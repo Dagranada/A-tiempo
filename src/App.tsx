@@ -3,7 +3,9 @@ import {
   INITIAL_PLANS,
   INITIAL_SENIOR_PROFILE,
   INITIAL_TODAY_DOSES,
+  SCAN_PRESETS,
 } from './data/mockData';
+import { analyzeMedicationImage } from './services/geminiService';
 import { DoseItem, MedicationPlan, NavTab, ScreenView } from './types';
 
 import { Header } from './components/Header';
@@ -29,6 +31,8 @@ export default function App() {
   const [pendingScannedPlan, setPendingScannedPlan] = useState<
     Omit<MedicationPlan, 'id' | 'createdAt'> | null
   >(null);
+  // true cuando el análisis de la imagen (real o de ejemplo) ya terminó
+  const [isPlanReady, setIsPlanReady] = useState(false);
 
   // Handlers for marking a dose as completed ("Listo ✓")
   const handleMarkAsTaken = (doseId: string) => {
@@ -58,11 +62,29 @@ export default function App() {
     setScreen('scan');
   };
 
-  const handleTakePhoto = (
-    extractedPlanData?: Omit<MedicationPlan, 'id' | 'createdAt'>
-  ) => {
-    setPendingScannedPlan(extractedPlanData || null);
+  const handleTakePhoto = (base64Image: string | null) => {
+    setIsPlanReady(false);
     setScreen('loading');
+
+    if (!base64Image) {
+      // No hay cámara real disponible: se usa un ejemplo de muestra.
+      setPendingScannedPlan(SCAN_PRESETS[0]?.extractedPlan ?? null);
+      setIsPlanReady(true);
+      return;
+    }
+
+    analyzeMedicationImage(base64Image)
+      .then((extractedPlan) => {
+        setPendingScannedPlan(extractedPlan);
+      })
+      .catch((err) => {
+        console.error('No se pudo analizar la imagen con Gemini:', err);
+        // El cuidador completa el formulario a mano si el análisis falla.
+        setPendingScannedPlan(null);
+      })
+      .finally(() => {
+        setIsPlanReady(true);
+      });
   };
 
   const handleSkipToManualForm = () => {
@@ -164,7 +186,7 @@ export default function App() {
         )}
 
         {screen === 'loading' && (
-          <LoadingScreen onComplete={handleLoadingComplete} />
+          <LoadingScreen onComplete={handleLoadingComplete} isReady={isPlanReady} />
         )}
 
         {screen === 'plan_form' && (

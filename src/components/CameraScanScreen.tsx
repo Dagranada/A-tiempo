@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ArrowLeft, Camera, Edit3 } from 'lucide-react';
-import { SCAN_PRESETS } from '../data/mockData';
-import { MedicationPlan } from '../types';
 
 interface CameraScanScreenProps {
-  onTakePhoto: (extractedPlanData?: Omit<MedicationPlan, 'id' | 'createdAt'>) => void;
+  // base64Image es la foto capturada (sin el prefijo data:...), o null si no hay
+  // cámara real disponible y se debe usar un ejemplo de muestra.
+  onTakePhoto: (base64Image: string | null) => void;
   onSkipToManualForm: () => void;
   onBack: () => void;
 }
@@ -49,7 +49,25 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
   }, []);
 
   const handleTriggerTakePhoto = () => {
-    onTakePhoto(SCAN_PRESETS[0]?.extractedPlan);
+    const video = videoRef.current;
+
+    if (hasCameraAccess && video && video.videoWidth > 0) {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        const base64 = dataUrl.split(',')[1];
+        onTakePhoto(base64);
+        return;
+      }
+    }
+
+    // Sin cámara real disponible: se usará un ejemplo de muestra.
+    onTakePhoto(null);
   };
 
   return (

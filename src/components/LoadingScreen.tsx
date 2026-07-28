@@ -3,6 +3,8 @@ import { Check, Loader2, Pill } from 'lucide-react';
 
 interface LoadingScreenProps {
   onComplete: () => void;
+  // true cuando Gemini ya respondió (o falló) y hay datos para mostrar en el formulario.
+  isReady: boolean;
 }
 
 const STEPS = [
@@ -12,22 +14,32 @@ const STEPS = [
   'Generando horario sugerido para Alberto...'
 ];
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
+const MAX_WAIT_MS = 15000; // Por si el análisis tarda demasiado o se cuelga.
+
+export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete, isReady }) => {
   const [currentStep, setCurrentStep] = useState(0);
 
+  // Avanza la animación de pasos hasta el último, y se queda ahí esperando.
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev < STEPS.length - 1) {
-          return prev + 1;
-        }
-        clearInterval(interval);
-        setTimeout(onComplete, 600); // Trigger transition on final step completion
-        return prev;
-      });
+      setCurrentStep((prev) => (prev < STEPS.length - 1 ? prev + 1 : prev));
     }, 750);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Solo avanza a la siguiente pantalla cuando la animación terminó Y el
+  // análisis real ya está listo (o se agotó el tiempo máximo de espera).
+  useEffect(() => {
+    if (isReady && currentStep >= STEPS.length - 1) {
+      const timeout = setTimeout(onComplete, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isReady, currentStep, onComplete]);
+
+  useEffect(() => {
+    const maxWaitTimeout = setTimeout(onComplete, MAX_WAIT_MS);
+    return () => clearTimeout(maxWaitTimeout);
   }, [onComplete]);
 
   return (
