@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+  }
+  h1, h2, h3, .font-heading {
+    font-family: 'Nunito Sans', sans-serif;
+  }
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+  code, .font-mono {
+    font-family: 'Nunito Sans', sans-serif;
+  }
+}
+
+/* Custom utility colors matching the protective minimalism design system */
+:root {
+  --color-accent: #0ee5ba;
+  --color-accent-dark: #0bc4a0;
+  --color-nav-active-bg: #d0f8ed;
+  --color-success: #27c93f;
+}

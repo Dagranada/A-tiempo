@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Cómo funciona "A Tiempo" — guía visual</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --canvas:#f8f9fa;
+    --surface:#ffffff;
+    --surface-2:#f1f6f4;
+    --border:#e2e8f0;
+    --text:#1b1c1c;
+    --text-soft:#5b6b68;
+    --text-faint:#8a9794;
+    --accent:#0ee5ba;
+    --accent-dark:#0a9a80;
+    --accent-soft:#d0f8ed;
+    --warn:#e08a3c;
+    --warn-soft:#fbe8d3;
+    --shadow: 0 1px 2px rgba(20,30,28,0.04), 0 6px 20px rgba(20,30,28,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --canvas:#111716;
+      --surface:#182220;
+      --surface-2:#1d2b28;
+      --border:#2a3735;
+      --text:#eef4f2;
+      --text-soft:#a9bab6;
+      --text-faint:#7c8d89;
+      --accent:#1ff0c4;
+      --accent-dark:#7be9d2;
+      --accent-soft:#123a32;
+      --warn:#f0a15c;
+      --warn-soft:#3a2c1c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --canvas:#111716; --surface:#182220; --surface-2:#1d2b28; --border:#2a3735;
+    --text:#eef4f2; --text-soft:#a9bab6; --text-faint:#7c8d89;
+    --accent:#1ff0c4; --accent-dark:#7be9d2; --accent-soft:#123a32;
+    --warn:#f0a15c; --warn-soft:#3a2c1c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.35);
+  }
+  :root[data-theme="light"]{
+    --canvas:#f8f9fa; --surface:#ffffff; --surface-2:#f1f6f4; --border:#e2e8f0;
+    --text:#1b1c1c; --text-soft:#5b6b68; --text-faint:#8a9794;
+    --accent:#0ee5ba; --accent-dark:#0a9a80; --accent-soft:#d0f8ed;
+    --warn:#e08a3c; --warn-soft:#fbe8d3;
+    --shadow: 0 1px 2px rgba(20,30,28,0.04), 0 6px 20px rgba(20,30,28,0.06);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--canvas);
+    color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    max-width:860px;
+    margin:0 auto;
+    padding: clamp(24px,5vw,64px) clamp(18px,4vw,28px) 80px;
+  }
+  h1,h2,h3{
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-weight:700;
+    text-wrap:balance;
+    color:var(--text);
+    margin:0 0 0.4em;
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:var(--accent-dark);
+    background:var(--accent-soft);
+    padding:5px 12px;
+    border-radius:999px;
+    margin-bottom:16px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+
+  header.hero{
+    padding-bottom:28px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:36px;
+  }
+  header.hero h1{ font-size:clamp(28px,4.4vw,40px); line-height:1.12; }
+  header.hero p.lede{
+    font-size:17px;
+    color:var(--text-soft);
+    max-width:62ch;
+    margin:14px 0 0;
+  }
+
+  section{ margin: 56px 0; }
+  section h2{ font-size:22px; margin-bottom:6px; }
+  section .section-sub{ color:var(--text-soft); font-size:15px; max-width:66ch; margin:0 0 22px; }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    padding: clamp(16px,3vw,28px);
+  }
+
+  .intro-grid{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:640px){ .intro-grid{ grid-template-columns:1fr; } }
+  .intro-grid .card p{ margin:0 0 10px; color:var(--text-soft); font-size:15px; }
+  .intro-grid .card p:last-child{ margin-bottom:0; }
+  .intro-grid .card strong{ color:var(--text); }
+
+  .fact-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; }
+  .fact-list li{ display:flex; gap:10px; font-size:14.5px; color:var(--text-soft); }
+  .fact-list b{ color:var(--text); min-width:96px; flex-shrink:0; }
+
+  .diagram-wrap{
+    overflow-x:auto;
+    border-radius:14px;
+  }
+  svg{ display:block; }
+  svg text{ font-family: ui-sans-serif, system-ui, sans-serif; }
+
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 22px;
+    margin-top:18px;
+    font-size:13px;
+    color:var(--text-soft);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:7px; }
+  .swatch{ width:12px; height:12px; border-radius:4px; display:inline-block; flex-shrink:0; }
+
+  .callout{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px 18px;
+    font-size:14.5px;
+    color:var(--text-soft);
+    margin-top:18px;
+  }
+  .callout strong{ color:var(--text); }
+  .callout.warn{ background:var(--warn-soft); }
+  .callout.warn strong{ color:var(--warn); }
+
+  .two-col{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:640px){ .two-col{ grid-template-columns:1fr; } }
+
+  .screen-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px 18px;
+    box-shadow:var(--shadow);
+  }
+  .screen-card .num{
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size:12px;
+    color:var(--accent-dark);
+    background:var(--accent-soft);
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:6px;
+    margin-bottom:8px;
+  }
+  .screen-card h3{ font-size:16px; margin-bottom:4px; }
+  .screen-card p{ font-size:13.8px; color:var(--text-soft); margin:0; }
+  .screen-card code{
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size:12px;
+    color:var(--text-faint);
+  }
+
+  footer{
+    margin-top:60px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+    color:var(--text-faint);
+    font-size:13px;
+  }
+
+  code.inline{
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    padding:1px 6px;
+    border-radius:6px;
+    font-size:0.9em;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <span class="eyebrow"><span class="dot"></span>Guía visual · sin jerga técnica</span>
+    <h1>Cómo funciona "A Tiempo"</h1>
+    <p class="lede">Un recorrido por lo que hace la app, sus pantallas, y por dónde viaja la información
+    cuando alguien la usa — pensado para entenderlo de un vistazo, no para programarlo.</p>
+  </header>
+
+  <section id="intro">
+    <div class="intro-grid">
+      <div class="card">
+        <p><strong>¿Qué es?</strong> "A Tiempo" es un organizador de medicamentos pensado para
+        cuidadores de adultos mayores. En el ejemplo que trae la app, una hija (María) organiza
+        los medicamentos de su padre (Alberto, 78 años).</p>
+        <p><strong>¿Qué problema resuelve?</strong> Evita el "¿ya se tomó la pastilla?" — muestra
+        de un vistazo qué toca hoy, qué falta y qué ya se tomó, y deja crear un plan nuevo
+        fotografiando la caja o receta del medicamento.</p>
+        <p><strong>¿Cómo está hecha?</strong> Es una página web (no una app de tienda de
+        aplicaciones) construida para verse y sentirse como una app de celular. Hoy es un
+        prototipo: la lectura de recetas por foto está simulada, y nada se guarda todavía de
+        forma permanente — al recargar la página, todo vuelve a un ejemplo de muestra.</p>
+      </div>
+      <div class="card">
+        <ul class="fact-list">
+          <li><b>Para quién</b> Cuidadores de personas mayores</li>
+          <li><b>Pantallas</b> 6 pantallas + 2 barras compartidas</li>
+          <li><b>Guarda datos</b> No, por ahora (solo en memoria)</li>
+          <li><b>Lectura de recetas</b> Simulada (aún no usa IA real)</li>
+          <li><b>Idioma</b> Todo el contenido está en español</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="flujo">
+    <h2>El recorrido de una persona usando la app</h2>
+    <p class="section-sub">Así se mueve alguien por la app: desde la pantalla principal, pasando
+    por escanear un medicamento, hasta guardar un plan nuevo.</p>
+
+    <div class="card">
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 1180 560" width="100%" style="min-width:820px">
+          <defs>
+            <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+              <path d="M0,0 L8,3.5 L0,7 Z" fill="var(--text-faint)"></path>
+            </marker>
+            <marker id="arrowAccent" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+              <path d="M0,0 L8,3.5 L0,7 Z" fill="var(--accent-dark)"></path>
+            </marker>
+          </defs>
+
+          <!-- Home hub -->
+          <g>
+            <rect x="40" y="230" width="190" height="110" rx="16" fill="var(--accent-soft)" stroke="var(--accent-dark)" stroke-width="1.5"></rect>
+            <text x="135" y="270" text-anchor="middle" font-size="15" font-weight="700" fill="var(--text)">Inicio</text>
+            <text x="135" y="292" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">Horario · Mis planes</text>
+            <text x="135" y="308" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">Perfil</text>
+          </g>
+
+          <!-- Scan screen -->
+          <g>
+            <rect x="300" y="60" width="200" height="100" rx="16" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"></rect>
+            <text x="400" y="98" text-anchor="middle" font-size="14.5" font-weight="700" fill="var(--text)">Escanear</text>
+            <text x="400" y="118" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">Foto de la receta</text>
+            <text x="400" y="134" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">o "llenar a mano"</text>
+          </g>
+
+          <!-- Loading screen -->
+          <g>
+            <rect x="580" y="60" width="200" height="100" rx="16" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"></rect>
+            <text x="680" y="98" text-anchor="middle" font-size="14.5" font-weight="700" fill="var(--text)">Cargando</text>
+            <text x="680" y="118" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">Simula que una IA</text>
+            <text x="680" y="134" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">lee los datos</text>
+          </g>
+
+          <!-- Plan form -->
+          <g>
+            <rect x="580" y="230" width="200" height="110" rx="16" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"></rect>
+            <text x="680" y="266" text-anchor="middle" font-size="14.5" font-weight="700" fill="var(--text)">Formulario de plan</text>
+            <text x="680" y="288" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">Nombre, dosis,</text>
+            <text x="680" y="304" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">horario, frecuencia</text>
+          </g>
+
+          <!-- Saved / back to home -->
+          <g>
+            <rect x="900" y="230" width="220" height="110" rx="16" fill="var(--accent)" stroke="var(--accent-dark)" stroke-width="1.5"></rect>
+            <text x="1010" y="270" text-anchor="middle" font-size="15" font-weight="700" fill="#0d1a17">Plan guardado</text>
+            <text x="1010" y="292" text-anchor="middle" font-size="11.5" fill="#0d1a17">Vuelve a Inicio, en</text>
+            <text x="1010" y="308" text-anchor="middle" font-size="11.5" fill="#0d1a17">la pestaña "Mis planes"</text>
+          </g>
+
+          <!-- Edit existing plan -->
+          <g>
+            <rect x="300" y="400" width="200" height="100" rx="16" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4 4"></rect>
+            <text x="400" y="440" text-anchor="middle" font-size="14.5" font-weight="700" fill="var(--text)">Editar plan</text>
+            <text x="400" y="460" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">Desde "Mis planes",</text>
+            <text x="400" y="476" text-anchor="middle" font-size="11.5" fill="var(--text-soft)">toca el lápiz de un plan</text>
+          </g>
+
+          <!-- Manual fill -->
+          <g>
+            <rect x="300" y="230" width="200" height="90" rx="16" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"></rect>
+            <text x="400" y="264" text-anchor="middle" font-size="13.5" font-weight="700" fill="var(--text)">"Llenar a mano"</text>
+            <text x="400" y="286" text-anchor="middle" font-size="11" fill="var(--text-soft)">Sin usar la cámara</text>
+            <text x="400" y="302" text-anchor="middle" font-size="11" fill="var(--text-soft)">(atajo directo)</text>
+          </g>
+
+          <!-- Arrows -->
+          <path d="M230,270 C265,240 265,140 300,120" fill="none" stroke="var(--text-faint)" stroke-width="1.6" marker-end="url(#arrow)"></path>
+          <path d="M500,110 L580,110" fill="none" stroke="var(--text-faint)" stroke-width="1.6" marker-end="url(#arrow)"></path>
+          <path d="M680,160 L680,230" fill="none" stroke="var(--text-faint)" stroke-width="1.6" marker-end="url(#arrow)"></path>
+          <path d="M230,275 L300,275" fill="none" stroke="var(--text-faint)" stroke-width="1.6" marker-end="url(#arrow)"></path>
+          <path d="M500,275 L580,275" fill="none" stroke="var(--text-faint)" stroke-width="1.6" marker-end="url(#arrow)"></path>
+          <path d="M780,285 L900,285" fill="none" stroke="var(--accent-dark)" stroke-width="2" marker-end="url(#arrowAccent)"></path>
+          <path d="M1010,340 C1010,410 260,430 300,440" fill="none" stroke="var(--text-faint)" stroke-width="1.6" stroke-dasharray="3 4" marker-end="url(#arrow)"></path>
+          <path d="M400,400 C300,360 230,330 230,320" fill="none" stroke="var(--text-faint)" stroke-width="1.6" stroke-dasharray="3 4" marker-end="url(#arrow)"></path>
+
+          <text x="452" y="230" text-anchor="middle" font-size="10.5" fill="var(--text-faint)">saca la foto</text>
+          <text x="265" y="255" text-anchor="middle" font-size="10.5" fill="var(--text-faint)">toca "Escanear"</text>
+          <text x="452" y="480" text-anchor="middle" font-size="10.5" fill="var(--text-faint)">reabre el mismo formulario, ya con datos</text>
+          <text x="850" y="270" text-anchor="middle" font-size="10.5" fill="var(--accent-dark)" font-weight="600">toca "Guardar plan"</text>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--accent-soft);border:1.5px solid var(--accent-dark);"></span>Punto de partida / llegada</span>
+        <span><span class="swatch" style="background:var(--surface);border:1.5px solid var(--border);"></span>Pantalla intermedia</span>
+        <span><span class="swatch" style="background:var(--accent);"></span>Acción que confirma y guarda</span>
+        <span><span class="swatch" style="border:1.5px dashed var(--text-faint);background:transparent;"></span>Camino alternativo (editar / a mano)</span>
+      </div>
+      <div class="callout">
+        <strong>En palabras simples:</strong> desde Inicio, la persona puede escanear una receta
+        (o llenar el formulario a mano), revisar lo que quedó cargado, y guardar. Al guardar,
+        vuelve a Inicio mostrando la lista de planes actualizada. Editar un plan existente entra
+        al mismo formulario, pero ya con los datos previos cargados.
+      </div>
+    </div>
+  </section>
+
+  <section id="pantallas">
+    <h2>Las pantallas, una por una</h2>
+    <p class="section-sub">Cada tarjeta es una pantalla real de la app, con su archivo de origen
+    entre paréntesis por si luego quieres ubicarla en el código.</p>
+    <div class="two-col">
+      <div class="screen-card">
+        <span class="num">01</span>
+        <h3>Horario</h3>
+        <p>El día de hoy dividido en Pendientes, Próximas y Ya tomadas. <code>HorarioView.tsx</code></p>
+      </div>
+      <div class="screen-card">
+        <span class="num">02</span>
+        <h3>Mis Planes</h3>
+        <p>La lista de medicamentos configurados, con opción de editar o borrar. <code>MisPlanesView.tsx</code></p>
+      </div>
+      <div class="screen-card">
+        <span class="num">03</span>
+        <h3>Perfil</h3>
+        <p>Datos de la persona cuidada y accesos a contactos e info médica. <code>PerfilView.tsx</code></p>
+      </div>
+      <div class="screen-card">
+        <span class="num">04</span>
+        <h3>Escanear</h3>
+        <p>Abre la cámara para fotografiar una receta o caja de medicamento. <code>CameraScanScreen.tsx</code></p>
+      </div>
+      <div class="screen-card">
+        <span class="num">05</span>
+        <h3>Cargando</h3>
+        <p>Pantalla breve que simula una IA extrayendo los datos de la foto. <code>LoadingScreen.tsx</code></p>
+      </div>
+      <div class="screen-card">
+        <span class="num">06</span>
+        <h3>Formulario de plan</h3>
+        <p>Crea o edita un plan: nombre, dosis, horario, frecuencia e instrucciones. <code>PlanFormScreen.tsx</code></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="dependencias">
+    <h2>Quién habla con quién por dentro</h2>
+    <p class="section-sub">Ninguna pantalla se comunica directamente con otra. Todas pasan por un
+    mismo punto central que guarda la información del momento y decide qué mostrar.</p>
+
+    <div class="card">
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 1000 520" width="100%" style="min-width:760px">
+          <defs>
+            <marker id="arrowD" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L7,3 L0,6 Z" fill="var(--text-faint)"></path>
+            </marker>
+          </defs>
+
+          <!-- center hub -->
+          <rect x="400" y="220" width="200" height="90" rx="18" fill="var(--accent)" stroke="var(--accent-dark)" stroke-width="1.5"></rect>
+          <text x="500" y="256" text-anchor="middle" font-size="15" font-weight="700" fill="#0d1a17">El "cerebro" central</text>
+          <text x="500" y="276" text-anchor="middle" font-size="11" fill="#0d1a17">reparte datos y decide qué se ve</text>
+          <text x="500" y="298" text-anchor="middle" font-size="10" fill="#0d1a17" opacity="0.75">(archivo App.tsx)</text>
+
+          <!-- screens around -->
+          <!-- top row -->
+          <g>
+            <rect x="60" y="40" width="160" height="70" rx="12" fill="var(--surface)" stroke="var(--border)"></rect>
+            <text x="140" y="70" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text)">Horario</text>
+            <text x="140" y="88" text-anchor="middle" font-size="10" fill="var(--text-soft)">HorarioView.tsx</text>
+          </g>
+          <g>
+            <rect x="260" y="40" width="160" height="70" rx="12" fill="var(--surface)" stroke="var(--border)"></rect>
+            <text x="340" y="70" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text)">Mis Planes</text>
+            <text x="340" y="88" text-anchor="middle" font-size="10" fill="var(--text-soft)">MisPlanesView.tsx</text>
+          </g>
+          <g>
+            <rect x="580" y="40" width="160" height="70" rx="12" fill="var(--surface)" stroke="var(--border)"></rect>
+            <text x="660" y="70" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text)">Perfil</text>
+            <text x="660" y="88" text-anchor="middle" font-size="10" fill="var(--text-soft)">PerfilView.tsx</text>
+          </g>
+          <g>
+            <rect x="780" y="40" width="160" height="70" rx="12" fill="var(--surface)" stroke="var(--border)"></rect>
+            <text x="860" y="70" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text)">Escanear</text>
+            <text x="860" y="88" text-anchor="middle" font-size="10" fill="var(--text-soft)">CameraScanScreen.tsx</text>
+          </g>
+
+          <!-- bottom row -->
+          <g>
+            <rect x="60" y="410" width="160" height="70" rx="12" fill="var(--surface)" stroke="var(--border)"></rect>
+            <text x="140" y="440" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text)">Cargando</text>
+            <text x="140" y="458" text-anchor="middle" font-size="10" fill="var(--text-soft)">LoadingScreen.tsx</text>
+          </g>
+          <g>
+            <rect x="260" y="410" width="160" height="70" rx="12" fill="var(--surface)" stroke="var(--border)"></rect>
+            <text x="340" y="440" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text)">Formulario</text>
+            <text x="340" y="458" text-anchor="middle" font-size="10" fill="var(--text-soft)">PlanFormScreen.tsx</text>
+          </g>
+          <g>
+            <rect x="580" y="410" width="160" height="70" rx="12" fill="var(--surface-2)" stroke="var(--border)"></rect>
+            <text x="660" y="440" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text)">Barra superior</text>
+            <text x="660" y="458" text-anchor="middle" font-size="10" fill="var(--text-soft)">Header.tsx</text>
+          </g>
+          <g>
+            <rect x="780" y="410" width="160" height="70" rx="12" fill="var(--surface-2)" stroke="var(--border)"></rect>
+            <text x="860" y="440" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--text)">Barra inferior</text>
+            <text x="860" y="458" text-anchor="middle" font-size="10" fill="var(--text-soft)">BottomNav.tsx</text>
+          </g>
+
+          <!-- side: data sources -->
+          <g>
+            <rect x="10" y="230" width="150" height="70" rx="12" fill="var(--warn-soft)" stroke="var(--warn)" stroke-dasharray="4 3"></rect>
+            <text x="85" y="260" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text)">Tipos compartidos</text>
+            <text x="85" y="278" text-anchor="middle" font-size="10" fill="var(--text-soft)">types.ts</text>
+          </g>
+          <g>
+            <rect x="840" y="230" width="150" height="70" rx="12" fill="var(--warn-soft)" stroke="var(--warn)" stroke-dasharray="4 3"></rect>
+            <text x="915" y="260" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text)">Datos de ejemplo</text>
+            <text x="915" y="278" text-anchor="middle" font-size="10" fill="var(--text-soft)">mockData.ts</text>
+          </g>
+
+          <!-- connecting lines from hub to each -->
+          <path d="M460,220 L140,110" fill="none" stroke="var(--text-faint)" stroke-width="1.3" marker-end="url(#arrowD)"></path>
+          <path d="M480,220 L340,110" fill="none" stroke="var(--text-faint)" stroke-width="1.3" marker-end="url(#arrowD)"></path>
+          <path d="M520,220 L660,110" fill="none" stroke="var(--text-faint)" stroke-width="1.3" marker-end="url(#arrowD)"></path>
+          <path d="M540,220 L860,110" fill="none" stroke="var(--text-faint)" stroke-width="1.3" marker-end="url(#arrowD)"></path>
+
+          <path d="M460,310 L140,410" fill="none" stroke="var(--text-faint)" stroke-width="1.3" marker-end="url(#arrowD)"></path>
+          <path d="M480,310 L340,410" fill="none" stroke="var(--text-faint)" stroke-width="1.3" marker-end="url(#arrowD)"></path>
+          <path d="M520,310 L660,410" fill="none" stroke="var(--text-faint)" stroke-width="1.3" marker-end="url(#arrowD)"></path>
+          <path d="M540,310 L860,410" fill="none" stroke="var(--text-faint)" stroke-width="1.3" marker-end="url(#arrowD)"></path>
+
+          <path d="M400,260 L160,260" fill="none" stroke="var(--warn)" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#arrowD)"></path>
+          <path d="M600,260 L840,260" fill="none" stroke="var(--warn)" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#arrowD)"></path>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--accent);"></span>El punto central que todo cruza</span>
+        <span><span class="swatch" style="background:var(--surface);border:1px solid var(--border);"></span>Pantallas visibles</span>
+        <span><span class="swatch" style="background:var(--surface-2);border:1px solid var(--border);"></span>Barras compartidas (arriba / abajo)</span>
+        <span><span class="swatch" style="background:var(--warn-soft);border:1.5px dashed var(--warn);"></span>Piezas de apoyo (no son pantallas)</span>
+      </div>
+      <div class="callout warn">
+        <strong>Dato clave:</strong> no existe una conexión directa entre, por ejemplo, "Escanear"
+        y "Formulario". Todo pasa primero por el cerebro central, que decide qué mostrar y le
+        entrega los datos a cada pantalla. Esto hace que sea fácil seguir el rastro de un dato,
+        pero también significa que si el cerebro central falla, ninguna pantalla puede
+        comunicarse con otra.
+      </div>
+    </div>
+  </section>
+
+  <section id="notas">
+    <h2>Lo que vale la pena saber, en corto</h2>
+    <div class="card">
+      <ul class="fact-list" style="gap:16px;">
+        <li><b>Nada se guarda</b> Hoy la app no tiene una base de datos ni memoria permanente. Si recargas la página, todo vuelve a los datos de ejemplo (María y Alberto).</li>
+        <li><b>La IA es un simulacro</b> Aunque la app está preparada para conectarse a un servicio de inteligencia artificial (Gemini) que lea recetas, por ahora la pantalla de "Cargando" solo simula el proceso y usa un resultado predefinido.</li>
+        <li><b>Pensada para mayores</b> Botones grandes, textos claros y un solo color de acento (verde menta) para todas las acciones importantes, buscando que sea fácil de usar para quien cuida a un adulto mayor.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Generado como material de apoyo para entender el proyecto "A Tiempo" — no modifica ningún archivo del proyecto original.
+  </footer>
+
+</div>
+</body>
+</html>

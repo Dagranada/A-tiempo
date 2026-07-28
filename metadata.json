@@ -1,0 +1,6 @@
+{
+  "name": "A Tiempo",
+  "description": "Organizador de medicamentos para cuidadores de adultos mayores con escaneo de recetas y recordatorios sencillos.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
