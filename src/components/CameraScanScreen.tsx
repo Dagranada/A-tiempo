@@ -16,25 +16,36 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [hasCameraAccess, setHasCameraAccess] = useState<boolean | null>(null);
+  const [cameraErrorMessage, setCameraErrorMessage] = useState<string | null>(null);
 
   // Attempt live camera stream
   useEffect(() => {
     let stream: MediaStream | null = null;
     async function startCamera() {
       try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' },
-          });
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            setHasCameraAccess(true);
-          }
-        } else {
-          setHasCameraAccess(false);
+        if (!window.isSecureContext) {
+          throw new Error(
+            'El navegador exige HTTPS (o localhost) para usar la cámara; este sitio no se abrió como contexto seguro.'
+          );
         }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Este navegador no soporta acceso a la cámara (getUserMedia).');
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+        });
+
+        // El <video> ya está montado en el DOM desde el primer render
+        // (ver JSX más abajo), así que la referencia siempre existe aquí.
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        setHasCameraAccess(true);
       } catch (err) {
+        const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
         console.warn('Camera access error or unsupported in environment:', err);
+        setCameraErrorMessage(message);
         setHasCameraAccess(false);
       }
     }
@@ -89,16 +100,18 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
 
       {/* Main Camera Viewport */}
       <div className="flex-1 relative bg-gray-900 flex items-center justify-center overflow-hidden">
-        {/* Live Video Feed or Fallback Simulated Viewfinder */}
-        {hasCameraAccess ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover"
-          />
-        ) : (
+        {/* El <video> siempre está montado para que la referencia esté lista
+            cuando el permiso de cámara se resuelva; se oculta hasta entonces. */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className={`w-full h-full object-cover ${hasCameraAccess ? '' : 'hidden'}`}
+        />
+
+        {/* Fallback Simulated Viewfinder (mientras no hay cámara real) */}
+        {!hasCameraAccess && (
           <div className="w-full h-full relative flex items-center justify-center bg-slate-950">
             <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-slate-900 to-black flex flex-col items-center justify-center p-6 text-center">
               <div className="w-16 h-16 rounded-full bg-[#0ee5ba]/10 text-[#0ee5ba] flex items-center justify-center mb-3">
@@ -110,6 +123,11 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
               <p className="text-xs text-gray-400 mt-1">
                 Apunta al nombre y dosis de la etiqueta
               </p>
+              {cameraErrorMessage && (
+                <p className="text-[11px] text-amber-400/90 mt-3 max-w-xs break-words">
+                  No se pudo abrir la cámara real: {cameraErrorMessage}
+                </p>
+              )}
             </div>
           </div>
         )}
