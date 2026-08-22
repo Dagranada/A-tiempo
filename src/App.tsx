@@ -6,9 +6,15 @@ import {
   SCAN_PRESETS,
 } from './data/mockData';
 import { analyzeMedicationImage } from './services/geminiService';
+import {
+  requestNotificationPermission,
+  unlockAudio,
+} from './services/notificationService';
+import { useDoseReminders } from './hooks/useDoseReminders';
 import { DoseItem, MedicationPlan, NavTab, ScreenView } from './types';
 
 import { Header } from './components/Header';
+import { ReminderAlert } from './components/ReminderAlert';
 import { HorarioView } from './components/HorarioView';
 import { MisPlanesView } from './components/MisPlanesView';
 import { CameraScanScreen } from './components/CameraScanScreen';
@@ -33,6 +39,30 @@ export default function App() {
   >(null);
   // true cuando el análisis de la imagen (real o de ejemplo) ya terminó
   const [isPlanReady, setIsPlanReady] = useState(false);
+
+  // Recordatorios de toma: se activan explícitamente desde la campana para no
+  // sorprender con alarmas apenas se abre la app.
+  const [remindersEnabled, setRemindersEnabled] = useState(false);
+  const { dueDose, snooze } = useDoseReminders(doses, remindersEnabled);
+
+  const handleEnableReminders = () => {
+    if (remindersEnabled) return;
+
+    // El mismo toque que activa los recordatorios habilita el audio, porque
+    // los navegadores bloquean el sonido sin una interacción previa.
+    unlockAudio();
+
+    requestNotificationPermission()
+      .catch((err) => {
+        console.error('No se pudo pedir permiso de notificaciones:', err);
+        return false;
+      })
+      .finally(() => {
+        // Aunque el navegador niegue las notificaciones del sistema, la alerta
+        // en pantalla y el sonido siguen funcionando.
+        setRemindersEnabled(true);
+      });
+  };
 
   // Handlers for marking a dose as completed ("Listo ✓")
   const handleMarkAsTaken = (doseId: string) => {
@@ -205,6 +235,8 @@ export default function App() {
               isEmptyState={isEmptyState}
               onToggleEmptyState={() => setIsEmptyState(!isEmptyState)}
               todayCountPending={pendingDosesCount}
+              remindersEnabled={remindersEnabled}
+              onEnableReminders={handleEnableReminders}
             />
 
             <main className="flex-1 overflow-y-auto">
@@ -245,6 +277,16 @@ export default function App() {
               }}
               onTapScan={handleTapScan}
             />
+
+            {/* Recordatorio de toma: solo sobre la vista principal, para no
+                interrumpir el escáner ni el formulario de plan. */}
+            {dueDose && (
+              <ReminderAlert
+                dose={dueDose}
+                onMarkAsTaken={handleMarkAsTaken}
+                onSnooze={snooze}
+              />
+            )}
           </>
         )}
       </div>

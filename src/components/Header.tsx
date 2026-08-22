@@ -7,13 +7,17 @@ interface HeaderProps {
   isEmptyState: boolean;
   onToggleEmptyState: () => void;
   todayCountPending: number;
+  remindersEnabled: boolean;
+  onEnableReminders: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   profile,
   isEmptyState,
   onToggleEmptyState,
-  todayCountPending
+  todayCountPending,
+  remindersEnabled,
+  onEnableReminders
 }) => {
   return (
     <header className="bg-white px-5 py-4 flex justify-between items-center border-b border-gray-100 shrink-0 sticky top-0 z-10">
@@ -39,8 +43,17 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center space-x-1">
         {/* Notification Bell */}
         <button
-          aria-label="Notificaciones de dosis"
-          className="p-2 text-gray-500 relative hover:text-gray-900 transition-colors rounded-full hover:bg-gray-50"
+          onClick={onEnableReminders}
+          aria-label={
+            remindersEnabled
+              ? 'Recordatorios activos'
+              : 'Activar recordatorios de dosis'
+          }
+          className={`p-2 relative transition-colors rounded-full ${
+            remindersEnabled
+              ? 'text-[#0bc4a0] bg-[#d0f8ed] hover:bg-[#0ee5ba]/30'
+              : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+          }`}
         >
           <Bell className="w-6 h-6" />
           {todayCountPending > 0 && !isEmptyState && (
