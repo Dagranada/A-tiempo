@@ -18,7 +18,8 @@ type ReminderAlertProps =
   // Alarma de prueba: misma pantalla con los textos de la referencia de diseño.
   // Sus botones solo la cierran: no marca ninguna toma. Muestra Metformina por
   // decisión explícita (excepción al invariante 5, ver Context/decisions/0006).
-  | { isTest: true; onClose: () => void };
+  // `version: 2` es un diseño alternativo solo para comparar (botón "Alarma 2").
+  | { isTest: true; version?: 1 | 2; onClose: () => void };
 
 // Ondas: cada una tarda WAVE_DURATION_S en cruzar; sale una nueva cada WAVE_GAP_S.
 // Debe coincidir con la duración de la animación `alarm-wave` en index.css.
@@ -34,6 +35,7 @@ const TEST_MEDICATION = {
 };
 
 export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
+  const isV2 = props.isTest && props.version === 2;
   const name = props.isTest ? TEST_MEDICATION.name : props.dose.medicationName;
   const description = props.isTest
     ? TEST_MEDICATION.description
@@ -80,8 +82,9 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
       aria-labelledby="reminder-title"
       aria-describedby="reminder-desc"
       style={{
-        background:
-          'radial-gradient(circle at 50% 32%, #22e3c8 0%, #00c7af 38%, #00a492 72%, #02897a 100%)',
+        background: isV2
+          ? 'radial-gradient(circle at 50% 35%, #2ee6cc 0%, #10d2b8 30%, #00bfa8 62%, #00a693 100%)'
+          : 'radial-gradient(circle at 50% 32%, #22e3c8 0%, #00c7af 38%, #00a492 72%, #02897a 100%)',
       }}
       className="fixed inset-0 z-50 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl font-heading text-white flex flex-col justify-between px-6 pt-16 pb-10 overflow-y-auto select-none"
     >
@@ -111,7 +114,11 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
           className="w-[210px] h-[210px] flex items-center justify-center mb-10"
           aria-hidden="true"
         >
-          <div className="w-[110px] h-[110px] rounded-full bg-white/20 border border-white/40 flex items-center justify-center">
+          <div
+            className={`w-[110px] h-[110px] rounded-full flex items-center justify-center ${
+              isV2 ? 'bg-[#00e5cf] border border-white/50' : 'bg-white/20 border border-white/40'
+            }`}
+          >
             <svg
               className="w-12 h-12 -rotate-45"
               fill="none"
@@ -127,31 +134,53 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
           </div>
         </div>
 
-        <h2
-          id="reminder-title"
-          className="text-[1.85rem] leading-tight font-extrabold text-white text-center"
-        >
-          {name}
-        </h2>
+        {isV2 ? (
+          <>
+            <p className="text-[1.05rem] font-medium text-[#087064]/80 text-center">Toma:</p>
+            <h2
+              id="reminder-title"
+              className="text-[2.25rem] leading-tight font-extrabold text-[#087064] text-center"
+            >
+              {name}
+            </h2>
+            <p id="reminder-desc" className="text-[1.25rem] font-bold text-white text-center mt-1">
+              {doseParts.join(' - ')}
+            </p>
+            {instructions && (
+              <p className="w-full text-center text-[0.95rem] leading-snug font-medium text-white/90 mt-4 px-6">
+                {instructions}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <h2
+              id="reminder-title"
+              className="text-[1.85rem] leading-tight font-extrabold text-white text-center"
+            >
+              {name}
+            </h2>
 
-        <p id="reminder-desc" className="text-[0.95rem] font-medium text-white/85 mt-1.5 mb-6 text-center">
-          {description}
-        </p>
+            <p id="reminder-desc" className="text-[0.95rem] font-medium text-white/85 mt-1.5 mb-6 text-center">
+              {description}
+            </p>
 
-        {/* Dosis: 1 pastilla | 850 mg */}
-        <div className="w-full rounded-2xl py-4 px-3 flex items-center bg-white/10 border border-white/30">
-          {doseParts.map((part, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <div className="h-8 w-px bg-white/30" />}
-              <div className="flex-1 text-center font-bold text-[1.1rem] text-white">{part}</div>
-            </React.Fragment>
-          ))}
-        </div>
+            {/* Dosis: 1 pastilla | 850 mg */}
+            <div className="w-full rounded-2xl py-4 px-3 flex items-center bg-white/10 border border-white/30">
+              {doseParts.map((part, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <div className="h-8 w-px bg-white/30" />}
+                  <div className="flex-1 text-center font-bold text-[1.1rem] text-white">{part}</div>
+                </React.Fragment>
+              ))}
+            </div>
 
-        {instructions && (
-          <p className="w-full text-center text-[0.95rem] leading-snug font-medium text-white/90 mt-4 px-4">
-            {instructions}
-          </p>
+            {instructions && (
+              <p className="w-full text-center text-[0.95rem] leading-snug font-medium text-white/90 mt-4 px-4">
+                {instructions}
+              </p>
+            )}
+          </>
         )}
       </main>
 

@@ -211,11 +211,12 @@ export default function App() {
 
   // Alarma de prueba (botón temporal del menú): suena y se muestra al instante
   // dentro del mismo toque, así el audio no queda bloqueado por el navegador.
-  const [isTestAlarmOpen, setIsTestAlarmOpen] = useState(false);
-  const handleTestAlarm = () => {
+  // `testAlarmVersion` dice qué diseño se está comparando (1 o 2); null = cerrada.
+  const [testAlarmVersion, setTestAlarmVersion] = useState<1 | 2 | null>(null);
+  const handleTestAlarm = (version: 1 | 2) => {
     unlockAudio();
     playReminderSound();
-    setIsTestAlarmOpen(true);
+    setTestAlarmVersion(version);
     requestNotificationPermission()
       .then((granted) => granted && showTestNotification())
       .catch(() => undefined);
@@ -312,15 +313,20 @@ export default function App() {
                 }
               }}
               onTapScan={handleTapScan}
-              onTapTestAlarm={handleTestAlarm}
+              onTapTestAlarm={() => handleTestAlarm(1)}
+              onTapTestAlarm2={() => handleTestAlarm(2)}
             />
 
             {/* Recordatorio de toma: solo sobre la vista principal, para no
                 interrumpir el escáner ni el formulario de plan. */}
-            {isTestAlarmOpen && (
-              <ReminderAlert isTest onClose={() => setIsTestAlarmOpen(false)} />
+            {testAlarmVersion && (
+              <ReminderAlert
+                isTest
+                version={testAlarmVersion}
+                onClose={() => setTestAlarmVersion(null)}
+              />
             )}
-            {dueDose && !isTestAlarmOpen && (
+            {dueDose && !testAlarmVersion && (
               <ReminderAlert
                 dose={dueDose}
                 plan={plans.find((p) => p.id === dueDose.planId)}
