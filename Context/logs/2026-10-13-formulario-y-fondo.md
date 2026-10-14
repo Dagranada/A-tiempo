@@ -14,3 +14,5 @@
 - **2026-10-14:** vuelven las ondas a la alarma, más suaves (3 ondas, 6 s, borde 2.5→1px, opacidad máx. 0.7) saliendo del centro por toda la pantalla; los anillos quietos se mantienen.
 - **2026-10-14:** fuera los anillos estáticos de la alarma; ondas más seguidas (5, cada 1 s) que se apagan antes (invisibles desde el 70 % del recorrido).
 - **2026-10-14:** ondas más lentas (8 s) y más seguidas (cada 0.8 s): 2–3 visibles a la vez. Constantes `WAVE_DURATION_S`/`WAVE_GAP_S` en `ReminderAlert.tsx`.
+- **2026-10-14:** alarma versión 2 para comparar (`ReminderAlert isTest version={2}`, botón "Alarma 2" en la nav, ahora `w-1/6`): "Toma:" + nombre en verde oscuro `#087064`, dosis en una línea, anillos quietos y disco sólido. La versión 1 no cambia. ADR 0006 ampliado a la v2.
+- **2026-10-14:** la alarma versión 2 pierde sus anillos quietos; solo quedan las ondas animadas.

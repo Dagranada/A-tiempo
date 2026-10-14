@@ -16,7 +16,7 @@ Navegación de 4 pestañas · CRUD de planes con validación · marcar toma con 
 5. **`startDate`/`endDate` decorativos**: se guardan y se muestran, no filtran nada.
 6. **Fecha del `Header` escrita a mano**: siempre `"Lunes, 24 de febrero"` (`src/components/Header.tsx:38`). Dato falso en pantalla → confusión.
 7. **`handleResetData` sin conectar** a ninguna vista. (El Perfil ya es editable desde 2026-10-13: datos básicos, médicos y el interruptor de recordatorios; nada persiste tras un refresh.)
-8. **Botón temporal "Alarma" en la `BottomNav`** (2026-10-14) para probar la alerta y el sonido. Quitarlo antes de un lanzamiento real.
+8. **Botones temporales "Alarma" y "Alarma 2" en la `BottomNav`** (2026-10-14) para probar la alerta y comparar dos diseños. Elegir uno, llevarlo a la alarma real y quitar ambos botones antes de un lanzamiento real.
 9. **La app no usa Nunito Sans** (2026-10-14): `font-sans` en la raíz de `src/App.tsx:233` pisa la fuente del `body` con la del sistema, contra `design.md` §4. La alarma ya lo corrige con `font-heading`; falta el resto (y el `<link>` de `index.html` solo carga los pesos 600–800).
 10. **Deuda de diseño**: `#69E1BC` huérfano y `motion` sin usar (`../design.md` §11).
 
