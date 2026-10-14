@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { DoseItem, MedicationPlan } from '../types';
 import { REMINDER_INTERVAL_MS } from '../hooks/useDoseReminders';
@@ -19,6 +19,12 @@ type ReminderAlertProps =
   // Sus botones solo la cierran: no marca ninguna toma. Muestra Metformina por
   // decisión explícita (excepción al invariante 5, ver Context/decisions/0006).
   | { isTest: true; onClose: () => void };
+
+// Ondas: cada una tarda WAVE_DURATION_S en cruzar; sale una nueva cada WAVE_GAP_S.
+// Debe coincidir con la duración de la animación `alarm-wave` en index.css.
+const WAVE_DURATION_S = 8;
+const WAVE_GAP_S = 0.8;
+const WAVE_COUNT = Math.round(WAVE_DURATION_S / WAVE_GAP_S);
 
 const TEST_MEDICATION = {
   name: 'Metformina',
@@ -43,8 +49,32 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
   const handleConfirm = props.isTest ? props.onClose : () => props.onMarkAsTaken(props.dose.id);
   const handleSnooze = props.isTest ? props.onClose : props.onSnooze;
 
+  // Las ondas viven en una capa de fondo a pantalla completa, centradas en la
+  // píldora. Se mide dónde quedó y hasta qué esquina deben llegar.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const iconRef = useRef<HTMLDivElement>(null);
+  const [ripple, setRipple] = useState({ x: 0, y: 0, size: 0 });
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const root = rootRef.current;
+      const icon = iconRef.current;
+      if (!root || !icon) return;
+      const r = root.getBoundingClientRect();
+      const i = icon.getBoundingClientRect();
+      const x = i.left + i.width / 2 - r.left;
+      const y = i.top + i.height / 2 - r.top + root.scrollTop;
+      setRipple({ x, y, size: 2 * Math.hypot(Math.max(x, r.width - x), Math.max(y, r.height - y)) });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    if (rootRef.current) observer.observe(rootRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div
+      ref={rootRef}
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="reminder-title"
@@ -55,27 +85,45 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
       }}
       className="fixed inset-0 z-50 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl font-heading text-white flex flex-col justify-between px-6 pt-16 pb-10 overflow-y-auto select-none"
     >
-      <main className="w-full flex flex-col items-center flex-1 justify-center">
-        {/* Píldora con dos anillos finos y quietos */}
+      {/* Ondas: salen del centro y se debilitan a medida que se alejan */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        {ripple.size > 0 &&
+          Array.from({ length: WAVE_COUNT }, (_, i) => (
+            <span
+              key={i}
+              className="alarm-wave absolute rounded-full"
+              style={
+                {
+                  left: ripple.x,
+                  top: ripple.y,
+                  '--wave-max': `${ripple.size}px`,
+                  animationDelay: `${i * WAVE_GAP_S}s`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+      </div>
+
+      <main className="relative w-full flex flex-col items-center flex-1 justify-center">
+        {/* Píldora: de aquí salen las ondas (el contenedor reserva su espacio) */}
         <div
-          className="w-[210px] h-[210px] rounded-full border border-white/20 flex items-center justify-center mb-10"
+          ref={iconRef}
+          className="w-[210px] h-[210px] flex items-center justify-center mb-10"
           aria-hidden="true"
         >
-          <div className="w-[160px] h-[160px] rounded-full border border-white/30 flex items-center justify-center">
-            <div className="w-[110px] h-[110px] rounded-full bg-white/20 border border-white/40 flex items-center justify-center">
-              <svg
-                className="w-12 h-12 -rotate-45"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.6"
-                viewBox="0 0 24 24"
-              >
-                <rect height="10" rx="5" width="18" x="3" y="7" />
-                <line strokeWidth="2.4" x1="12" x2="12" y1="7" y2="17" />
-              </svg>
-            </div>
+          <div className="w-[110px] h-[110px] rounded-full bg-white/20 border border-white/40 flex items-center justify-center">
+            <svg
+              className="w-12 h-12 -rotate-45"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.6"
+              viewBox="0 0 24 24"
+            >
+              <rect height="10" rx="5" width="18" x="3" y="7" />
+              <line strokeWidth="2.4" x1="12" x2="12" y1="7" y2="17" />
+            </svg>
           </div>
         </div>
 
@@ -108,7 +156,7 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
       </main>
 
       {/* Acciones: mismo tamaño; el blanco manda, el posponer acompaña */}
-      <footer className="w-full flex flex-col gap-3 pt-8">
+      <footer className="relative w-full flex flex-col gap-3 pt-8">
         <button
           type="button"
           onClick={handleConfirm}
