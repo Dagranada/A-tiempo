@@ -43,7 +43,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete, isRead
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 bg-[#f8f9fa] z-50 flex flex-col items-center justify-center p-6 text-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto">
+    <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto">
       {/* Main Title Required: Creando plan… */}
       <h2 className="text-2xl font-extrabold text-gray-900 font-heading mb-2">
         Creando plan…
