@@ -18,7 +18,8 @@ Revisado 2026-08-22 contra el código.
 | Acento | `#0ee5ba` | CTA primario, anillo de foco, marco de cámara, pestaña "Escanear" activa |
 | Acento oscuro | `#0bc4a0` | Hover del primario; iconos y texto sobre fondo menta |
 | Menta suave | `#d0f8ed` | Píldora de nav activa, círculos de icono, check de toma hecha |
-| Canvas | `#f8f9fa` | Fondo de la app |
+| Canvas | `#ffffff` | Fondo de la app (envelope y pantallas completas) |
+| Fondo exterior | `#f8f9fa` | Solo fuera del envelope en desktop, para que el teléfono se distinga |
 | Superficie | `#ffffff` | Tarjetas y barras |
 | **Borde estándar** | `#E2E8F0` | El borde de la app: tarjetas, divisores, píldoras |
 | Borde suave | `gray-100` / `gray-200` | Barras superiores, inputs, estados vacíos |
@@ -73,7 +74,7 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 // Envelope — lo repite TODA pantalla completa y barra fija, o se desalinea en desktop
 "w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl"
 ```
-- Contenedor raíz: envelope + `bg-[#f8f9fa] min-h-screen flex flex-col shadow-2xl border-x border-gray-200`.
+- Contenedor raíz: envelope + `bg-white min-h-screen flex flex-col shadow-2xl border-x border-gray-200`.
 - Barras fijas: envelope + `left-1/2 -translate-x-1/2`.
 - Vistas: `px-5 py-6`, secciones `space-y-6`/`7`, y **`pb-28` obligatorio** o la `BottomNav` tapa la última tarjeta.
 - Capas: contenido/header sticky `z-10` → `BottomNav` `z-30` → pantallas completas y alertas `z-50`.
@@ -98,8 +99,9 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 "bg-gray-50 text-gray-600 text-[13px] font-medium rounded-full flex items-center justify-center space-x-2 border border-[#E2E8F0] py-2"
 ```
 
-- **Tarjeta de plan** (`MisPlanesView`): base + `space-y-3.5 hover:border-gray-200`, acciones rápidas en el encabezado, detalles en `grid grid-cols-2 gap-2 text-xs`, e instrucciones en `bg-[#fafafa] p-2.5 rounded-xl border border-gray-200 text-xs italic`.
-- **Fila de opción** (`PerfilView`): tarjeta base sin padding + `overflow-hidden`, filas `p-4 hover:bg-gray-50/80 border-b`, icono en círculo `w-12 h-12 bg-gray-50`, `ChevronRight` a la derecha.
+- **Tarjeta de plan** (`MisPlanesView`): base + `space-y-4`. Nombre `text-[18px] font-bold`, descripción `text-sm text-gray-500`, encabezado separado del resto con un divisor igual al borde de la tarjeta, de lado a lado (`-mx-5 px-5 pb-4 border-b border-[#E2E8F0]`); editar/eliminar `p-2` con iconos `w-5`. Detalles en `<dl>` de filas `flex justify-between text-sm`: etiqueta `text-gray-500`, valor `font-bold text-gray-900` a la derecha (Dosis · Frecuencia · Hora inicial en 12 h · Vigencia "1 Feb 2026 – 1 Ago 2026"). Instrucciones en `bg-gray-50 px-4 py-3 rounded-2xl text-sm text-gray-600`, sin borde ni itálica.
+- **Perfil** (`PerfilView`): formulario en tarjetas base (`space-y-4`). Cada tarjeta abre con un **título de sección**: punto `w-2 h-2 rounded-full bg-[#0ee5ba]` + `text-[13px] font-bold tracking-wider text-gray-900 uppercase`. Campos con los mismos inputs, etiquetas e iconos derechos que `PlanFormScreen` (§7); unidades `kg`/`m` como sufijo `text-sm text-gray-400`. Foto `w-28` con botón de cámara `w-10` abajo a la derecha (input de archivo `sr-only`).
+- **Interruptor** (recordatorios): `role="switch"` + `aria-checked`, pista `w-14 h-8 rounded-full` (`bg-[#0ee5ba]` encendido · `bg-gray-200` apagado), perilla `w-6 h-6 bg-white shadow-sm`. Se aplica al instante, sin esperar a "Guardar cambios"; el copy no promete vibración ni avisos con la app cerrada.
 
 ## 7. Formularios (`PlanFormScreen`)
 
@@ -110,6 +112,9 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 - Error: borde `border-red-500` + `<p className="text-xs text-red-500 mt-1 font-medium">`. Se limpia al escribir, no al reenviar. Mensajes en imperativo amable ("Ingresa el nombre del medicamento").
 - Etiqueta encima (§4) con `*` si es obligatorio. Placeholders con ejemplos reales: `"Ej.: 1 pastilla • 500mg, 10ml"`. Campos separados `space-y-5`; fechas Desde/Hasta en `grid grid-cols-2 gap-3`.
 - **Hora y fechas**: el indicador nativo se estira invisible sobre el campo (`[&::-webkit-calendar-picker-indicator]:opacity-0 ... inset-0 w-full h-full`) para que **todo el campo sea táctil**, no solo el iconito.
+- **Stepper numérico** (`Stepper` en `PlanFormScreen`): caja `h-12 rounded-2xl border-gray-200 px-1.5` con `focus-within:ring-2 focus-within:ring-[#0ee5ba]`, botones `w-9 h-9 rounded-full bg-gray-50 hover:bg-gray-100` con `Minus`/`Plus` `w-4` y `aria-label` "Disminuir/Aumentar …", valor `text-sm font-medium` como cualquier input (prefijo/sufijo `text-sm text-gray-400`), editable a mano; cada stepper lleva su propia etiqueta de campo (§4), sin subetiquetas. Se usa en dosis (cantidad + mg) y frecuencia ("Cada N").
+- **Dosis**: se guarda como texto `"N pastillas • X mg"` (mg opcional). Si la dosis que llega no encaja (ml, gotas…), el campo cae a texto libre para no falsearla.
+- **Iconos en campos**: `Clock`/`Calendar`/`ChevronDown` `w-4 text-gray-400 absolute right-4 pointer-events-none` + `pr-10` en el input; el `<select>` usa `appearance-none`.
 - **Banner de sugerencia IA**: `bg-amber-50 border border-amber-200/80 p-3.5 rounded-2xl text-xs`, cerrable. La IA nunca guarda sola: prellena y la persona confirma.
 
 ## 8. Navegación

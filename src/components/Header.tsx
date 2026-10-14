@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
         <div>
           <h1 className="text-[19px] font-bold text-[#1b1c1c] leading-tight">
-            {profile.name}
+            {profile.name.split(' ')[0]}
           </h1>
           <p className="text-[14px] text-[#0bc4a0] font-semibold leading-tight mt-0.5">
             Lunes, 24 de febrero

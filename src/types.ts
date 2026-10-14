@@ -29,9 +29,16 @@ export type ScreenView = 'home' | 'scan' | 'loading' | 'plan_form';
 export type NavTab = 'horario' | 'planes' | 'escanear' | 'perfil';
 
 export interface SeniorProfile {
-  name: string;
+  name: string; // nombre completo; el Header muestra solo el primero
   relationship: string;
-  age: number;
+  age: number; // se recalcula desde birthDate al guardar
   avatarUrl: string;
   caregiverName: string;
+  birthDate: string; // YYYY-MM-DD
+  sex: 'Masculino' | 'Femenino' | 'Otro' | '';
+  phone: string;
+  weightKg: string; // texto para permitir campo vacío
+  heightM: string;
+  bloodType: 'O' | 'A' | 'B' | 'AB' | '';
+  rhFactor: 'Positivo (+)' | 'Negativo (−)' | '';
 }
