@@ -243,14 +243,18 @@ export default function App() {
         {/* Main Home App View */}
         {screen === 'home' && (
           <>
-            <Header
-              profile={profile}
-              isEmptyState={isEmptyState}
-              onToggleEmptyState={() => setIsEmptyState(!isEmptyState)}
-              todayCountPending={pendingDosesCount}
-              remindersEnabled={remindersEnabled}
-              onEnableReminders={handleEnableReminders}
-            />
+            {/* En Perfil no hay Header: la foto y el nombre ya encabezan la vista,
+                y los recordatorios se controlan con su propio interruptor */}
+            {activeTab !== 'perfil' && (
+              <Header
+                profile={profile}
+                isEmptyState={isEmptyState}
+                onToggleEmptyState={() => setIsEmptyState(!isEmptyState)}
+                todayCountPending={pendingDosesCount}
+                remindersEnabled={remindersEnabled}
+                onEnableReminders={handleEnableReminders}
+              />
+            )}
 
             <main className="flex-1 overflow-y-auto">
               {activeTab === 'horario' && (
