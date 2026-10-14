@@ -1,6 +1,24 @@
 import React from 'react';
-import { Calendar, Clock, Pencil, Pill, Plus, Scan, Trash2 } from 'lucide-react';
+import { Pencil, Pill, Plus, Scan, Trash2 } from 'lucide-react';
 import { MedicationPlan } from '../types';
+
+const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+// "2026-02-01" → "1 Feb 2026". Si no es una fecha válida, se muestra tal cual.
+const formatDate = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d || m > 12) return iso;
+  return `${d} ${MONTHS[m - 1]} ${y}`;
+};
+
+// "14:00" → "02:00 PM". Si ya trae AM/PM o no se entiende, se muestra tal cual.
+const formatTime12h = (time: string) => {
+  const match = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return time;
+  const hour = parseInt(match[1], 10);
+  const hour12 = hour % 12 || 12;
+  return `${String(hour12).padStart(2, '0')}:${match[2]} ${hour >= 12 ? 'PM' : 'AM'}`;
+};
 
 interface MisPlanesViewProps {
   plans: MedicationPlan[];
@@ -81,80 +99,71 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
           {activePlans.map((plan) => (
             <article
               key={plan.id}
-              className="bg-white rounded-3xl p-5 border border-[#E2E8F0] shadow-sm relative space-y-3.5 hover:border-gray-200 transition-colors"
+              className="bg-white rounded-3xl p-5 border border-[#E2E8F0] shadow-sm space-y-4 hover:border-gray-200 transition-colors"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 font-heading leading-tight">
+              <div className="flex justify-between items-start -mx-5 px-5 pb-4 border-b border-[#E2E8F0]">
+                <div className="min-w-0">
+                  <h3 className="text-[18px] font-bold text-gray-900 leading-tight">
                     {plan.name}
                   </h3>
-                  <p className="text-xs text-gray-500 mt-0.5 font-medium">
-                    {plan.description}
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{plan.description}</p>
                 </div>
 
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1 -mr-1.5 -mt-1 shrink-0">
                   {onEditPlan && (
                     <button
                       onClick={() => onEditPlan(plan)}
-                      title="Editar plan"
-                      className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                      aria-label={`Editar plan de ${plan.name}`}
+                      className="text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="w-5 h-5" />
                     </button>
                   )}
                   <button
                     onClick={() => onDeletePlan(plan.id)}
-                    title="Eliminar plan"
-                    className="text-gray-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors"
+                    aria-label={`Eliminar plan de ${plan.name}`}
+                    className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              {/* Plan Details Grid */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-gray-50 p-2.5 rounded-xl border border-[#E2E8F0]">
-                  <span className="text-[10px] text-gray-400 block uppercase font-bold">
-                    Dosis
-                  </span>
-                  <span className="font-semibold text-gray-800">
-                    {plan.dose}
-                  </span>
+              {/* Detalles: etiqueta a la izquierda, valor a la derecha */}
+              <dl className="space-y-2.5 text-sm">
+                <div className="flex justify-between items-baseline gap-4">
+                  <dt className="text-gray-500">Dosis</dt>
+                  <dd className="font-bold text-gray-900 text-right">
+                    {plan.dose.split('•').map((part, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <span className="text-gray-400 font-normal mx-1.5">·</span>}
+                        {part.trim()}
+                      </React.Fragment>
+                    ))}
+                  </dd>
                 </div>
-
-                <div className="bg-gray-50 p-2.5 rounded-xl border border-[#E2E8F0]">
-                  <span className="text-[10px] text-gray-400 block uppercase font-bold">
-                    Frecuencia
-                  </span>
-                  <span className="font-semibold text-gray-800">
+                <div className="flex justify-between items-baseline gap-4">
+                  <dt className="text-gray-500">Frecuencia</dt>
+                  <dd className="font-bold text-gray-900 text-right">
                     1 cada {plan.frequencyValue} {plan.frequencyUnit}
-                  </span>
+                  </dd>
                 </div>
-              </div>
-
-              {/* Date & Initial time stacked */}
-              <div className="text-xs text-gray-500 pt-2 border-t border-[#E2E8F0] space-y-1.5">
-                <div className="flex items-center space-x-1.5">
-                  <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                  <span>
-                    Hora inicial:{' '}
-                    <strong className="text-gray-800">
-                      {plan.initialTime}
-                    </strong>
-                  </span>
+                <div className="flex justify-between items-baseline gap-4">
+                  <dt className="text-gray-500">Hora inicial</dt>
+                  <dd className="font-bold text-gray-900 text-right">
+                    {formatTime12h(plan.initialTime)}
+                  </dd>
                 </div>
-                <div className="flex items-center space-x-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                  <span className="whitespace-nowrap">
-                    {plan.startDate} al {plan.endDate}
-                  </span>
+                <div className="flex justify-between items-baseline gap-4">
+                  <dt className="text-gray-500">Vigencia</dt>
+                  <dd className="font-bold text-gray-900 text-right">
+                    {formatDate(plan.startDate)} – {formatDate(plan.endDate)}
+                  </dd>
                 </div>
-              </div>
+              </dl>
 
               {plan.instructions && (
-                <div className="bg-[#fafafa] p-2.5 rounded-xl border border-gray-200 text-xs text-gray-600 italic">
+                <div className="bg-gray-50 px-4 py-3 rounded-2xl text-sm text-gray-600 leading-relaxed">
                   {plan.instructions}
                 </div>
               )}
