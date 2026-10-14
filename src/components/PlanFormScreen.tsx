@@ -220,7 +220,7 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto flex flex-col">
+    <div className="min-h-screen bg-[#f8f9fa] pb-24 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto flex flex-col">
       {/* Top Bar Header */}
       <header className="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10 shrink-0">
         <button

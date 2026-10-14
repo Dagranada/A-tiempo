@@ -218,7 +218,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#1b1c1c] font-sans flex flex-col items-center justify-start antialiased">
       {/* Container Device Envelope */}
-      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-white min-h-screen relative flex flex-col shadow-2xl border-x border-gray-200">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-[#f8f9fa] min-h-screen relative flex flex-col shadow-2xl border-x border-gray-200">
         {/* Full-Screen Workflows */}
         {screen === 'scan' && (
           <CameraScanScreen
