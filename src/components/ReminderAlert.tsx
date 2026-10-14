@@ -15,23 +15,21 @@ type ReminderAlertProps =
       onMarkAsTaken: (doseId: string) => void;
       onSnooze: () => void;
     }
-  // Alarma de prueba: misma pantalla con un medicamento ficticio. Sus botones
-  // solo la cierran: no marca ninguna toma. Nunca usa un medicamento real del
-  // plan, para que nadie se tome una pastilla de más por una prueba.
+  // Alarma de prueba: misma pantalla con los textos de la referencia de diseño.
+  // Sus botones solo la cierran: no marca ninguna toma. Muestra Metformina por
+  // decisión explícita (excepción al invariante 5, ver Context/decisions/0006).
   | { isTest: true; onClose: () => void };
 
 const TEST_MEDICATION = {
-  name: 'Medicamento de prueba',
-  description: 'Así se verá el aviso de cada toma',
+  time: '02:00 PM',
+  name: 'Metformina',
+  description: 'Control de glucosa en sangre',
   dose: '1 pastilla • 850mg',
-  instructions: 'Ejemplo de indicación: tomar con el almuerzo para evitar molestias estomacales',
+  instructions: 'Tomar con el almuerzo para evitar molestias estomacales',
 };
 
-const formatNow = () =>
-  new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
 export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
-  const time = props.isTest ? formatNow() : props.dose.timeFormatted;
+  const time = props.isTest ? TEST_MEDICATION.time : props.dose.timeFormatted;
   const name = props.isTest ? TEST_MEDICATION.name : props.dose.medicationName;
   const description = props.isTest
     ? TEST_MEDICATION.description
@@ -83,7 +81,7 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
         background:
           'radial-gradient(circle at 50% 32%, #22e3c8 0%, #00c7af 38%, #00a492 72%, #02897a 100%)',
       }}
-      className="fixed inset-0 z-50 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl text-white flex flex-col justify-between px-7 pt-12 pb-10 overflow-y-auto select-none"
+      className="fixed inset-0 z-50 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl font-heading text-white flex flex-col justify-between px-7 pt-12 pb-10 overflow-y-auto select-none"
     >
       {/* Ondas: de tamaño del disco hasta la esquina más lejana, cada vez más débiles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -106,7 +104,7 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
 
       {/* Hora */}
       <header className="relative w-full flex justify-center pt-2">
-        <span className="text-[1.35rem] font-bold tracking-wider drop-shadow-sm">{time}</span>
+        <span className="text-[1.15rem] font-bold tracking-wider text-white drop-shadow-sm">{time}</span>
       </header>
 
       <main className="relative w-full flex flex-col items-center flex-1 justify-center -mt-4 py-6">
@@ -136,12 +134,12 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
 
         <h2
           id="reminder-title"
-          className="text-[2.25rem] leading-none font-extrabold tracking-tight mb-2 text-center drop-shadow-sm"
+          className="text-[1.85rem] leading-none font-extrabold text-white mb-2 text-center drop-shadow-sm"
         >
           {name}
         </h2>
 
-        <p id="reminder-desc" className="text-[1.05rem] font-medium text-white/85 mb-7 text-center">
+        <p id="reminder-desc" className="text-[0.95rem] font-medium text-white mb-6 text-center">
           {description}
         </p>
 
@@ -156,7 +154,7 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
           {doseParts.map((part, i) => (
             <React.Fragment key={i}>
               {i > 0 && <div className="h-10 w-[1.5px] bg-white/40 rounded-full" />}
-              <div className="flex-1 text-center font-bold text-[1.25rem] tracking-tight py-1.5">
+              <div className="flex-1 text-center font-bold text-[1.1rem] text-white py-1">
                 {part}
               </div>
             </React.Fragment>
@@ -164,37 +162,30 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
         </div>
 
         {instructions && (
-          <p className="w-full text-left text-[1.05rem] leading-snug font-medium px-1">
+          <p className="w-full text-left text-[0.95rem] leading-snug font-medium text-white px-1">
             {instructions}
           </p>
         )}
       </main>
 
       {/* Acciones */}
-      <footer className="relative w-full flex flex-col items-center gap-4 pb-1">
+      <footer className="relative w-full flex flex-col items-center gap-3 pb-1">
         <button
           type="button"
           onClick={handleConfirm}
-          style={{
-            boxShadow: '0 12px 32px -4px rgba(0, 70, 64, 0.28), 0 0 18px rgba(255, 255, 255, 0.4)',
-          }}
-          className="w-full bg-white active:bg-slate-50 rounded-full py-4 px-6 flex items-center justify-center gap-3 transition-all active:scale-[0.98] touch-manipulation focus:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
+          className="w-full bg-white hover:bg-white/90 text-[#009688] font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
         >
-          <CheckCircle2 className="w-6 h-6 text-[#009688]" strokeWidth={2.6} />
-          <span className="text-[#009688] font-bold text-[1.14rem] tracking-tight">
-            Marcar como tomada
-          </span>
+          <CheckCircle2 className="w-5 h-5" />
+          <span>Marcar como tomada</span>
         </button>
 
         <button
           type="button"
           onClick={handleSnooze}
-          className="w-full bg-[#00695e]/35 hover:bg-[#00695e]/45 text-white/95 rounded-full py-4 px-6 flex items-center justify-center gap-3 transition-all active:scale-[0.98] touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          className="w-full bg-[#00695e]/35 hover:bg-[#00695e]/45 text-white font-bold py-2.5 px-5 rounded-full text-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
         >
-          <Clock className="w-6 h-6" strokeWidth={2.6} />
-          <span className="text-[1.14rem] font-bold tracking-tight">
-            Recordar en {SNOOZE_MINUTES} min
-          </span>
+          <Clock className="w-5 h-5" />
+          <span>Recordar en {SNOOZE_MINUTES} min</span>
         </button>
       </footer>
     </div>
