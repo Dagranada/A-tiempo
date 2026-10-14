@@ -5,7 +5,7 @@ Rama `main`. Último commit de código: `caaaf27` (recordatorios). Hogar canóni
 **Éxito =** Alberto se toma todas las pastillas según lo planeado, sin confusiones. Lo que no acerque a eso, no es prioritario.
 
 ## Funciona
-Navegación de 4 pestañas · CRUD de planes con validación · marcar toma con hora real · escaneo real (cámara → Gemini → formulario, con fallback a preset y a formulario vacío) · recordatorios opt-in (alerta + notificación + chime, insistiendo cada 5 min, con snooze) · estados vacíos demostrables (`isEmptyState`) · sistema de diseño homogéneo.
+Navegación de 4 pestañas · CRUD de planes con validación · marcar toma con hora real · escaneo real (cámara → Gemini → formulario, con fallback a preset y a formulario vacío) · recordatorios opt-in (alerta + notificación + chime, insistiendo cada 5 min, con snooze) · estados vacíos demostrables (`isEmptyState`) · sistema de diseño homogéneo · formulario "Revisa el plan" con steppers de dosis (cantidad + mg) y frecuencia · Perfil editable con interruptor de recordatorios (2026-10-13).
 
 ## Pendiente
 
@@ -15,7 +15,7 @@ Navegación de 4 pestañas · CRUD de planes con validación · marcar toma con 
 4. **`upcoming` nunca pasa a `pending`** con el reloj. `useDoseReminders` lo esquiva; `HorarioView` sí los distingue.
 5. **`startDate`/`endDate` decorativos**: se guardan y se muestran, no filtran nada.
 6. **Fecha del `Header` escrita a mano**: siempre `"Lunes, 24 de febrero"` (`src/components/Header.tsx:38`). Dato falso en pantalla → confusión.
-7. **Perfil de solo lectura** y **`handleResetData` sin conectar** a ninguna vista.
+7. **`handleResetData` sin conectar** a ninguna vista. (El Perfil ya es editable desde 2026-10-13: datos básicos, médicos y el interruptor de recordatorios; nada persiste tras un refresh.)
 8. **Deuda de diseño**: `#69E1BC` huérfano y `motion` sin usar (`../design.md` §11).
 
 ## Blockers
