@@ -9,6 +9,8 @@ import { analyzeMedicationImage } from './services/geminiService';
 import {
   requestNotificationPermission,
   unlockAudio,
+  playReminderSound,
+  showTestNotification,
 } from './services/notificationService';
 import { useDoseReminders } from './hooks/useDoseReminders';
 import { DoseItem, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
@@ -207,6 +209,18 @@ export default function App() {
     setProfile(updated);
   };
 
+  // Alarma de prueba (botón temporal del menú): suena y se muestra al instante
+  // dentro del mismo toque, así el audio no queda bloqueado por el navegador.
+  const [isTestAlarmOpen, setIsTestAlarmOpen] = useState(false);
+  const handleTestAlarm = () => {
+    unlockAudio();
+    playReminderSound();
+    setIsTestAlarmOpen(true);
+    requestNotificationPermission()
+      .then((granted) => granted && showTestNotification())
+      .catch(() => undefined);
+  };
+
   const handleResetData = () => {
     setPlans(INITIAL_PLANS);
     setDoses(INITIAL_TODAY_DOSES);
@@ -218,7 +232,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#1b1c1c] font-sans flex flex-col items-center justify-start antialiased">
       {/* Container Device Envelope */}
-      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-white min-h-screen relative flex flex-col shadow-2xl border-x border-gray-200">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl bg-[#f8f9fa] min-h-screen relative flex flex-col shadow-2xl border-x border-gray-200">
         {/* Full-Screen Workflows */}
         {screen === 'scan' && (
           <CameraScanScreen
@@ -243,14 +257,18 @@ export default function App() {
         {/* Main Home App View */}
         {screen === 'home' && (
           <>
-            <Header
-              profile={profile}
-              isEmptyState={isEmptyState}
-              onToggleEmptyState={() => setIsEmptyState(!isEmptyState)}
-              todayCountPending={pendingDosesCount}
-              remindersEnabled={remindersEnabled}
-              onEnableReminders={handleEnableReminders}
-            />
+            {/* En Perfil no hay Header: la foto y el nombre ya encabezan la vista,
+                y los recordatorios se controlan con su propio interruptor */}
+            {activeTab !== 'perfil' && (
+              <Header
+                profile={profile}
+                isEmptyState={isEmptyState}
+                onToggleEmptyState={() => setIsEmptyState(!isEmptyState)}
+                todayCountPending={pendingDosesCount}
+                remindersEnabled={remindersEnabled}
+                onEnableReminders={handleEnableReminders}
+              />
+            )}
 
             <main className="flex-1 overflow-y-auto">
               {activeTab === 'horario' && (
@@ -294,13 +312,18 @@ export default function App() {
                 }
               }}
               onTapScan={handleTapScan}
+              onTapTestAlarm={handleTestAlarm}
             />
 
             {/* Recordatorio de toma: solo sobre la vista principal, para no
                 interrumpir el escáner ni el formulario de plan. */}
-            {dueDose && (
+            {isTestAlarmOpen && (
+              <ReminderAlert isTest onClose={() => setIsTestAlarmOpen(false)} />
+            )}
+            {dueDose && !isTestAlarmOpen && (
               <ReminderAlert
                 dose={dueDose}
+                plan={plans.find((p) => p.id === dueDose.planId)}
                 onMarkAsTaken={handleMarkAsTaken}
                 onSnooze={snooze}
               />

@@ -16,7 +16,8 @@ Navegación de 4 pestañas · CRUD de planes con validación · marcar toma con 
 5. **`startDate`/`endDate` decorativos**: se guardan y se muestran, no filtran nada.
 6. **Fecha del `Header` escrita a mano**: siempre `"Lunes, 24 de febrero"` (`src/components/Header.tsx:38`). Dato falso en pantalla → confusión.
 7. **`handleResetData` sin conectar** a ninguna vista. (El Perfil ya es editable desde 2026-10-13: datos básicos, médicos y el interruptor de recordatorios; nada persiste tras un refresh.)
-8. **Deuda de diseño**: `#69E1BC` huérfano y `motion` sin usar (`../design.md` §11).
+8. **Botón temporal "Alarma" en la `BottomNav`** (2026-10-14) para probar la alerta y el sonido. Quitarlo antes de un lanzamiento real.
+9. **Deuda de diseño**: `#69E1BC` huérfano y `motion` sin usar (`../design.md` §11).
 
 ## Blockers
 - **API key en el bundle del navegador** (`vite.config.ts` → `define`). Bloquea cualquier deploy público. Salida: endpoint propio (`express` y `tsx` ya instalados, sin usar). ADR 0002.
