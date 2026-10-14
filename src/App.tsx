@@ -11,7 +11,7 @@ import {
   unlockAudio,
 } from './services/notificationService';
 import { useDoseReminders } from './hooks/useDoseReminders';
-import { DoseItem, MedicationPlan, NavTab, ScreenView } from './types';
+import { DoseItem, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
 
 import { Header } from './components/Header';
 import { ReminderAlert } from './components/ReminderAlert';
@@ -24,7 +24,7 @@ import { PerfilView } from './components/PerfilView';
 import { BottomNav } from './components/BottomNav';
 
 export default function App() {
-  const [profile] = useState(INITIAL_SENIOR_PROFILE);
+  const [profile, setProfile] = useState(INITIAL_SENIOR_PROFILE);
   const [plans, setPlans] = useState<MedicationPlan[]>(INITIAL_PLANS);
   const [doses, setDoses] = useState<DoseItem[]>(INITIAL_TODAY_DOSES);
 
@@ -194,6 +194,19 @@ export default function App() {
     setDoses((prev) => prev.filter((d) => d.planId !== planId));
   };
 
+  // Apagar no necesita gesto ni permisos; encender pasa por el flujo de la campana
+  const handleToggleReminders = () => {
+    if (remindersEnabled) {
+      setRemindersEnabled(false);
+    } else {
+      handleEnableReminders();
+    }
+  };
+
+  const handleSaveProfile = (updated: SeniorProfile) => {
+    setProfile(updated);
+  };
+
   const handleResetData = () => {
     setPlans(INITIAL_PLANS);
     setDoses(INITIAL_TODAY_DOSES);
@@ -262,7 +275,12 @@ export default function App() {
               )}
 
               {activeTab === 'perfil' && (
-                <PerfilView profile={profile} />
+                <PerfilView
+                  profile={profile}
+                  remindersEnabled={remindersEnabled}
+                  onToggleReminders={handleToggleReminders}
+                  onSaveProfile={handleSaveProfile}
+                />
               )}
             </main>
 

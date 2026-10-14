@@ -1,11 +1,18 @@
 import { MedicationPlan, DoseItem, SeniorProfile } from '../types';
 
 export const INITIAL_SENIOR_PROFILE: SeniorProfile = {
-  name: 'Alberto',
+  name: 'Alberto Valdés',
   relationship: 'Padre',
   age: 78,
   avatarUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&q=80&w=400',
-  caregiverName: 'Hija (María)'
+  caregiverName: 'Hija (María)',
+  birthDate: '1948-05-14',
+  sex: 'Masculino',
+  phone: '612 345 678',
+  weightKg: '72',
+  heightM: '1.70',
+  bloodType: 'O',
+  rhFactor: 'Positivo (+)',
 };
 
 export const INITIAL_PLANS: MedicationPlan[] = [
