@@ -18,8 +18,7 @@ Revisado 2026-08-22 contra el código.
 | Acento | `#0ee5ba` | CTA primario, anillo de foco, marco de cámara, pestaña "Escanear" activa |
 | Acento oscuro | `#0bc4a0` | Hover del primario; iconos y texto sobre fondo menta |
 | Menta suave | `#d0f8ed` | Píldora de nav activa, círculos de icono, check de toma hecha |
-| Canvas | `#ffffff` | Fondo de la app (envelope y pantallas completas) |
-| Fondo exterior | `#f8f9fa` | Solo fuera del envelope en desktop, para que el teléfono se distinga |
+| Canvas | `#f8f9fa` | Fondo de las pantallas (envelope y pantallas completas). Barra superior y `BottomNav` siguen en blanco |
 | Superficie | `#ffffff` | Tarjetas y barras |
 | **Borde estándar** | `#E2E8F0` | El borde de la app: tarjetas, divisores, píldoras |
 | Borde suave | `gray-100` / `gray-200` | Barras superiores, inputs, estados vacíos |
@@ -30,7 +29,8 @@ Revisado 2026-08-22 contra el código.
 | Error | `red-500` | Borde y mensaje de validación |
 | Destructivo | `red-500` + `hover:bg-red-50` | Solo eliminar plan |
 | Aviso IA | `amber-50` / `amber-200/80` / `amber-800` | Banner "esto es una sugerencia" |
-| Cámara | `#000` + `white/10` | Único contexto oscuro |
+| Cámara | `#000` + `white/10` | Contexto oscuro de la cámara |
+| Alarma | radial `#22e3c8` → `#02897a` + blanco; acción `#009688` | Solo `ReminderAlert` |
 
 También como variables en `src/index.css`. Color huérfano pendiente: ver §11.
 
@@ -74,7 +74,7 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 // Envelope — lo repite TODA pantalla completa y barra fija, o se desalinea en desktop
 "w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl"
 ```
-- Contenedor raíz: envelope + `bg-white min-h-screen flex flex-col shadow-2xl border-x border-gray-200`.
+- Contenedor raíz: envelope + `bg-[#f8f9fa] min-h-screen flex flex-col shadow-2xl border-x border-gray-200`.
 - Barras fijas: envelope + `left-1/2 -translate-x-1/2`.
 - Vistas: `px-5 py-6`, secciones `space-y-6`/`7`, y **`pb-28` obligatorio** o la `BottomNav` tapa la última tarjeta.
 - Capas: contenido/header sticky `z-10` → `BottomNav` `z-30` → pantallas completas y alertas `z-50`.
@@ -100,7 +100,7 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 ```
 
 - **Tarjeta de plan** (`MisPlanesView`): base + `space-y-4`. Nombre `text-[18px] font-bold`, descripción `text-sm text-gray-500`, encabezado separado del resto con un divisor igual al borde de la tarjeta, de lado a lado (`-mx-5 px-5 pb-4 border-b border-[#E2E8F0]`); editar/eliminar `p-2` con iconos `w-5`. Detalles en `<dl>` de filas `flex justify-between text-sm`: etiqueta `text-gray-500`, valor `font-bold text-gray-900` a la derecha (Dosis · Frecuencia · Hora inicial en 12 h · Vigencia "1 Feb 2026 – 1 Ago 2026"). Instrucciones en `bg-gray-50 px-4 py-3 rounded-2xl text-sm text-gray-600`, sin borde ni itálica.
-- **Perfil** (`PerfilView`): formulario en tarjetas base (`space-y-4`). Cada tarjeta abre con un **título de sección**: punto `w-2 h-2 rounded-full bg-[#0ee5ba]` + `text-[13px] font-bold tracking-wider text-gray-900 uppercase`. Campos con los mismos inputs, etiquetas e iconos derechos que `PlanFormScreen` (§7); unidades `kg`/`m` como sufijo `text-sm text-gray-400`. Foto `w-28` con botón de cámara `w-10` abajo a la derecha (input de archivo `sr-only`).
+- **Perfil** (`PerfilView`): **sin `Header`** (la foto y el nombre ya encabezan la vista). Formulario en tarjetas base (`space-y-4`). Cada tarjeta abre con un **título de sección**: punto `w-2 h-2 rounded-full bg-[#0ee5ba]` + `text-[13px] font-bold tracking-wider text-gray-900 uppercase`. Campos con los mismos inputs, etiquetas e iconos derechos que `PlanFormScreen` (§7); unidades `kg`/`m` como sufijo `text-sm text-gray-400`. Foto `w-28` con botón de cámara `w-10` abajo a la derecha (input de archivo `sr-only`).
 - **Interruptor** (recordatorios): `role="switch"` + `aria-checked`, pista `w-14 h-8 rounded-full` (`bg-[#0ee5ba]` encendido · `bg-gray-200` apagado), perilla `w-6 h-6 bg-white shadow-sm`. Se aplica al instante, sin esperar a "Guardar cambios"; el copy no promete vibración ni avisos con la app cerrada.
 
 ## 7. Formularios (`PlanFormScreen`)
@@ -121,14 +121,16 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 
 - **Header**: `bg-white px-5 py-4 border-b border-gray-100 sticky top-0 z-10`. Avatar `w-[50px] rounded-full border-2 border-[#0ee5ba]/20`, nombre `text-[19px] font-bold`, fecha `text-[14px] text-[#0bc4a0] font-semibold`.
   **Campana** con dos estados: activa `text-[#0bc4a0] bg-[#d0f8ed]` · inactiva `text-gray-500 hover:bg-gray-50`; punto `w-2.5 h-2.5 bg-[#ff5f56] ring-2 ring-white animate-pulse` si hay tomas pendientes; `aria-label` que cambia con el estado.
-- **BottomNav**: `bg-white border-t border-gray-200 px-2 py-2 fixed bottom-0 z-30` + envelope. Cuatro pestañas `w-1/4`: píldora `px-4 py-1 rounded-full` + label `text-[11px] font-semibold`. Activa `bg-[#d0f8ed] text-[#0bc4a0]`, inactiva `text-gray-400`/`text-gray-500`.
+- **BottomNav**: `bg-white border-t border-gray-200 px-2 py-2 fixed bottom-0 z-30` + envelope. Cinco botones `w-1/5` (Horario · Mis planes · Escanear · **Alarma** · Perfil): píldora `px-4 py-1 rounded-full` + label `text-[11px] font-semibold`. Activa `bg-[#d0f8ed] text-[#0bc4a0]`, inactiva `text-gray-400`/`text-gray-500`.
+  **"Alarma" es temporal (2026-10-14)**: no es pestaña, nunca queda activa; dispara la alerta de prueba (`ReminderAlert isTest`, con medicamento ficticio; no marca tomas). Cuando se quite, la nav vuelve a `w-1/4`.
   **Excepción "Escanear"**: acento sólido `bg-[#0ee5ba] text-gray-950 scale-105`, porque es la acción principal de la app y no una vista más.
 
 ## 9. Overlays
 
 - **`ReminderAlert` — la pantalla más importante de la app.** Aparece sola; debe leerse de lejos y resolverse con un toque.
-  Overlay `fixed inset-0 z-50 bg-black/60 backdrop-blur-sm` + envelope; tarjeta base con `p-8 text-center space-y-5`; icono `w-20 h-20 bg-[#d0f8ed] rounded-full shadow-inner` con punto de urgencia; título `text-2xl font-extrabold`; **medicamento y dosis en `font-bold text-gray-900`** dentro del cuerpo gris; píldora de hora; y dos acciones apiladas (primaria + secundaria).
-  **Obligatorio**: `role="alertdialog"`, `aria-modal`, `aria-labelledby`.
+  **Pantalla completa** (2026-10-14, copiada del HTML de referencia): `fixed inset-0 z-50` + envelope, fondo `radial-gradient(circle at 50% 32%, #22e3c8 0%, #00c7af 38%, #00a492 72%, #02897a 100%)`, texto blanco, `px-7 pt-12 pb-10`. Hora `text-[1.35rem] font-bold tracking-wider`; píldora (SVG propio `-rotate-45`) en disco `w-[114px] bg-white/[0.22] border-[1.5px] border-white/[0.55]`, **sin halos estáticos**. Animación en `src/index.css` (todo bajo `prefers-reduced-motion: no-preference`): cuatro ondas `.alarm-ripple` con borde blanco brillante y resplandor, cada 1.25 s, en una **capa de fondo a pantalla completa** centrada en el icono (posición medida con `ResizeObserver`): crecen del tamaño del disco hasta la esquina más lejana (`--ripple-max`, se anima `width`/`height` para controlar el borde) en 5 s; el borde se adelgaza 5px → 3px → 1.5px → 1px y la opacidad cae 0.95 → 0.5 → 0.18 → 0 a medida que se alejan; resplandor `.alarm-glow` que late; disco `.alarm-core` que respira (escala 1→1.07 con halo); píldora `.alarm-pill` que vibra como timbre al inicio de cada ciclo (su giro base de -45° vive en el CSS, no en Tailwind, para que la animación no lo duplique). Nombre `text-[2.25rem] font-extrabold`, descripción `text-[1.05rem] text-white/85`. Dosis en caja de vidrio `bg-white/[0.16] backdrop-blur-xl border-[1.5px] border-white/[0.42] rounded-2xl` con celdas sin etiqueta (`1 pastilla | 850 mg`, `text-[1.25rem] font-bold`). Indicaciones como párrafo `text-[1.05rem]` a la izquierda. Primario blanco con brillo, texto `#009688 text-[1.14rem] font-bold py-4`; snooze como botón ancho de fondo verde oscuro suave `bg-[#00695e]/35` (que no compita con el blanco). **Ambos botones comparten tamaño**: `py-4`, icono `w-6`, texto `text-[1.14rem] font-bold`, cuyo número sale de `REMINDER_INTERVAL_MS`.
+  Variante `isTest`: misma pantalla con el **medicamento ficticio** `TEST_MEDICATION` ("Medicamento de prueba", 1 pastilla • 850 mg, indicación de ejemplo) y la hora actual. Sus dos botones solo la cierran. **Nunca usa un medicamento real del plan** (invariante 5: nadie debe tomarse una pastilla de más por una prueba).
+  **Obligatorio**: `role="alertdialog"`, `aria-modal`, `aria-labelledby`, `aria-describedby`.
 - **`LoadingScreen`**: título "Creando plan…" + 4 pasos en círculos `w-6 h-6`; hecho = acento + `Check` y texto `line-through opacity-80`, actual = acento 20% + `Loader2 animate-spin` en `font-bold`, futuro = `bg-gray-100 text-gray-400` con el número.
 - **`CameraScanScreen`**: negro con barras `bg-black/80 backdrop-blur-md`. Marco `max-w-[280px] aspect-[4/3] border-2 border-[#0ee5ba] rounded-2xl shadow-[0_0_20px_rgba(14,229,186,0.3)]` con esquinas `border-4` y línea `animate-ping`. Sin cámara: visor simulado **con el motivo exacto del error** en `text-[11px] text-amber-400/90`. Nunca dejes al usuario sin explicación.
 - **Estados vacíos**, dos variantes: *invitación* (icono `w-20 h-20 bg-[#d0f8ed]`, en `HorarioView`) y *neutro* (icono `w-16 h-16 bg-gray-100 text-gray-400`, en `MisPlanesView`). Ambos: tarjeta `rounded-3xl p-8 border-gray-100 text-center`, explicación `text-sm text-gray-500 max-w-xs mx-auto` **que nombra a Alberto**, y las dos salidas siempre juntas (escanear + crear a mano).
