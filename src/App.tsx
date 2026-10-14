@@ -9,6 +9,8 @@ import { analyzeMedicationImage } from './services/geminiService';
 import {
   requestNotificationPermission,
   unlockAudio,
+  playReminderSound,
+  showTestNotification,
 } from './services/notificationService';
 import { useDoseReminders } from './hooks/useDoseReminders';
 import { DoseItem, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
@@ -207,6 +209,18 @@ export default function App() {
     setProfile(updated);
   };
 
+  // Alarma de prueba (botón temporal del menú): suena y se muestra al instante
+  // dentro del mismo toque, así el audio no queda bloqueado por el navegador.
+  const [isTestAlarmOpen, setIsTestAlarmOpen] = useState(false);
+  const handleTestAlarm = () => {
+    unlockAudio();
+    playReminderSound();
+    setIsTestAlarmOpen(true);
+    requestNotificationPermission()
+      .then((granted) => granted && showTestNotification())
+      .catch(() => undefined);
+  };
+
   const handleResetData = () => {
     setPlans(INITIAL_PLANS);
     setDoses(INITIAL_TODAY_DOSES);
@@ -298,13 +312,18 @@ export default function App() {
                 }
               }}
               onTapScan={handleTapScan}
+              onTapTestAlarm={handleTestAlarm}
             />
 
             {/* Recordatorio de toma: solo sobre la vista principal, para no
                 interrumpir el escáner ni el formulario de plan. */}
-            {dueDose && (
+            {isTestAlarmOpen && (
+              <ReminderAlert isTest onClose={() => setIsTestAlarmOpen(false)} />
+            )}
+            {dueDose && !isTestAlarmOpen && (
               <ReminderAlert
                 dose={dueDose}
+                plan={plans.find((p) => p.id === dueDose.planId)}
                 onMarkAsTaken={handleMarkAsTaken}
                 onSnooze={snooze}
               />

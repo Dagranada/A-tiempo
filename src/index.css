@@ -22,3 +22,114 @@
   --color-nav-active-bg: #d0f8ed;
   --color-success: #27c93f;
 }
+
+/* Animación de la alarma (ReminderAlert): ondas que se expanden con brillo,
+   disco que "respira", resplandor que late y la píldora que vibra como un
+   timbre. Con "reducir movimiento" activado todo queda quieto y las ondas no
+   se ven. */
+.alarm-ripple {
+  opacity: 0;
+  width: 114px;
+  height: 114px;
+  translate: -50% -50%;
+  border: 5px solid rgba(255, 255, 255, 0.9);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0) 55%, rgba(255, 255, 255, 0.18) 100%);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.35), inset 0 0 12px rgba(255, 255, 255, 0.25);
+}
+.alarm-glow {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 70%);
+  opacity: 0.6;
+}
+.alarm-pill {
+  transform: rotate(-45deg);
+}
+.alarm-core {
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4), 0 10px 30px -8px rgba(0, 70, 64, 0.35);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .alarm-ripple {
+    animation: alarm-ripple 5s cubic-bezier(0.25, 0.6, 0.4, 1) infinite;
+  }
+  .alarm-glow {
+    animation: alarm-glow 1.5s ease-in-out infinite alternate;
+  }
+  .alarm-core {
+    animation: alarm-breathe 1.5s ease-in-out infinite alternate;
+  }
+  .alarm-pill {
+    animation: alarm-ring 3s ease-in-out infinite;
+  }
+}
+/* Se anima el tamaño (no la escala) para controlar el borde a mano: arranca
+   grueso junto al icono y se adelgaza hasta 1px mientras la onda se aleja y
+   se apaga. */
+@keyframes alarm-ripple {
+  0% {
+    width: 114px;
+    height: 114px;
+    border-width: 5px;
+    opacity: 0;
+  }
+  6% {
+    border-width: 5px;
+    opacity: 0.95;
+  }
+  35% {
+    border-width: 3px;
+    opacity: 0.5;
+  }
+  70% {
+    border-width: 1.5px;
+    opacity: 0.18;
+  }
+  100% {
+    width: var(--ripple-max, 900px);
+    height: var(--ripple-max, 900px);
+    border-width: 1px;
+    opacity: 0;
+  }
+}
+@keyframes alarm-glow {
+  from {
+    transform: scale(0.9);
+    opacity: 0.35;
+  }
+  to {
+    transform: scale(1.25);
+    opacity: 0.75;
+  }
+}
+@keyframes alarm-breathe {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.35), 0 10px 30px -8px rgba(0, 70, 64, 0.35);
+  }
+  to {
+    transform: scale(1.07);
+    box-shadow: 0 0 28px 6px rgba(255, 255, 255, 0.3), 0 14px 34px -8px rgba(0, 70, 64, 0.4);
+  }
+}
+/* Vibración tipo timbre al inicio de cada ciclo; la píldora parte girada -45° */
+@keyframes alarm-ring {
+  0%, 30%, 100% {
+    transform: rotate(-45deg);
+  }
+  4% {
+    transform: rotate(-30deg);
+  }
+  8% {
+    transform: rotate(-60deg);
+  }
+  12% {
+    transform: rotate(-33deg);
+  }
+  16% {
+    transform: rotate(-57deg);
+  }
+  20% {
+    transform: rotate(-40deg);
+  }
+  24% {
+    transform: rotate(-50deg);
+  }
+}
