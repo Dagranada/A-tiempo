@@ -212,8 +212,8 @@ export default function App() {
   // Alarma de prueba (botón temporal del menú): suena y se muestra al instante
   // dentro del mismo toque, así el audio no queda bloqueado por el navegador.
   // `testAlarmVersion` dice qué diseño se está comparando (1 o 2); null = cerrada.
-  const [testAlarmVersion, setTestAlarmVersion] = useState<1 | 2 | null>(null);
-  const handleTestAlarm = (version: 1 | 2) => {
+  const [testAlarmVersion, setTestAlarmVersion] = useState<1 | 2 | 3 | null>(null);
+  const handleTestAlarm = (version: 1 | 2 | 3) => {
     unlockAudio();
     playReminderSound();
     setTestAlarmVersion(version);
@@ -315,6 +315,7 @@ export default function App() {
               onTapScan={handleTapScan}
               onTapTestAlarm={() => handleTestAlarm(1)}
               onTapTestAlarm2={() => handleTestAlarm(2)}
+              onTapTestAlarm3={() => handleTestAlarm(3)}
             />
 
             {/* Recordatorio de toma: solo sobre la vista principal, para no
