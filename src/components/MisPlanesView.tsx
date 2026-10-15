@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pencil, Pill, Plus, Scan, Trash2 } from 'lucide-react';
 import { MedicationPlan } from '../types';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -38,6 +39,8 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
   onDeletePlan
 }) => {
   const activePlans = isEmptyState ? [] : plans;
+  // Solo estado visual: qué plan está esperando confirmación para eliminarse.
+  const [planToDelete, setPlanToDelete] = useState<MedicationPlan | null>(null);
 
   return (
     <div className="px-5 py-6 space-y-6 pb-28">
@@ -120,7 +123,7 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
                     </button>
                   )}
                   <button
-                    onClick={() => onDeletePlan(plan.id)}
+                    onClick={() => setPlanToDelete(plan)}
                     aria-label={`Eliminar plan de ${plan.name}`}
                     className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors"
                   >
@@ -170,6 +173,23 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
             </article>
           ))}
         </div>
+      )}
+
+      {planToDelete && (
+        <ConfirmDialog
+          title={`¿Eliminar ${planToDelete.name}?`}
+          message={
+            planToDelete.claim
+              ? 'Se borrarán su plan, sus tomas y su orden de la EPS con el historial de reclamos. No se puede deshacer.'
+              : 'Se borrarán su plan y sus tomas. No se puede deshacer.'
+          }
+          confirmLabel="Sí, eliminar"
+          onConfirm={() => {
+            onDeletePlan(planToDelete.id);
+            setPlanToDelete(null);
+          }}
+          onCancel={() => setPlanToDelete(null)}
+        />
       )}
     </div>
   );

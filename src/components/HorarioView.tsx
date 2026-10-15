@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Clock, Plus, Sparkles } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Clock, Pill, Plus, Sparkles } from 'lucide-react';
 import { DoseItem } from '../types';
 
 interface HorarioViewProps {
@@ -8,6 +8,8 @@ interface HorarioViewProps {
   onMarkAsTaken: (doseId: string) => void;
   onNavigateToScan: () => void;
   onNavigateToForm: () => void;
+  claimNotices: string[]; // p. ej. "Mañana toca reclamar Losartán en la EPS"
+  onOpenPastas: () => void;
 }
 
 export const HorarioView: React.FC<HorarioViewProps> = ({
@@ -16,6 +18,8 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
   onMarkAsTaken,
   onNavigateToScan,
   onNavigateToForm,
+  claimNotices,
+  onOpenPastas,
 }) => {
   const pendingDoses = isEmptyState ? [] : doses.filter((d) => d.status === 'pending');
   const upcomingDoses = isEmptyState ? [] : doses.filter((d) => d.status === 'upcoming');
@@ -23,6 +27,27 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
 
   return (
     <div className="px-5 py-6 space-y-7 pb-28">
+      {/* Reclamos en la EPS de hoy o mañana: se ven al abrir la app aunque los
+          recordatorios estén apagados (solo suenan con la app abierta). */}
+      {claimNotices.length > 0 && (
+        <button
+          onClick={onOpenPastas}
+          className="w-full bg-white rounded-3xl p-4 border border-[#0ee5ba]/40 shadow-sm flex items-center space-x-3.5 text-left hover:bg-gray-50/80 transition-colors"
+        >
+          <span className="w-12 h-12 rounded-2xl bg-[#d0f8ed] text-[#0bc4a0] flex items-center justify-center shrink-0">
+            <Pill className="w-5 h-5" />
+          </span>
+          <span className="flex-1 min-w-0 space-y-0.5">
+            {claimNotices.map((notice) => (
+              <span key={notice} className="block text-sm font-bold text-gray-900">
+                {notice}
+              </span>
+            ))}
+            <span className="block text-xs text-gray-500 font-medium">Toca para ver tus pastas</span>
+          </span>
+          <ChevronRight className="w-5 h-5 text-gray-400 shrink-0" />
+        </button>
+      )}
 
       {/* EMPTY STATE */}
       {(isEmptyState || doses.length === 0) && (

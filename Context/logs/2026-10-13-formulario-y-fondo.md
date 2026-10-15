@@ -22,3 +22,13 @@
 - **2026-10-14:** la v3 deja el pulso único (`.alarm-pulse`, eliminado) y usa la misma cadencia y número de ondas que la v2, cada una como banda difuminada (`.alarm-wave-soft`).
 - **2026-10-14:** las ondas de la v3 se trababan en el celular (animaban tamaño, sombras y blur). Ahora solo `transform` + `opacity`: 60 fps sin cuadros lentos en el navegador. Regla anotada en `gotchas/navegador.md`.
 - **2026-10-14:** ondas de la v3 más anchas, difusas y transparentes (máx. 0.7 en vez de 0.9) para no estorbar la lectura.
+- **2026-10-14:** `design.md` reescrito y revisado contra el código: secciones por pantalla (Horario, Mis planes, Perfil, Revisa el plan), tabla comparativa de las tres alarmas, regla de animaciones (solo transform/opacity) y deuda nueva (Nunito no aplicada, ondas v1/v2, `--color-success` sin uso).
+- **2026-10-14 · Feature reclamos en la EPS (pestaña "Pastas")**:
+  - Reglas acordadas con la persona y escritas en ADR 0008: mes calendario, no antes de su día, atrasos acumulados, mes perdido cuenta en la orden, meses cortos sin perder su día.
+  - Primero la persistencia (ADR 0007, `usePersistentState`). Luego `src/lib/claims.ts` probado con `tsx` contra la tabla del ejemplo y los casos borde (mes corto, reclamo antes de su día).
+  - UI: `PastasView` (formulario + tarjetas + historial), `ClaimAlert` sobre `AlarmShell` (posponer 1–12 h con − / +), recuadro en Horario, punto en la pestaña.
+  - Se eliminó la alarma v1 y su botón; la v2 pasa a ser la alarma real. `Stepper` salió a su propio archivo.
+  - Trampa evitada: `PlanFormScreen` reconstruye el plan al guardar; ahora conserva `claim`.
+  - Verificado en el navegador: registrar orden, aviso "Hoy" con posponer 4 h guardado, aviso "Mañana" con "Entendido", marcar reclamada y recargar sin perder nada, editar plan sin perder el reclamo.
+- **2026-10-14:** eliminar un plan pide confirmación (`ConfirmDialog`): avisa si se pierde también la orden de la EPS. Quitar un reclamo en Pastas sigue sin confirmación.
+- **2026-10-14:** se quitó la pestaña Escanear del menú (`NavTab` ya no tiene `'escanear'`); el escáner se abre desde "Nuevo plan" y los estados vacíos. Menú: 6 botones `w-1/6`.

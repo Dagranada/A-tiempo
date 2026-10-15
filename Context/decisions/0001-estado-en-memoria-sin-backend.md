@@ -1,6 +1,6 @@
 # 0001 · Estado en memoria, sin backend
 
-**Fecha:** 2026-07-28 · **Estado:** Vigente (con deuda técnica reconocida)
+**Fecha:** 2026-07-28 · **Estado:** Vigente salvo la persistencia: desde 2026-10-14 los datos se guardan en el teléfono (ADR 0007)
 
 ## Contexto
 Prototipo nacido en Google AI Studio para validar el flujo del cuidador, no para producción.

@@ -70,6 +70,17 @@ export function showDoseNotification(medicationName: string, dose: string, tag: 
   });
 }
 
+/** Notificación del sistema de un reclamo en la EPS (mañana u hoy). */
+export function showClaimNotification(body: string, tag: string): void {
+  if (!isNotificationSupported() || Notification.permission !== 'granted') return;
+
+  new Notification('A Tiempo · Reclamo en la EPS', {
+    body,
+    tag: `claim-${tag}`,
+    silent: false,
+  });
+}
+
 /** Notificación del sistema de prueba: no menciona ningún medicamento real. */
 export function showTestNotification(): void {
   if (!isNotificationSupported() || Notification.permission !== 'granted') return;

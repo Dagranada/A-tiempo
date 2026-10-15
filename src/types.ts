@@ -10,6 +10,19 @@ export interface MedicationPlan {
   endDate: string; // YYYY-MM-DD
   instructions?: string;
   createdAt: string;
+  claim?: EpsClaim; // solo si el medicamento se reclama en la EPS
+}
+
+/**
+ * Reclamo mensual en la EPS de un medicamento con orden médica de varios meses.
+ * Reglas (ver Context/decisions/0008): se reclama una vez por mes calendario,
+ * desde "su día" hasta el último día del mes; su día pasa a ser el día del
+ * último reclamo; un mes sin reclamar se pierde y cuenta dentro de la orden.
+ */
+export interface EpsClaim {
+  firstDate: string; // YYYY-MM-DD, primer día para reclamar
+  orderMonths: number; // duración de la orden médica, en meses (= entregas)
+  claimedDates: string[]; // YYYY-MM-DD de cada reclamo hecho
 }
 
 export interface DoseItem {
@@ -26,7 +39,7 @@ export interface DoseItem {
 }
 
 export type ScreenView = 'home' | 'scan' | 'loading' | 'plan_form';
-export type NavTab = 'horario' | 'planes' | 'escanear' | 'perfil';
+export type NavTab = 'horario' | 'planes' | 'pastas' | 'perfil';
 
 export interface SeniorProfile {
   name: string; // nombre completo; el Header muestra solo el primero

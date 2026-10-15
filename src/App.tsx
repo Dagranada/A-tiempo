@@ -13,7 +13,10 @@ import {
   showTestNotification,
 } from './services/notificationService';
 import { useDoseReminders } from './hooks/useDoseReminders';
-import { DoseItem, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
+import { usePersistentState } from './hooks/usePersistentState';
+import { DoseItem, EpsClaim, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
+import { ClaimAlertState, EMPTY_CLAIM_ALERTS, useClaimReminders } from './hooks/useClaimReminders';
+import { daysBetween, getClaimSchedule, toIsoDate } from './lib/claims';
 
 import { Header } from './components/Header';
 import { ReminderAlert } from './components/ReminderAlert';
@@ -24,11 +27,14 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { PlanFormScreen } from './components/PlanFormScreen';
 import { PerfilView } from './components/PerfilView';
 import { BottomNav } from './components/BottomNav';
+import { PastasView } from './components/PastasView';
+import { ClaimAlert } from './components/ClaimAlert';
 
 export default function App() {
-  const [profile, setProfile] = useState(INITIAL_SENIOR_PROFILE);
-  const [plans, setPlans] = useState<MedicationPlan[]>(INITIAL_PLANS);
-  const [doses, setDoses] = useState<DoseItem[]>(INITIAL_TODAY_DOSES);
+  // Datos del cuidador: se guardan en el teléfono (ADR 0007)
+  const [profile, setProfile] = usePersistentState('profile', INITIAL_SENIOR_PROFILE);
+  const [plans, setPlans] = usePersistentState<MedicationPlan[]>('plans', INITIAL_PLANS);
+  const [doses, setDoses] = usePersistentState<DoseItem[]>('doses', INITIAL_TODAY_DOSES);
 
   // App Navigation & Screen State
   const [screen, setScreen] = useState<ScreenView>('home');
@@ -46,6 +52,14 @@ export default function App() {
   // sorprender con alarmas apenas se abre la app.
   const [remindersEnabled, setRemindersEnabled] = useState(false);
   const { dueDose, snooze } = useDoseReminders(doses, remindersEnabled);
+
+  // Avisos de reclamo en la EPS: qué respondió el cuidador a cada uno se guarda
+  // en el teléfono para no repetir un aviso ya resuelto al recargar.
+  const [claimAlerts, setClaimAlerts] = usePersistentState<ClaimAlertState>(
+    'claim-alerts',
+    EMPTY_CLAIM_ALERTS
+  );
+  const dueClaim = useClaimReminders(plans, claimAlerts, remindersEnabled);
 
   const handleEnableReminders = () => {
     if (remindersEnabled) return;
@@ -211,9 +225,9 @@ export default function App() {
 
   // Alarma de prueba (botón temporal del menú): suena y se muestra al instante
   // dentro del mismo toque, así el audio no queda bloqueado por el navegador.
-  // `testAlarmVersion` dice qué diseño se está comparando (1 o 2); null = cerrada.
-  const [testAlarmVersion, setTestAlarmVersion] = useState<1 | 2 | 3 | null>(null);
-  const handleTestAlarm = (version: 1 | 2 | 3) => {
+  // `testAlarmVersion` dice qué diseño se está comparando (2 o 3); null = cerrada.
+  const [testAlarmVersion, setTestAlarmVersion] = useState<2 | 3 | null>(null);
+  const handleTestAlarm = (version: 2 | 3) => {
     unlockAudio();
     playReminderSound();
     setTestAlarmVersion(version);
@@ -221,6 +235,52 @@ export default function App() {
       .then((granted) => granted && showTestNotification())
       .catch(() => undefined);
   };
+
+  // --- Reclamos en la EPS (pestaña Pastas) ---
+  const updateClaim = (planId: string, change: (claim: EpsClaim) => EpsClaim | undefined) =>
+    setPlans((prev) =>
+      prev.map((p) => (p.id === planId && p.claim ? { ...p, claim: change(p.claim) } : p))
+    );
+
+  const handleSaveClaim = (planId: string, claim: EpsClaim) =>
+    setPlans((prev) => prev.map((p) => (p.id === planId ? { ...p, claim } : p)));
+
+  // Solo se puede marcar dentro de la ventana del mes (desde su día a fin de mes).
+  const handleMarkClaimed = (planId: string) => {
+    const today = toIsoDate(new Date());
+    updateClaim(planId, (claim) => {
+      const current = getClaimSchedule(claim, today).current;
+      if (current?.status !== 'open') return claim;
+      return { ...claim, claimedDates: [...claim.claimedDates, today] };
+    });
+  };
+
+  const handleRemoveClaim = (planId: string) => updateClaim(planId, () => undefined);
+
+  const handleAcknowledgeClaim = (key: string) =>
+    setClaimAlerts((prev) => ({ ...prev, dismissed: [...prev.dismissed, key] }));
+
+  const handleSnoozeClaim = (key: string, hours: number) =>
+    setClaimAlerts((prev) => ({
+      ...prev,
+      snoozedUntil: { ...prev.snoozedUntil, [key]: Date.now() + hours * 60 * 60 * 1000 },
+    }));
+
+  // Punto en la pestaña Pastas: hay que reclamar hoy (o se atrasó) o es mañana.
+  const todayIso = toIsoDate(new Date());
+  const claimNotices = plans.flatMap((p) => {
+    const current = p.claim && getClaimSchedule(p.claim, todayIso).current;
+    if (!current) return [];
+    if (current.status === 'open') {
+      return current.dueDate === todayIso
+        ? [`Hoy toca reclamar ${p.name} en la EPS`]
+        : [`${p.name}: reclámala antes de fin de mes`];
+    }
+    return daysBetween(todayIso, current.dueDate) === 1
+      ? [`Mañana toca reclamar ${p.name} en la EPS`]
+      : [];
+  });
+  const hasClaimToday = claimNotices.length > 0;
 
   const handleResetData = () => {
     setPlans(INITIAL_PLANS);
@@ -279,6 +339,8 @@ export default function App() {
                   onMarkAsTaken={handleMarkAsTaken}
                   onNavigateToScan={handleTapScan}
                   onNavigateToForm={handleSkipToManualForm}
+                  claimNotices={claimNotices}
+                  onOpenPastas={() => setActiveTab('pastas')}
                 />
               )}
 
@@ -290,6 +352,16 @@ export default function App() {
                   onNavigateToForm={handleSkipToManualForm}
                   onEditPlan={handleEditPlan}
                   onDeletePlan={handleDeletePlan}
+                />
+              )}
+
+              {activeTab === 'pastas' && (
+                <PastasView
+                  plans={plans}
+                  onSaveClaim={handleSaveClaim}
+                  onMarkClaimed={handleMarkClaimed}
+                  onRemoveClaim={handleRemoveClaim}
+                  onNavigateToPlans={() => setActiveTab('planes')}
                 />
               )}
 
@@ -305,17 +377,10 @@ export default function App() {
 
             <BottomNav
               activeTab={activeTab}
-              onSelectTab={(tab) => {
-                if (tab === 'escanear') {
-                  handleTapScan();
-                } else {
-                  setActiveTab(tab);
-                }
-              }}
-              onTapScan={handleTapScan}
-              onTapTestAlarm={() => handleTestAlarm(1)}
+              onSelectTab={setActiveTab}
               onTapTestAlarm2={() => handleTestAlarm(2)}
               onTapTestAlarm3={() => handleTestAlarm(3)}
+              hasClaimToday={hasClaimToday}
             />
 
             {/* Recordatorio de toma: solo sobre la vista principal, para no
@@ -333,6 +398,19 @@ export default function App() {
                 plan={plans.find((p) => p.id === dueDose.planId)}
                 onMarkAsTaken={handleMarkAsTaken}
                 onSnooze={snooze}
+              />
+            )}
+            {/* Aviso de reclamo: solo si no hay una toma ni una prueba en pantalla */}
+            {dueClaim && !dueDose && !testAlarmVersion && (
+              <ClaimAlert
+                key={dueClaim.key}
+                claim={dueClaim}
+                onClaimed={(planId) => {
+                  handleMarkClaimed(planId);
+                  handleAcknowledgeClaim(dueClaim.key);
+                }}
+                onAcknowledge={handleAcknowledgeClaim}
+                onSnooze={handleSnoozeClaim}
               />
             )}
           </>

@@ -1,7 +1,16 @@
 # Gotchas — datos y estado
 
-## Nada persiste
-`plans`, `doses` y `profile` son `useState` inicializados desde `mockData.ts`. **Un refresh borra todo lo que el cuidador creó.** Al probar en el navegador, no confundas "se perdió mi plan" con un bug: es el diseño actual (ADR 0001).
+## Todo persiste en el navegador (desde 2026-10-14)
+`profile`, `plans`, `doses` y `claim-alerts` usan `usePersistentState` (ADR 0007): se guardan en `localStorage` con el prefijo `a-tiempo:v1:`. Consecuencias al probar:
+- **Cambiar `mockData.ts` no cambia lo que ves**: el navegador ya tiene datos guardados. Para volver a los de ejemplo, en la consola: `Object.keys(localStorage).filter(k => k.startsWith('a-tiempo:')).forEach(k => localStorage.removeItem(k))` y recarga.
+- Si cambias la forma de un dato guardado, sube el prefijo a `v2` o migra; si no, los datos viejos pueden romper la vista.
+- Las fechas de reclamo de ejemplo se calculan **desde el día en que se cargaron por primera vez**; días después ya no muestran "mañana".
+
+## Fechas de reclamo: siempre texto YYYY-MM-DD local
+`src/lib/claims.ts` compara fechas como texto `YYYY-MM-DD` y usa `toIsoDate(new Date())`. No uses `new Date('2026-10-14')` (se interpreta en UTC y en Colombia da el día anterior) ni `toISOString().split('T')[0]` para "hoy" (de noche ya es mañana en UTC). `PlanFormScreen` todavía usa `toISOString` para las fechas por defecto: mismo riesgo.
+
+## Editar un plan no debe borrar su reclamo
+`PlanFormScreen` arma el plan desde cero al guardar; por eso copia `claim: initialData?.claim`. Cualquier campo nuevo de `MedicationPlan` que no se edite en ese formulario necesita lo mismo.
 
 ## Un plan genera exactamente una toma diaria
 `handleSavePlan` (`src/App.tsx:130-180`) crea **un** `DoseItem` por plan, con la hora inicial. `frequencyValue` y `frequencyUnit` se guardan y se muestran, pero **no generan tomas adicionales**. "Cada 8 horas" hoy avisa una vez al día.
