@@ -26,3 +26,6 @@ Al editar `src/data/mockData.ts`, la pantalla puede seguir mostrando los valores
 
 ## Ver un video de referencia (.mov/.mp4) en este entorno
 No hay `ffmpeg`, y `swift`/`swiftc` con AVFoundation se cuelgan o fallan por los module maps de las Command Line Tools. Lo que sí funciona (2026-10-14): copiar el video temporalmente a la raíz del repo, abrir `http://localhost:3000/index.html` en una pestaña aparte del preview y, con `javascript_tool`, crear un `<video src="/archivo.mov">`, recorrer `currentTime` y dibujar cada cuadro en un `<canvas>` en cuadrícula con su tiempo; luego una captura. H.264 se decodifica bien. **Borra la copia del video al terminar** (no debe entrar en git).
+
+## Animaciones que se traban en el celular
+Animar `width`/`height`, `box-shadow` o `filter: blur()` obliga a repintar en cada cuadro; con varias capas grandes a la vez (las 10 ondas de la alarma) el celular se traba, y empeora a medida que se acumulan. Regla: anima solo `transform` y `opacity`, con el elemento ya del tamaño final (`will-change: transform, opacity`). Pasó con la alarma v3 el 2026-10-14; las ondas v1/v2 (`.alarm-wave`) todavía animan `width`/`height`/`border-width`: si se traban, misma solución.
