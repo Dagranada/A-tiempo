@@ -8,6 +8,7 @@ interface BottomNavProps {
   onTapScan: () => void;
   onTapTestAlarm: () => void;
   onTapTestAlarm2: () => void;
+  onTapTestAlarm3: () => void;
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({
@@ -16,13 +17,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onTapScan,
   onTapTestAlarm,
   onTapTestAlarm2,
+  onTapTestAlarm3,
 }) => {
   return (
     <nav className="bg-white border-t border-gray-200 px-2 py-2 flex justify-between items-center fixed bottom-0 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl left-1/2 -translate-x-1/2 z-30 shrink-0">
       {/* 1. Horario */}
       <button
         onClick={() => onSelectTab('horario')}
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center p-2 w-1/7 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -45,7 +47,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* 2. Mis planes */}
       <button
         onClick={() => onSelectTab('planes')}
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center p-2 w-1/7 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -68,7 +70,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* 3. Escanear (Required trigger to camera screen) */}
       <button
         onClick={onTapScan}
-        className="flex flex-col items-center p-2 w-1/6 group transition-colors"
+        className="flex flex-col items-center p-2 w-1/7 group transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -92,7 +94,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={onTapTestAlarm}
         aria-label="Probar alarma"
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center p-2 w-1/7 transition-colors"
       >
         <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
           <BellRing className="w-5 h-5" />
@@ -104,7 +106,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={onTapTestAlarm2}
         aria-label="Probar alarma, versión 2"
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center p-2 w-1/7 transition-colors"
       >
         <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
           <BellRing className="w-5 h-5" />
@@ -112,10 +114,22 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Alarma 2</span>
       </button>
 
-      {/* 6. Perfil */}
+      {/* 6. Alarma, versión 3 (temporal): la 2 con otro fondo */}
+      <button
+        onClick={onTapTestAlarm3}
+        aria-label="Probar alarma, versión 3"
+        className="flex flex-col items-center p-2 w-1/7 transition-colors"
+      >
+        <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
+          <BellRing className="w-5 h-5" />
+        </div>
+        <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Alarma 3</span>
+      </button>
+
+      {/* 7. Perfil */}
       <button
         onClick={() => onSelectTab('perfil')}
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center p-2 w-1/7 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${

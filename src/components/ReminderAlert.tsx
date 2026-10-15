@@ -18,14 +18,16 @@ type ReminderAlertProps =
   // Alarma de prueba: misma pantalla con los textos de la referencia de diseño.
   // Sus botones solo la cierran: no marca ninguna toma. Muestra Metformina por
   // decisión explícita (excepción al invariante 5, ver Context/decisions/0006).
-  // `version: 2` es un diseño alternativo solo para comparar (botón "Alarma 2").
-  | { isTest: true; version?: 1 | 2; onClose: () => void };
+  // `version: 2` y `3` son diseños alternativos solo para comparar (botones
+  // "Alarma 2" y "Alarma 3"). La 3 es la 2 con otro fondo.
+  | { isTest: true; version?: 1 | 2 | 3; onClose: () => void };
 
 // Ondas: cada una tarda WAVE_DURATION_S en cruzar; sale una nueva cada WAVE_GAP_S.
 // Debe coincidir con la duración de la animación `alarm-wave` en index.css.
 const WAVE_DURATION_S = 8;
 const WAVE_GAP_S = 0.8;
 const WAVE_COUNT = Math.round(WAVE_DURATION_S / WAVE_GAP_S);
+
 
 const TEST_MEDICATION = {
   name: 'Metformina',
@@ -35,7 +37,8 @@ const TEST_MEDICATION = {
 };
 
 export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
-  const isV2 = props.isTest && props.version === 2;
+  const version = props.isTest ? props.version ?? 1 : 1;
+  const isV2 = version === 2 || version === 3; // la 3 comparte todo con la 2 salvo el fondo
   const name = props.isTest ? TEST_MEDICATION.name : props.dose.medicationName;
   const description = props.isTest
     ? TEST_MEDICATION.description
@@ -82,19 +85,49 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
       aria-labelledby="reminder-title"
       aria-describedby="reminder-desc"
       style={{
-        background: isV2
-          ? 'radial-gradient(circle at 50% 35%, #2ee6cc 0%, #10d2b8 30%, #00bfa8 62%, #00a693 100%)'
-          : 'radial-gradient(circle at 50% 32%, #22e3c8 0%, #00c7af 38%, #00a492 72%, #02897a 100%)',
+        background:
+          version === 3
+            ? 'radial-gradient(circle at 50% 32%, #0cdbc9 0%, #01bcae 42%, #009d90 100%)'
+            : isV2
+              ? 'radial-gradient(circle at 50% 35%, #2ee6cc 0%, #10d2b8 30%, #00bfa8 62%, #00a693 100%)'
+              : 'radial-gradient(circle at 50% 32%, #22e3c8 0%, #00c7af 38%, #00a492 72%, #02897a 100%)',
       }}
       className="fixed inset-0 z-50 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl font-heading text-white flex flex-col justify-between px-6 pt-16 pb-10 overflow-y-auto select-none"
     >
+      {version === 3 && (
+        <>
+          {/* Fondo v3: manchas cálidas difuminadas */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+            <div className="absolute -top-24 -left-20 w-80 h-80 rounded-full bg-[#f6d365]/25 blur-3xl" />
+            <div className="absolute top-1/4 -right-24 w-72 h-72 rounded-full bg-[#ffd166]/20 blur-3xl" />
+            <div className="absolute -bottom-28 -right-16 w-88 h-88 rounded-full bg-[#ffb703]/25 blur-3xl" />
+            <div className="absolute bottom-1/3 -left-24 w-64 h-64 rounded-full bg-[#ffe49e]/15 blur-3xl" />
+          </div>
+          {/* Fondo v3: textura de grano */}
+          <div
+            className="absolute inset-0 overflow-hidden pointer-events-none opacity-40 mix-blend-overlay"
+            aria-hidden="true"
+          >
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <filter id="alarm-grain">
+                <feTurbulence baseFrequency="0.8" numOctaves={4} stitchTiles="stitch" type="fractalNoise" />
+                <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 2.2 -0.6" />
+              </filter>
+              <rect filter="url(#alarm-grain)" height="100%" width="100%" />
+            </svg>
+          </div>
+        </>
+      )}
+
       {/* Ondas: salen del centro y se debilitan a medida que se alejan */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        {/* Misma cadencia y número de ondas en todas las versiones; la 3 las
+            dibuja como bandas de luz difuminadas en vez de líneas */}
         {ripple.size > 0 &&
           Array.from({ length: WAVE_COUNT }, (_, i) => (
             <span
               key={i}
-              className="alarm-wave absolute rounded-full"
+              className={`alarm-wave absolute rounded-full ${version === 3 ? 'alarm-wave-soft' : ''}`}
               style={
                 {
                   left: ripple.x,

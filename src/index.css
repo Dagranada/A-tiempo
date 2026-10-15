@@ -66,3 +66,16 @@
     border-width: 1px;
   }
 }
+
+/* Versión 3 de la alarma: mismas ondas (cadencia, número, crecimiento y
+   desvanecimiento de .alarm-wave) pero cada una es una banda de luz
+   difuminada con una sombra suave por fuera, como ondas en el agua, en vez de
+   una línea fina. */
+.alarm-wave.alarm-wave-soft {
+  border-color: transparent;
+  box-shadow:
+    0 0 16px 6px rgba(255, 255, 255, 0.4),
+    inset 0 0 16px 6px rgba(255, 255, 255, 0.3),
+    0 0 50px 26px rgba(0, 70, 62, 0.1);
+  filter: blur(4px);
+}
