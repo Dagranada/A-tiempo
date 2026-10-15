@@ -27,7 +27,8 @@ type ReminderAlertProps =
 const WAVE_DURATION_S = 8;
 const WAVE_GAP_S = 0.8;
 const WAVE_COUNT = Math.round(WAVE_DURATION_S / WAVE_GAP_S);
-
+// Diámetro del disco de la píldora: las ondas nacen de este tamaño.
+const WAVE_START_PX = 110;
 
 const TEST_MEDICATION = {
   name: 'Metformina',
@@ -127,14 +128,25 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
           Array.from({ length: WAVE_COUNT }, (_, i) => (
             <span
               key={i}
-              className={`alarm-wave absolute rounded-full ${version === 3 ? 'alarm-wave-soft' : ''}`}
+              className={`absolute rounded-full ${version === 3 ? 'alarm-wave-soft' : 'alarm-wave'}`}
               style={
-                {
-                  left: ripple.x,
-                  top: ripple.y,
-                  '--wave-max': `${ripple.size}px`,
-                  animationDelay: `${i * WAVE_GAP_S}s`,
-                } as React.CSSProperties
+                version === 3
+                  ? // La 3 ya nace del tamaño final y solo se escala: así el
+                    // celular la anima sin repintar (no se traba).
+                    ({
+                      left: ripple.x,
+                      top: ripple.y,
+                      width: ripple.size,
+                      height: ripple.size,
+                      '--wave-start': WAVE_START_PX / ripple.size,
+                      animationDelay: `${i * WAVE_GAP_S}s`,
+                    } as React.CSSProperties)
+                  : ({
+                      left: ripple.x,
+                      top: ripple.y,
+                      '--wave-max': `${ripple.size}px`,
+                      animationDelay: `${i * WAVE_GAP_S}s`,
+                    } as React.CSSProperties)
               }
             />
           ))}
