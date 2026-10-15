@@ -20,3 +20,5 @@
 - **2026-10-14:** la alarma v3 reemplaza las líneas por ondas difuminadas en ráfaga (3 ondas, cada 3 s). Se pidió copiar un video, pero el video no llegó y el entorno no puede reproducir video (sin `ffmpeg`): se implementó por la descripción.
 - **2026-10-14:** con el video `ondas.mov` se rehízo la animación de la v3: no eran anillos sueltos sino un pulso de bandas claras/oscuras difuminadas que se expande y se apaga (`.alarm-pulse`, cada 3 s). Cuadros extraídos sirviendo el video con Vite y dibujándolo en un canvas (ver `gotchas/navegador.md`).
 - **2026-10-14:** la v3 deja el pulso único (`.alarm-pulse`, eliminado) y usa la misma cadencia y número de ondas que la v2, cada una como banda difuminada (`.alarm-wave-soft`).
+- **2026-10-14:** las ondas de la v3 se trababan en el celular (animaban tamaño, sombras y blur). Ahora solo `transform` + `opacity`: 60 fps sin cuadros lentos en el navegador. Regla anotada en `gotchas/navegador.md`.
+- **2026-10-14:** ondas de la v3 más anchas, difusas y transparentes (máx. 0.7 en vez de 0.9) para no estorbar la lectura.
