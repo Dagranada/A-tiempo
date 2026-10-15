@@ -1,4 +1,18 @@
 import { MedicationPlan, DoseItem, SeniorProfile } from '../types';
+import { toIsoDate } from '../lib/claims';
+
+// Fechas de reclamo de ejemplo calculadas desde hoy, para que la demo siempre
+// muestre casos útiles: "dentro de N días" con N meses atrás y desplazamiento.
+const demoDate = (monthsAgo: number, dayOffset = 0) => {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - monthsAgo);
+  const target = new Date();
+  target.setDate(target.getDate() + dayOffset);
+  const day = Math.min(target.getDate(), new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate());
+  d.setDate(day);
+  return toIsoDate(d);
+};
 
 export const INITIAL_SENIOR_PROFILE: SeniorProfile = {
   name: 'Alberto Valdés',
@@ -27,7 +41,13 @@ export const INITIAL_PLANS: MedicationPlan[] = [
     startDate: '2026-02-01',
     endDate: '2026-08-01',
     instructions: 'Tomar con el almuerzo para evitar molestias estomacales',
-    createdAt: '2026-02-01T08:00:00Z'
+    createdAt: '2026-02-01T08:00:00Z',
+    // Orden de 6 meses: reclamó a tiempo el primero y 3 días tarde el segundo
+    claim: {
+      firstDate: demoDate(2),
+      orderMonths: 6,
+      claimedDates: [demoDate(2), demoDate(1, 3)],
+    },
   },
   {
     id: 'plan-2',
@@ -79,7 +99,13 @@ export const INITIAL_PLANS: MedicationPlan[] = [
     startDate: '2026-01-01',
     endDate: '2026-12-31',
     instructions: 'Tomar por la mañana',
-    createdAt: '2026-01-01T08:00:00Z'
+    createdAt: '2026-01-01T08:00:00Z',
+    // Orden de 4 meses: perdió el segundo mes y le toca reclamar mañana
+    claim: {
+      firstDate: demoDate(3, 1),
+      orderMonths: 4,
+      claimedDates: [demoDate(3, 1), demoDate(1, 1)],
+    },
   }
 ];
 
