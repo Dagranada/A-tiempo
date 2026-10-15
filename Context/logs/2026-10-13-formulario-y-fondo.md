@@ -16,3 +16,7 @@
 - **2026-10-14:** ondas más lentas (8 s) y más seguidas (cada 0.8 s): 2–3 visibles a la vez. Constantes `WAVE_DURATION_S`/`WAVE_GAP_S` en `ReminderAlert.tsx`.
 - **2026-10-14:** alarma versión 2 para comparar (`ReminderAlert isTest version={2}`, botón "Alarma 2" en la nav, ahora `w-1/6`): "Toma:" + nombre en verde oscuro `#087064`, dosis en una línea, anillos quietos y disco sólido. La versión 1 no cambia. ADR 0006 ampliado a la v2.
 - **2026-10-14:** la alarma versión 2 pierde sus anillos quietos; solo quedan las ondas animadas.
+- **2026-10-14:** alarma versión 3 = la 2 con otro fondo (degradado + manchas cálidas difuminadas + grano). Botón "Alarma 3"; la nav pasa a `w-1/7`. ADR 0006 ampliado a la v3.
+- **2026-10-14:** la alarma v3 reemplaza las líneas por ondas difuminadas en ráfaga (3 ondas, cada 3 s). Se pidió copiar un video, pero el video no llegó y el entorno no puede reproducir video (sin `ffmpeg`): se implementó por la descripción.
+- **2026-10-14:** con el video `ondas.mov` se rehízo la animación de la v3: no eran anillos sueltos sino un pulso de bandas claras/oscuras difuminadas que se expande y se apaga (`.alarm-pulse`, cada 3 s). Cuadros extraídos sirviendo el video con Vite y dibujándolo en un canvas (ver `gotchas/navegador.md`).
+- **2026-10-14:** la v3 deja el pulso único (`.alarm-pulse`, eliminado) y usa la misma cadencia y número de ondas que la v2, cada una como banda difuminada (`.alarm-wave-soft`).

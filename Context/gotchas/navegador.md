@@ -23,3 +23,6 @@ Funcionan **solo con la app abierta**. Con el celular bloqueado o el navegador c
 
 ## El HMR no refresca los datos de `mockData.ts`
 Al editar `src/data/mockData.ts`, la pantalla puede seguir mostrando los valores viejos: el estado inicial ya se copió a los `useState` de `App.tsx` y el hot reload no lo vuelve a leer. **Recarga la página** antes de concluir que tu cambio no se aplicó. (Visto el 2026-08-22 revirtiendo una traducción: el archivo ya estaba correcto y la pantalla seguía en inglés.)
+
+## Ver un video de referencia (.mov/.mp4) en este entorno
+No hay `ffmpeg`, y `swift`/`swiftc` con AVFoundation se cuelgan o fallan por los module maps de las Command Line Tools. Lo que sí funciona (2026-10-14): copiar el video temporalmente a la raíz del repo, abrir `http://localhost:3000/index.html` en una pestaña aparte del preview y, con `javascript_tool`, crear un `<video src="/archivo.mov">`, recorrer `currentTime` y dibujar cada cuadro en un `<canvas>` en cuadrícula con su tiempo; luego una captura. H.264 se decodifica bien. **Borra la copia del video al terminar** (no debe entrar en git).
