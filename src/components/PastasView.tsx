@@ -254,7 +254,7 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
       )}
 
       {history.length > 0 && (
-        <div className="pt-4 border-t border-[#E2E8F0]">
+        <div className="pt-1">
           <p className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3">Historial</p>
           <ul className="space-y-1.5">
             {history.map((c) => (
