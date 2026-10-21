@@ -7,6 +7,7 @@ interface BottomNavProps {
   onSelectTab: (tab: NavTab) => void;
   onTapTestAlarm2: () => void;
   onTapTestAlarm3: () => void;
+  onTapTestAlarm4: () => void;
   hasClaimToday: boolean; // punto en "Pastas" si hay que reclamar hoy o mañana
 }
 
@@ -15,6 +16,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onSelectTab,
   onTapTestAlarm2,
   onTapTestAlarm3,
+  onTapTestAlarm4,
   hasClaimToday,
 }) => {
   return (
@@ -22,7 +24,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* 1. Horario */}
       <button
         onClick={() => onSelectTab('horario')}
-        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -45,7 +47,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* 2. Mis planes */}
       <button
         onClick={() => onSelectTab('planes')}
-        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -69,7 +71,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={() => onSelectTab('pastas')}
         aria-label={hasClaimToday ? 'Pastas: hay un reclamo pendiente' : 'Pastas'}
-        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
       >
         <div
           className={`relative px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -94,7 +96,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={onTapTestAlarm2}
         aria-label="Probar alarma, versión 2"
-        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
       >
         <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
           <BellRing className="w-5 h-5" />
@@ -106,7 +108,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={onTapTestAlarm3}
         aria-label="Probar alarma, versión 3"
-        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
       >
         <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
           <BellRing className="w-5 h-5" />
@@ -114,10 +116,22 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Alarma 3</span>
       </button>
 
-      {/* 6. Perfil */}
+      {/* 6. Alarma, versión 4 (temporal): sin píldora, texto al centro */}
+      <button
+        onClick={onTapTestAlarm4}
+        aria-label="Probar alarma, versión 4"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
+      >
+        <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
+          <BellRing className="w-5 h-5" />
+        </div>
+        <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Alarma 4</span>
+      </button>
+
+      {/* 7. Perfil */}
       <button
         onClick={() => onSelectTab('perfil')}
-        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${

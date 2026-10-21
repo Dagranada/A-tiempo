@@ -27,8 +27,8 @@
    pantalla y se apagan con la distancia. Se anima el tamaño (no la escala)
    para que el borde se adelgace a mano. Con "reducir movimiento" no se ven. */
 .alarm-wave {
-  width: 110px;
-  height: 110px;
+  width: var(--wave-start-px, 110px);
+  height: var(--wave-start-px, 110px);
   translate: -50% -50%;
   border: 2.5px solid rgba(255, 255, 255, 0.7);
   opacity: 0;
@@ -40,8 +40,8 @@
 }
 @keyframes alarm-wave {
   0% {
-    width: 110px;
-    height: 110px;
+    width: var(--wave-start-px, 110px);
+    height: var(--wave-start-px, 110px);
     border-width: 2.5px;
     opacity: 0;
   }

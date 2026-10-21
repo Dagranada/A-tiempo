@@ -19,7 +19,8 @@ type ReminderAlertProps =
   // Alarma de prueba: misma pantalla con los textos de la referencia de diseño.
   // Sus botones solo la cierran: no marca ninguna toma. Muestra Metformina por
   // decisión explícita (excepción al invariante 5, ver Context/decisions/0006).
-  // La versión 3 es una alternativa solo para comparar (botón "Alarma 3").
+  // Las versiones 3 y 4 son alternativas solo para comparar (botones "Alarma 3"
+  // y "Alarma 4"); la 4 no tiene píldora y centra el texto.
   | { isTest: true; version?: AlarmVersion; onClose: () => void };
 
 const TEST_MEDICATION = {
@@ -69,7 +70,7 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
         {doseLine}
       </p>
       {instructions && (
-        <p className="w-full text-center text-[0.95rem] leading-snug font-medium text-white/90 mt-4 px-6">
+        <p className="w-full max-w-[17rem] mx-auto text-center text-[0.95rem] leading-snug font-medium text-white/90 mt-4">
           {instructions}
         </p>
       )}
