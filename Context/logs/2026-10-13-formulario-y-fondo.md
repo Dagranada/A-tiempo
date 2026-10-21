@@ -33,3 +33,4 @@
 - **2026-10-14:** eliminar un plan pide confirmación (`ConfirmDialog`): avisa si se pierde también la orden de la EPS. Quitar un reclamo en Pastas sigue sin confirmación.
 - **2026-10-14:** se quitó la pestaña Escanear del menú (`NavTab` ya no tiene `'escanear'`); el escáner se abre desde "Nuevo plan" y los estados vacíos. Menú: 6 botones `w-1/6`.
 - **2026-10-20:** tarjeta de Pastas rehecha según referencia (caja "Próxima entrega | N. de entrega", historial con fecha completa, sin divisor bajo el encabezado) y botón para **editar la orden** (conserva el historial). La píldora de estado solo se muestra si hay que reclamar hoy, mañana o hay atraso.
+- **2026-10-20:** responsive a 386px: la caja "Próxima entrega | N. de entrega" de Pastas se apila en filas por debajo de 420px (probado con el caso más largo, "Reclamar hasta · 30 de septiembre"), y las etiquetas del menú ya no bajan de línea.
