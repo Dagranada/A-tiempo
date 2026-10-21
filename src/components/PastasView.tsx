@@ -211,20 +211,21 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
               {describeCycle(current, today)}
             </span>
           )}
-          {/* Próxima entrega | número de entrega */}
-          <div className="bg-gray-50 rounded-2xl border border-[#E2E8F0] px-5 py-4 flex items-stretch">
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium uppercase tracking-wide text-gray-500">
+          {/* Próxima entrega | número de entrega. En pantallas angostas (< 420px)
+              cada dato va en su propia fila para que fecha y etiqueta no se partan. */}
+          <div className="bg-gray-50 rounded-2xl border border-[#E2E8F0] px-4 min-[420px]:px-5 py-1 min-[420px]:py-4 flex flex-col min-[420px]:flex-row min-[420px]:items-stretch">
+            <div className="flex-1 min-w-0 flex items-baseline justify-between gap-2 py-3 min-[420px]:py-0 min-[420px]:block">
+              <p className="min-w-0 text-xs min-[420px]:text-[13px] font-medium uppercase tracking-wide text-gray-500 min-[420px]:whitespace-nowrap">
                 {current.status === 'open' ? 'Reclamar hasta' : 'Próxima entrega'}
               </p>
-              <p className="text-[18px] font-bold text-gray-900 mt-1">
+              <p className="shrink-0 text-[17px] min-[420px]:text-[18px] font-bold text-gray-900 min-[420px]:mt-1 whitespace-nowrap">
                 {formatDayMonth(current.status === 'open' ? current.lastDate : current.dueDate)}
               </p>
             </div>
-            <div className="w-px bg-[#E2E8F0] mx-4" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium uppercase tracking-wide text-gray-500">N. de entrega</p>
-              <p className="text-[18px] font-bold text-gray-900 mt-1">
+            <div className="h-px min-[420px]:h-auto min-[420px]:w-px bg-[#E2E8F0] min-[420px]:mx-4" />
+            <div className="flex-1 min-w-0 flex items-baseline justify-between gap-2 py-3 min-[420px]:py-0 min-[420px]:block">
+              <p className="min-w-0 text-xs min-[420px]:text-[13px] font-medium uppercase tracking-wide text-gray-500 min-[420px]:whitespace-nowrap">N. de entrega</p>
+              <p className="shrink-0 text-[17px] min-[420px]:text-[18px] font-bold text-gray-900 min-[420px]:mt-1 whitespace-nowrap">
                 {current.number} de {orderMonths}
               </p>
             </div>

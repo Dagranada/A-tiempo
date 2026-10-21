@@ -22,7 +22,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* 1. Horario */}
       <button
         onClick={() => onSelectTab('horario')}
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -34,7 +34,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <Clock className="w-5 h-5" />
         </div>
         <span
-          className={`text-[11px] font-semibold ${
+          className={`text-[11px] font-semibold whitespace-nowrap ${
             activeTab === 'horario' ? 'text-[#0bc4a0]' : 'text-gray-500'
           }`}
         >
@@ -45,7 +45,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* 2. Mis planes */}
       <button
         onClick={() => onSelectTab('planes')}
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -57,7 +57,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <Map className="w-5 h-5" />
         </div>
         <span
-          className={`text-[11px] font-semibold ${
+          className={`text-[11px] font-semibold whitespace-nowrap ${
             activeTab === 'planes' ? 'text-[#0bc4a0]' : 'text-gray-500'
           }`}
         >
@@ -69,7 +69,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={() => onSelectTab('pastas')}
         aria-label={hasClaimToday ? 'Pastas: hay un reclamo pendiente' : 'Pastas'}
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
       >
         <div
           className={`relative px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -82,7 +82,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           )}
         </div>
         <span
-          className={`text-[11px] font-semibold ${
+          className={`text-[11px] font-semibold whitespace-nowrap ${
             activeTab === 'pastas' ? 'text-[#0bc4a0]' : 'text-gray-500'
           }`}
         >
@@ -94,7 +94,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={onTapTestAlarm2}
         aria-label="Probar alarma, versión 2"
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
       >
         <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
           <BellRing className="w-5 h-5" />
@@ -106,7 +106,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={onTapTestAlarm3}
         aria-label="Probar alarma, versión 3"
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
       >
         <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
           <BellRing className="w-5 h-5" />
@@ -117,7 +117,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* 6. Perfil */}
       <button
         onClick={() => onSelectTab('perfil')}
-        className="flex flex-col items-center p-2 w-1/6 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/6 transition-colors"
       >
         <div
           className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
@@ -129,7 +129,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <User className="w-5 h-5" />
         </div>
         <span
-          className={`text-[11px] font-semibold ${
+          className={`text-[11px] font-semibold whitespace-nowrap ${
             activeTab === 'perfil' ? 'text-[#0bc4a0]' : 'text-gray-500'
           }`}
         >
