@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, CalendarCheck, CheckCircle2, ChevronDown, Pill, Plus, Trash2, XCircle } from 'lucide-react';
+import { Calendar, CalendarCheck, CheckCircle2, ChevronDown, Pencil, Pill, Plus, Trash2 } from 'lucide-react';
 import { EpsClaim, MedicationPlan } from '../types';
 import {
   ClaimCycle,
@@ -7,6 +7,7 @@ import {
   daysBetween,
   describeCycle,
   formatDayMonth,
+  formatFullDate,
   getClaimSchedule,
   toIsoDate,
 } from '../lib/claims';
@@ -45,15 +46,17 @@ function statusTone(cycle: ClaimCycle, today: string): string {
 interface ClaimFormProps {
   plans: MedicationPlan[]; // planes que se pueden elegir
   initialPlanId?: string;
+  initialClaim?: EpsClaim; // editar una orden: conserva sus reclamos
   onSave: (planId: string, claim: EpsClaim) => void;
   onCancel: () => void;
 }
 
 /** Registrar (o renovar) la orden de un medicamento que se reclama en la EPS. */
-const ClaimForm: React.FC<ClaimFormProps> = ({ plans, initialPlanId, onSave, onCancel }) => {
+const ClaimForm: React.FC<ClaimFormProps> = ({ plans, initialPlanId, initialClaim, onSave, onCancel }) => {
   const [planId, setPlanId] = useState(initialPlanId ?? plans[0]?.id ?? '');
-  const [firstDate, setFirstDate] = useState(toIsoDate(new Date()));
-  const [months, setMonths] = useState('6');
+  const [firstDate, setFirstDate] = useState(initialClaim?.firstDate ?? toIsoDate(new Date()));
+  const [months, setMonths] = useState(String(initialClaim?.orderMonths ?? 6));
+  const isEditing = Boolean(initialClaim);
   const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -62,7 +65,7 @@ const ClaimForm: React.FC<ClaimFormProps> = ({ plans, initialPlanId, onSave, onC
     if (!planId) return setError('Elige el medicamento');
     if (!firstDate) return setError('Elige la fecha del primer reclamo');
     if (orderMonths < 1) return setError('Ingresa cuántos meses dura la orden');
-    onSave(planId, { firstDate, orderMonths, claimedDates: [] });
+    onSave(planId, { firstDate, orderMonths, claimedDates: initialClaim?.claimedDates ?? [] });
   };
 
   return (
@@ -70,7 +73,9 @@ const ClaimForm: React.FC<ClaimFormProps> = ({ plans, initialPlanId, onSave, onC
       onSubmit={handleSubmit}
       className="bg-white rounded-3xl p-5 border border-[#E2E8F0] shadow-sm space-y-5"
     >
-      <h3 className="text-lg font-bold text-gray-900 font-heading">Registrar orden de la EPS</h3>
+      <h3 className="text-lg font-bold text-gray-900 font-heading">
+        {isEditing ? 'Editar orden de la EPS' : 'Registrar orden de la EPS'}
+      </h3>
 
       <div>
         <label htmlFor="claim-plan" className={labelClass}>
@@ -84,7 +89,8 @@ const ClaimForm: React.FC<ClaimFormProps> = ({ plans, initialPlanId, onSave, onC
               setPlanId(e.target.value);
               setError('');
             }}
-            className={`${inputClass} appearance-none pr-10 cursor-pointer`}
+            disabled={Boolean(initialPlanId)}
+            className={`${inputClass} appearance-none pr-10 cursor-pointer disabled:bg-gray-50 disabled:text-gray-600 disabled:cursor-default`}
           >
             {plans.map((p) => (
               <option key={p.id} value={p.id}>
@@ -158,52 +164,71 @@ interface ClaimCardProps {
   schedule: ClaimSchedule;
   today: string;
   onMarkClaimed: () => void;
+  onEdit: () => void;
   onRemove: () => void;
   onRenew: () => void;
 }
 
-const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClaimed, onRemove, onRenew }) => {
-  const { current, finished, claimedCount, missedCount, cycles } = schedule;
+const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClaimed, onEdit, onRemove, onRenew }) => {
+  const { current, finished, claimedCount, cycles } = schedule;
   const orderMonths = cycles.length;
   const history = cycles.filter((c) => c.status === 'claimed' || c.status === 'missed');
+  // El estado solo se destaca cuando pide atención (hoy, mañana o atrasado).
+  const isUrgent =
+    !!current && (current.status === 'open' || daysBetween(today, current.dueDate) === 1);
 
   return (
     <article className="bg-white rounded-3xl p-5 border border-[#E2E8F0] shadow-sm space-y-4">
-      <div className="flex justify-between items-start -mx-5 px-5 pb-4 border-b border-[#E2E8F0]">
+      <div className="flex justify-between items-start">
         <div className="min-w-0">
-          <h3 className="text-[18px] font-bold text-gray-900 leading-tight">{plan.name}</h3>
+          <h3 className="text-[22px] font-bold text-gray-900 leading-tight">{plan.name}</h3>
           <p className="text-sm text-gray-500 mt-1">{plan.dose.replace('•', '·')}</p>
         </div>
-        <button
-          onClick={onRemove}
-          aria-label={`Quitar el reclamo de ${plan.name}`}
-          className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors -mr-1.5 -mt-1 shrink-0"
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
+        <div className="flex items-center space-x-1 -mr-1.5 -mt-1 shrink-0">
+          <button
+            onClick={onEdit}
+            aria-label={`Editar la orden de ${plan.name}`}
+            className="text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <Pencil className="w-5 h-5" />
+          </button>
+          <button
+            onClick={onRemove}
+            aria-label={`Quitar el reclamo de ${plan.name}`}
+            className="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {current && (
         <div className="space-y-3">
-          <span
-            className={`inline-flex items-center text-[13px] font-bold rounded-full px-3 py-1 border ${statusTone(current, today)}`}
-          >
-            {describeCycle(current, today)}
-          </span>
-          <dl className="space-y-2.5 text-sm">
-            <div className="flex justify-between items-baseline gap-4">
-              <dt className="text-gray-500">{current.status === 'open' ? 'Puede reclamar hasta' : 'Le toca reclamar'}</dt>
-              <dd className="font-bold text-gray-900 text-right">
+          {isUrgent && (
+            <span
+              className={`inline-flex items-center text-[13px] font-bold rounded-full px-3 py-1 border ${statusTone(current, today)}`}
+            >
+              {describeCycle(current, today)}
+            </span>
+          )}
+          {/* Próxima entrega | número de entrega */}
+          <div className="bg-gray-50 rounded-2xl border border-[#E2E8F0] px-5 py-4 flex items-stretch">
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium uppercase tracking-wide text-gray-500">
+                {current.status === 'open' ? 'Reclamar hasta' : 'Próxima entrega'}
+              </p>
+              <p className="text-[18px] font-bold text-gray-900 mt-1">
                 {formatDayMonth(current.status === 'open' ? current.lastDate : current.dueDate)}
-              </dd>
+              </p>
             </div>
-            <div className="flex justify-between items-baseline gap-4">
-              <dt className="text-gray-500">Entrega</dt>
-              <dd className="font-bold text-gray-900 text-right">
+            <div className="w-px bg-[#E2E8F0] mx-4" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium uppercase tracking-wide text-gray-500">N. de entrega</p>
+              <p className="text-[18px] font-bold text-gray-900 mt-1">
                 {current.number} de {orderMonths}
-              </dd>
+              </p>
             </div>
-          </dl>
+          </div>
           {current.status === 'open' && (
             <button onClick={onMarkClaimed} className={primaryButton}>
               <CheckCircle2 className="w-5 h-5" />
@@ -215,7 +240,7 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
 
       {finished && (
         <div className="space-y-3">
-          <p className="bg-gray-50 px-4 py-3 rounded-2xl text-sm text-gray-600 leading-relaxed">
+          <p className="bg-gray-50 px-4 py-3 rounded-2xl border border-[#E2E8F0] text-sm text-gray-600 leading-relaxed">
             La orden terminó ({claimedCount} de {orderMonths} entregas reclamadas). Pide una orden nueva al médico y
             regístrala aquí.
           </p>
@@ -227,24 +252,17 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
       )}
 
       {history.length > 0 && (
-        <div className="pt-1">
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-            Historial{missedCount > 0 ? ` · ${missedCount} ${missedCount === 1 ? 'mes perdido' : 'meses perdidos'}` : ''}
-          </p>
+        <div className="pt-4 border-t border-[#E2E8F0]">
+          <p className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3">Historial</p>
           <ul className="space-y-2">
             {history.map((c) => (
-              <li key={c.number} className="flex items-center justify-between text-sm">
-                <span className="flex items-center space-x-2 text-gray-700">
-                  {c.status === 'claimed' ? (
-                    <CheckCircle2 className="w-4 h-4 text-[#0bc4a0]" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-red-500" />
-                  )}
-                  <span>Entrega {c.number}</span>
-                </span>
-                <span className={c.status === 'claimed' ? 'font-medium text-gray-600' : 'font-bold text-red-500'}>
-                  {c.status === 'claimed' && c.claimedOn ? `Reclamada el ${formatDayMonth(c.claimedOn)}` : 'Perdida'}
-                </span>
+              <li key={c.number} className="text-sm">
+                <span className="font-bold text-gray-800">Entrega {c.number}:</span>{' '}
+                {c.status === 'claimed' && c.claimedOn ? (
+                  <span className="text-gray-500">{formatFullDate(c.claimedOn)}</span>
+                ) : (
+                  <span className="font-bold text-red-500">Perdida</span>
+                )}
               </li>
             ))}
           </ul>
@@ -263,8 +281,9 @@ export const PastasView: React.FC<PastasViewProps> = ({
   onNavigateToPlans,
 }) => {
   // Solo estado visual: qué formulario está abierto.
-  const [formPlanId, setFormPlanId] = useState<string | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  // `new` = arriba de la lista; `edit`/`renew` = en el lugar de esa tarjeta.
+  const [form, setForm] = useState<{ mode: 'new' | 'edit' | 'renew'; planId?: string } | null>(null);
+  const isFormOpen = form !== null;
   const today = toIsoDate(new Date());
 
   const claimPlans = plans
@@ -276,16 +295,8 @@ export const PastasView: React.FC<PastasViewProps> = ({
       const kb = b.schedule.current?.dueDate ?? '9999';
       return ka.localeCompare(kb);
     });
-  const availablePlans = plans.filter((p) => !p.claim || p.id === formPlanId);
-
-  const openForm = (planId?: string) => {
-    setFormPlanId(planId ?? null);
-    setIsFormOpen(true);
-  };
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setFormPlanId(null);
-  };
+  const availablePlans = plans.filter((p) => !p.claim);
+  const closeForm = () => setForm(null);
 
   return (
     <div className="px-5 py-6 space-y-6 pb-28">
@@ -295,17 +306,16 @@ export const PastasView: React.FC<PastasViewProps> = ({
           <p className="text-xs text-gray-500 mt-0.5">Medicamentos que Alberto reclama en la EPS</p>
         </div>
         {!isFormOpen && plans.length > 0 && availablePlans.length > 0 && (
-          <button onClick={() => openForm()} className={primaryButton}>
+          <button onClick={() => setForm({ mode: 'new' })} className={primaryButton}>
             <Plus className="w-4 h-4" />
             <span>Registrar orden de la EPS</span>
           </button>
         )}
       </div>
 
-      {isFormOpen && (
+      {form?.mode === 'new' && (
         <ClaimForm
           plans={availablePlans}
-          initialPlanId={formPlanId ?? undefined}
           onSave={(planId, claim) => {
             onSaveClaim(planId, claim);
             closeForm();
@@ -338,17 +348,33 @@ export const PastasView: React.FC<PastasViewProps> = ({
 
       {claimPlans.length > 0 && (
         <div className="space-y-4">
-          {claimPlans.map(({ plan, schedule }) => (
-            <ClaimCard
-              key={plan.id}
-              plan={plan}
-              schedule={schedule}
-              today={today}
-              onMarkClaimed={() => onMarkClaimed(plan.id)}
-              onRemove={() => onRemoveClaim(plan.id)}
-              onRenew={() => openForm(plan.id)}
-            />
-          ))}
+          {claimPlans.map(({ plan, schedule }) =>
+            form && form.mode !== 'new' && form.planId === plan.id ? (
+              <ClaimForm
+                key={plan.id}
+                plans={[plan]}
+                initialPlanId={plan.id}
+                // Editar conserva los reclamos hechos; renovar empieza una orden nueva.
+                initialClaim={form.mode === 'edit' ? plan.claim : undefined}
+                onSave={(planId, claim) => {
+                  onSaveClaim(planId, claim);
+                  closeForm();
+                }}
+                onCancel={closeForm}
+              />
+            ) : (
+              <ClaimCard
+                key={plan.id}
+                plan={plan}
+                schedule={schedule}
+                today={today}
+                onMarkClaimed={() => onMarkClaimed(plan.id)}
+                onEdit={() => setForm({ mode: 'edit', planId: plan.id })}
+                onRemove={() => onRemoveClaim(plan.id)}
+                onRenew={() => setForm({ mode: 'renew', planId: plan.id })}
+              />
+            )
+          )}
         </div>
       )}
     </div>
