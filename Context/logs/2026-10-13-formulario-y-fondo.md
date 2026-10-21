@@ -36,3 +36,7 @@
 - **2026-10-20:** responsive a 386px: la caja "Próxima entrega | N. de entrega" de Pastas se apila en filas por debajo de 420px (probado con el caso más largo, "Reclamar hasta · 30 de septiembre"), y las etiquetas del menú ya no bajan de línea.
 - **2026-10-20:** tarjeta de Pastas con las proporciones de la referencia (nombre `text-xl`, etiquetas `text-xs`, valores `text-[15px]`, historial en peso medio, "Entrega" en vez de "N. de entrega"). Las dos columnas caben desde 380px (columna de fecha más ancha); la píldora solo con la ventana abierta.
 - **2026-10-20:** la caja de Pastas ya no se apila en pantallas angostas: siempre dos columnas; por debajo de 380px se ajustan márgenes, proporción de columnas y tamaño de la fecha. Probado a 320–386px con el caso más largo.
+- **2026-10-20:** la caja de instrucciones de Mis planes toma el borde `#E2E8F0` de la caja de Pastas (mismo fondo `gray-50`).
+- **2026-10-20:** detalles de la tarjeta de Mis planes en cuadrícula de dos columnas con los valores alineados a la izquierda (referencia); ajustes para 320px (columna de etiquetas más angosta, `p-4`, fechas y partes de la dosis sin partirse).
+- **2026-10-20:** divisores homologados: el del encabezado de Mis planes deja de ir de borde a borde y respeta el padding, como el del historial de Pastas (ambos a 21px de los bordes).
+- **2026-10-20:** la tarjeta de Pastas pierde la línea sobre el historial: la caja de datos basta como separación.

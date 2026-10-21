@@ -102,9 +102,9 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
           {activePlans.map((plan) => (
             <article
               key={plan.id}
-              className="bg-white rounded-3xl p-5 border border-[#E2E8F0] shadow-sm space-y-4 hover:border-gray-200 transition-colors"
+              className="bg-white rounded-3xl p-4 min-[380px]:p-5 border border-[#E2E8F0] shadow-sm space-y-4 hover:border-gray-200 transition-colors"
             >
-              <div className="flex justify-between items-start -mx-5 px-5 pb-4 border-b border-[#E2E8F0]">
+              <div className="flex justify-between items-start pb-4 border-b border-[#E2E8F0]">
                 <div className="min-w-0">
                   <h3 className="text-[18px] font-bold text-gray-900 leading-tight">
                     {plan.name}
@@ -133,40 +133,34 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
               </div>
 
               {/* Detalles: etiqueta a la izquierda, valor a la derecha */}
-              <dl className="space-y-2.5 text-sm">
-                <div className="flex justify-between items-baseline gap-4">
-                  <dt className="text-gray-500">Dosis</dt>
-                  <dd className="font-bold text-gray-900 text-right">
-                    {plan.dose.split('•').map((part, i) => (
-                      <React.Fragment key={i}>
-                        {i > 0 && <span className="text-gray-400 font-normal mx-1.5">·</span>}
-                        {part.trim()}
-                      </React.Fragment>
-                    ))}
-                  </dd>
-                </div>
-                <div className="flex justify-between items-baseline gap-4">
-                  <dt className="text-gray-500">Frecuencia</dt>
-                  <dd className="font-bold text-gray-900 text-right">
-                    1 cada {plan.frequencyValue} {plan.frequencyUnit}
-                  </dd>
-                </div>
-                <div className="flex justify-between items-baseline gap-4">
-                  <dt className="text-gray-500">Hora inicial</dt>
-                  <dd className="font-bold text-gray-900 text-right">
-                    {formatTime12h(plan.initialTime)}
-                  </dd>
-                </div>
-                <div className="flex justify-between items-baseline gap-4">
-                  <dt className="text-gray-500">Vigencia</dt>
-                  <dd className="font-bold text-gray-900 text-right">
-                    {formatDate(plan.startDate)} – {formatDate(plan.endDate)}
-                  </dd>
-                </div>
+              {/* Etiquetas en una columna fija y valores alineados a la izquierda
+                  en la segunda, como en la referencia de diseño */}
+              <dl className="grid grid-cols-[5.5rem_1fr] min-[380px]:grid-cols-[6.5rem_1fr] gap-x-2 min-[380px]:gap-x-3 gap-y-2.5 text-sm items-baseline">
+                <dt className="text-gray-500">Dosis</dt>
+                <dd className="font-bold text-gray-900">
+                  {plan.dose.split('•').map((part, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <span className="text-gray-400 font-normal mx-1.5">·</span>}
+                      <span className="whitespace-nowrap">{part.trim()}</span>
+                    </React.Fragment>
+                  ))}
+                </dd>
+                <dt className="text-gray-500">Frecuencia</dt>
+                <dd className="font-bold text-gray-900">
+                  1 cada {plan.frequencyValue} {plan.frequencyUnit}
+                </dd>
+                <dt className="text-gray-500">Hora inicial</dt>
+                <dd className="font-bold text-gray-900">{formatTime12h(plan.initialTime)}</dd>
+                <dt className="text-gray-500">Vigencia</dt>
+                <dd className="font-bold text-gray-900">
+                  {/* Si no cabe, corta solo después del guion, nunca dentro de una fecha */}
+                  <span className="whitespace-nowrap">{formatDate(plan.startDate)} –</span>{' '}
+                  <span className="whitespace-nowrap">{formatDate(plan.endDate)}</span>
+                </dd>
               </dl>
 
               {plan.instructions && (
-                <div className="bg-gray-50 px-4 py-3 rounded-2xl text-sm text-gray-600 leading-relaxed">
+                <div className="bg-gray-50 border border-[#E2E8F0] px-4 py-3 rounded-2xl text-sm text-gray-600 leading-relaxed">
                   {plan.instructions}
                 </div>
               )}
