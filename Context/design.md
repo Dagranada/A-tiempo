@@ -112,8 +112,8 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
   - Instrucciones en `bg-gray-50 border border-[#E2E8F0] px-4 py-3 rounded-2xl text-sm text-gray-600 leading-relaxed`, sin itálica: mismo fondo y borde que la caja de datos de Pastas.
 
 ### Pastas (`PastasView`) — reclamos en la EPS
-Reglas en ADR 0008. Título "Pastas" (`text-xl font-bold font-heading`) + "Medicamentos que Alberto reclama en la EPS" + CTA primario "Registrar orden de la EPS".
-- **Formulario** (tarjeta base, en la misma vista): Medicamento * (`<select>` con los planes sin reclamo, `appearance-none` + `ChevronDown`) · Primer reclamo * (fecha nativa + `Calendar`) y Meses de la orden * (`Stepper` 1–24, por defecto 6) en `grid-cols-2` · ayuda en `text-xs text-[#0bc4a0] font-semibold` · "Guardar orden" (A, icono `CalendarCheck`) + "Cancelar" (B).
+Reglas en ADR 0008. Título "Pastas" (`text-xl font-bold font-heading`) + "Medicamentos para reclamar en la EPS" + CTA primario "Registrar orden de la EPS".
+- **Formulario** (tarjeta base, en la misma vista): Medicamento * (`<select>` con los planes sin reclamo, `appearance-none` + `ChevronDown`) · Primer reclamo * (fecha nativa + `Calendar`) y Meses de la orden * (`Stepper` 1–24, por defecto 6) en `grid-cols-2` · (sin texto de ayuda) · "Guardar orden" (A, icono `CalendarCheck`) + "Cancelar" (B).
 - **Tarjeta de reclamo** (tarjeta base `space-y-4`, **sin divisor bajo el encabezado**). **Regla común de las tarjetas**: los divisores internos respetan el padding de la tarjeta; ninguno llega al borde. Proporciones tomadas de la referencia: todo más contenido que en la tarjeta de plan.
   - Encabezado: nombre `text-xl font-bold`, dosis `text-sm text-gray-500`; a la derecha editar (`Pencil`, "Editar la orden de …") y quitar (`Trash2`, "Quitar el reclamo de …").
   - **Píldora de estado** `text-[13px] font-bold rounded-full px-3 py-1 border`, **solo cuando ya se puede reclamar** (aparece junto con el botón): menta (`bg-[#d0f8ed] text-[#0b8f75]`) para *Hoy toca reclamar*; ámbar (`bg-amber-50 text-amber-800 border-amber-200`) para *Atrasado · quedan N días* / *Último día para reclamar*. "Mañana" no lleva píldora (lo avisan el recuadro del Horario y el punto de la pestaña).
@@ -158,9 +158,9 @@ Lo usan `PlanFormScreen` y `PerfilView`.
 - **Header**: `bg-white px-5 py-4 border-b border-gray-100 sticky top-0 z-10`. Avatar `w-[50px] rounded-full border-2 border-[#0ee5ba]/20`, **solo el primer nombre** `text-[19px] font-bold`, fecha `text-[14px] text-[#0bc4a0] font-semibold`. Se muestra en Horario, Mis planes y Pastas; **no en Perfil**.
   **Campana** con dos estados: activa `text-[#0bc4a0] bg-[#d0f8ed]` · inactiva `text-gray-500 hover:bg-gray-50`; punto `w-2.5 h-2.5 bg-[#ff5f56] ring-2 ring-white animate-pulse` si hay tomas pendientes; `aria-label` que cambia con el estado.
 - **BottomNav**: `bg-white border-t border-gray-200 px-2 py-2 fixed bottom-0 z-30` + envelope. Botones `py-2 px-0.5`; píldora `px-4 py-1 rounded-full` + label `text-[11px] font-semibold whitespace-nowrap` (con 6 botones, a 320px "Mis planes" queda justo; se resuelve al quitar los de prueba). Activa `bg-[#d0f8ed] text-[#0bc4a0]`, inactiva `text-gray-400`/`text-gray-500`.
-  **Hoy tiene seis botones `w-1/6`**: Horario · Mis planes · **Pastas** · Alarma 2 · Alarma 3 · Perfil. La pestaña **Escanear se quitó** (2026-10-14): escanear se abre desde "Nuevo plan" en Mis planes y desde los estados vacíos, siempre con "Omitir y llenar a mano" al lado.
+  **Hoy tiene siete botones `w-1/7`**: Horario · Mis planes · **Pastas** · Alarma 2 · Alarma 3 · Alarma 4 · Perfil. La pestaña **Escanear se quitó** (2026-10-14): escanear se abre desde "Nuevo plan" en Mis planes y desde los estados vacíos, siempre con "Omitir y llenar a mano" al lado.
   - **Pastas** (icono `Pill`) lleva punto `w-2.5 h-2.5 bg-[#ff5f56] ring-2 ring-white motion-safe:animate-pulse` cuando hay que reclamar hoy, mañana o hay atraso; su `aria-label` cambia a "Pastas: hay un reclamo pendiente".
-  - **"Alarma 2" y "Alarma 3" son temporales**: icono `BellRing`, nunca quedan activos y no son pestañas. Abren la alarma de prueba en las versiones 2 y 3 (§9) para comparar. La versión 1 y su botón se eliminaron el 2026-10-14. Cuando se elija, se quitan y la nav vuelve a cuatro botones `w-1/4`.
+  - **"Alarma 2", "Alarma 3" y "Alarma 4" son temporales**: icono `BellRing`, nunca quedan activos y no son pestañas. Abren la alarma de prueba en las versiones 2, 3 y 4 (§9) para comparar. La versión 1 y su botón se eliminaron el 2026-10-14. Cuando se elija, se quitan y la nav vuelve a cuatro botones `w-1/4`.
 
 ## 9. Overlays
 
@@ -176,7 +176,7 @@ Aparece sola; debe leerse de lejos y resolverse con un toque. `AlarmShell` pone 
   - Posponer `bg-[#00695e]/30` con texto blanco, **sin icono**, "Recordar en N min" con los minutos reales de `REMINDER_INTERVAL_MS` (hoy 5; la referencia decía 10).
 - **Obligatorio**: `role="alertdialog"`, `aria-modal`, `aria-labelledby`, `aria-describedby`.
 
-- **Textos** (toma): "Toma:" `text-[1.05rem] text-[#087064]/80` · nombre `text-[2.25rem] font-extrabold text-[#087064]` · dosis en una línea "1 pastilla - 850 mg" `text-[1.25rem] font-bold` blanca · indicación centrada `text-[0.95rem] text-white/90`.
+- **Textos** (toma): "Toma:" `text-[1.05rem] text-[#087064]/80` · nombre `text-[2.25rem] font-extrabold text-[#087064]` · dosis en una línea "1 pastilla - 850 mg" `text-[1.25rem] font-bold` blanca · indicación centrada `text-[0.95rem] text-white/90` en `max-w-[17rem]` (dos líneas angostas).
 
 **Versiones** (la 1 se eliminó el 2026-10-14):
 
@@ -184,6 +184,8 @@ Aparece sola; debe leerse de lejos y resolverse con un toque. `AlarmShell` pone 
 |---|---|---|
 | Fondo | `radial-gradient(circle at 50% 35%, #2ee6cc 0%, #10d2b8 30%, #00bfa8 62%, #00a693 100%)` | `radial-gradient(circle at 50% 32%, #0cdbc9 0%, #01bcae 42%, #009d90 100%)` + 4 manchas cálidas `blur-3xl` (`#f6d365`/25, `#ffd166`/20, `#ffb703`/25, `#ffe49e`/15) + grano SVG (`feTurbulence`, `opacity-40 mix-blend-overlay`) |
 | Ondas | líneas `.alarm-wave`: borde blanco 2.5px → 1px | bandas de luz difusas `.alarm-wave-soft` (degradado radial blanco de opacidad máx. 0.2 + sombra verde apenas visible) |
+
+- **Versión 4 (solo prueba, `version: 4`)**: la 2 sin píldora. El bloque de texto ("Toma:", nombre, dosis, indicación) queda al centro de la pantalla y **las ondas `.alarm-wave` nacen a 300px alrededor del texto** (`TEXT_WAVE_START_PX`, vía `--wave-start-px`) en lugar de desde el disco. Mismo fondo, botones y textos que la 2.
 
 - **Rendimiento**: `.alarm-wave` (v2) anima `width`/`height`/`border-width`; `.alarm-wave-soft` (v3) nace del tamaño final y solo anima `transform: scale` (de `--wave-start` = 110px/tamaño a 1) y `opacity`, porque animar tamaño, sombras o `filter` trababa el celular. Regla en `gotchas/navegador.md`.
 - **Aviso de reclamo** (`ClaimAlert`, siempre v2): "Mañana toca reclamar:" / "Hoy toca reclamar:" / "Sigue pendiente reclamar:" en el lugar de "Toma:", nombre, "En la EPS, el 15 de octubre" (o "hasta el 31 de octubre") y "Entrega N de M. Si no la reclamas este mes, se pierde." Primario "Ya lo reclamé" (día de reclamar o atraso) o "Entendido" (víspera). Posponer: `[ − ] Recordarme en N horas [ + ]`, botones redondos `w-14 h-14 bg-[#00695e]/30` con `Minus`/`Plus` `w-6` ("Menos horas"/"Más horas"), de 1 a 12 h, por defecto 2.

@@ -140,9 +140,6 @@ const ClaimForm: React.FC<ClaimFormProps> = ({ plans, initialPlanId, initialClai
         </div>
       </div>
 
-      <p className="text-xs text-[#0bc4a0] font-semibold">
-        Se reclama una vez al mes, desde su día hasta fin de mes. Si un mes no se reclama, se pierde.
-      </p>
 
       {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
 
@@ -305,7 +302,7 @@ export const PastasView: React.FC<PastasViewProps> = ({
       <div className="space-y-3">
         <div>
           <h2 className="text-xl font-bold text-gray-900 font-heading">Pastas</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Medicamentos que Alberto reclama en la EPS</p>
+          <p className="text-xs text-gray-500 mt-0.5">Medicamentos para reclamar en la EPS</p>
         </div>
         {!isFormOpen && plans.length > 0 && availablePlans.length > 0 && (
           <button onClick={() => setForm({ mode: 'new' })} className={primaryButton}>

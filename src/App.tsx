@@ -29,6 +29,7 @@ import { PerfilView } from './components/PerfilView';
 import { BottomNav } from './components/BottomNav';
 import { PastasView } from './components/PastasView';
 import { ClaimAlert } from './components/ClaimAlert';
+import { AlarmVersion } from './components/AlarmShell';
 
 export default function App() {
   // Datos del cuidador: se guardan en el teléfono (ADR 0007)
@@ -225,9 +226,9 @@ export default function App() {
 
   // Alarma de prueba (botón temporal del menú): suena y se muestra al instante
   // dentro del mismo toque, así el audio no queda bloqueado por el navegador.
-  // `testAlarmVersion` dice qué diseño se está comparando (2 o 3); null = cerrada.
-  const [testAlarmVersion, setTestAlarmVersion] = useState<2 | 3 | null>(null);
-  const handleTestAlarm = (version: 2 | 3) => {
+  // `testAlarmVersion` dice qué diseño se está comparando (2, 3 o 4); null = cerrada.
+  const [testAlarmVersion, setTestAlarmVersion] = useState<AlarmVersion | null>(null);
+  const handleTestAlarm = (version: AlarmVersion) => {
     unlockAudio();
     playReminderSound();
     setTestAlarmVersion(version);
@@ -380,6 +381,7 @@ export default function App() {
               onSelectTab={setActiveTab}
               onTapTestAlarm2={() => handleTestAlarm(2)}
               onTapTestAlarm3={() => handleTestAlarm(3)}
+              onTapTestAlarm4={() => handleTestAlarm(4)}
               hasClaimToday={hasClaimToday}
             />
 

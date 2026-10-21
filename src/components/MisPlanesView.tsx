@@ -51,7 +51,7 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
             Mis Planes
           </h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Planes activos para Alberto
+            Planes de medicación activos
           </p>
         </div>
         <button

@@ -7,11 +7,13 @@ const WAVE_GAP_S = 0.8;
 const WAVE_COUNT = Math.round(WAVE_DURATION_S / WAVE_GAP_S);
 // Diámetro del disco de la píldora: las ondas nacen de este tamaño.
 const WAVE_START_PX = 110;
+// En la versión 4 no hay píldora: las ondas nacen alrededor del texto.
+const TEXT_WAVE_START_PX = 300;
 
-export type AlarmVersion = 2 | 3;
+export type AlarmVersion = 2 | 3 | 4;
 
 interface AlarmShellProps {
-  version: AlarmVersion; // 2 = la alarma real; 3 = alternativa de prueba
+  version: AlarmVersion; // 2 = la alarma real; 3 y 4 = alternativas de prueba
   titleId: string;
   descriptionId: string;
   children: React.ReactNode; // textos bajo la píldora
@@ -33,7 +35,9 @@ export const AlarmShell: React.FC<AlarmShellProps> = ({
   // Las ondas viven en una capa de fondo a pantalla completa, centradas en la
   // píldora. Se mide dónde quedó y hasta qué esquina deben llegar.
   const rootRef = useRef<HTMLDivElement>(null);
-  const iconRef = useRef<HTMLDivElement>(null);
+  const iconRef = useRef<HTMLDivElement>(null); // origen de las ondas: píldora, o el texto en la v4
+  const isTextCentered = version === 4;
+  const waveStartPx = isTextCentered ? TEXT_WAVE_START_PX : WAVE_START_PX;
   const [ripple, setRipple] = useState({ x: 0, y: 0, size: 0 });
 
   useLayoutEffect(() => {
@@ -110,13 +114,14 @@ export const AlarmShell: React.FC<AlarmShellProps> = ({
                       top: ripple.y,
                       width: ripple.size,
                       height: ripple.size,
-                      '--wave-start': WAVE_START_PX / ripple.size,
+                      '--wave-start': waveStartPx / ripple.size,
                       animationDelay: `${i * WAVE_GAP_S}s`,
                     } as React.CSSProperties)
                   : ({
                       left: ripple.x,
                       top: ripple.y,
                       '--wave-max': `${ripple.size}px`,
+                      '--wave-start-px': `${waveStartPx}px`,
                       animationDelay: `${i * WAVE_GAP_S}s`,
                     } as React.CSSProperties)
               }
@@ -125,29 +130,38 @@ export const AlarmShell: React.FC<AlarmShellProps> = ({
       </div>
 
       <main className="relative w-full flex flex-col items-center flex-1 justify-center">
-        {/* Píldora: de aquí salen las ondas (el contenedor reserva su espacio) */}
-        <div
-          ref={iconRef}
-          className="w-[210px] h-[210px] flex items-center justify-center mb-10"
-          aria-hidden="true"
-        >
-          <div className="w-[110px] h-[110px] rounded-full flex items-center justify-center bg-[#00e5cf] border border-white/50">
-            <svg
-              className="w-12 h-12 -rotate-45"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2.6"
-              viewBox="0 0 24 24"
-            >
-              <rect height="10" rx="5" width="18" x="3" y="7" />
-              <line strokeWidth="2.4" x1="12" x2="12" y1="7" y2="17" />
-            </svg>
+        {isTextCentered ? (
+          // v4: sin píldora; el texto queda al centro y las ondas salen de su alrededor
+          <div ref={iconRef} className="w-full flex flex-col items-center">
+            {children}
           </div>
-        </div>
+        ) : (
+          <>
+          {/* Píldora: de aquí salen las ondas (el contenedor reserva su espacio) */}
+          <div
+            ref={iconRef}
+            className="w-[210px] h-[210px] flex items-center justify-center mb-10"
+            aria-hidden="true"
+          >
+            <div className="w-[110px] h-[110px] rounded-full flex items-center justify-center bg-[#00e5cf] border border-white/50">
+              <svg
+                className="w-12 h-12 -rotate-45"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.6"
+                viewBox="0 0 24 24"
+              >
+                <rect height="10" rx="5" width="18" x="3" y="7" />
+                <line strokeWidth="2.4" x1="12" x2="12" y1="7" y2="17" />
+              </svg>
+            </div>
+          </div>
 
-        {children}
+          {children}
+          </>
+        )}
       </main>
 
       <footer className="relative w-full flex flex-col gap-3 pt-8">{actions}</footer>

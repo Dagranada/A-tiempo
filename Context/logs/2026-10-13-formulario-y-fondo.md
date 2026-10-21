@@ -40,3 +40,4 @@
 - **2026-10-20:** detalles de la tarjeta de Mis planes en cuadrícula de dos columnas con los valores alineados a la izquierda (referencia); ajustes para 320px (columna de etiquetas más angosta, `p-4`, fechas y partes de la dosis sin partirse).
 - **2026-10-20:** divisores homologados: el del encabezado de Mis planes deja de ir de borde a borde y respeta el padding, como el del historial de Pastas (ambos a 21px de los bordes).
 - **2026-10-20:** la tarjeta de Pastas pierde la línea sobre el historial: la caja de datos basta como separación.
+- **2026-10-20:** alarma versión 4 de prueba (botón "Alarma 4", menú `w-1/7`): la 2 sin píldora, texto al centro y ondas que nacen a 300px alrededor del texto (`--wave-start-px`). La indicación de todas las alarmas pasa a `max-w-[17rem]`. Bajadas de Mis planes y Pastas sin el nombre de Alberto; sin texto de ayuda en el formulario de orden.
