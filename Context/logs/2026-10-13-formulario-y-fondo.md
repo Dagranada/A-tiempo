@@ -32,3 +32,4 @@
   - Verificado en el navegador: registrar orden, aviso "Hoy" con posponer 4 h guardado, aviso "Mañana" con "Entendido", marcar reclamada y recargar sin perder nada, editar plan sin perder el reclamo.
 - **2026-10-14:** eliminar un plan pide confirmación (`ConfirmDialog`): avisa si se pierde también la orden de la EPS. Quitar un reclamo en Pastas sigue sin confirmación.
 - **2026-10-14:** se quitó la pestaña Escanear del menú (`NavTab` ya no tiene `'escanear'`); el escáner se abre desde "Nuevo plan" y los estados vacíos. Menú: 6 botones `w-1/6`.
+- **2026-10-20:** tarjeta de Pastas rehecha según referencia (caja "Próxima entrega | N. de entrega", historial con fecha completa, sin divisor bajo el encabezado) y botón para **editar la orden** (conserva el historial). La píldora de estado solo se muestra si hay que reclamar hoy, mañana o hay atraso.

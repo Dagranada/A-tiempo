@@ -107,6 +107,11 @@ export function formatDayMonth(iso: string): string {
   return `${d} de ${MONTHS[m - 1]}`;
 }
 
+/** "2026-07-21" → "21 de julio de 2026" */
+export function formatFullDate(iso: string): string {
+  return `${formatDayMonth(iso)} de ${parseIso(iso).y}`;
+}
+
 /** Texto corto del estado del mes en curso, para tarjetas y avisos. */
 export function describeCycle(cycle: ClaimCycle, todayIso: string): string {
   if (cycle.status === 'open') {
