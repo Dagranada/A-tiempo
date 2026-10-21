@@ -173,15 +173,15 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
   const { current, finished, claimedCount, cycles } = schedule;
   const orderMonths = cycles.length;
   const history = cycles.filter((c) => c.status === 'claimed' || c.status === 'missed');
-  // El estado solo se destaca cuando pide atención (hoy, mañana o atrasado).
-  const isUrgent =
-    !!current && (current.status === 'open' || daysBetween(today, current.dueDate) === 1);
+  // La píldora de estado solo aparece cuando ya se puede reclamar (hoy o con
+  // atraso): es cuando hay que actuar y aparece el botón.
+  const isUrgent = current?.status === 'open';
 
   return (
-    <article className="bg-white rounded-3xl p-5 border border-[#E2E8F0] shadow-sm space-y-4">
+    <article className="bg-white rounded-3xl p-4 min-[380px]:p-5 border border-[#E2E8F0] shadow-sm space-y-4">
       <div className="flex justify-between items-start">
         <div className="min-w-0">
-          <h3 className="text-[22px] font-bold text-gray-900 leading-tight">{plan.name}</h3>
+          <h3 className="text-xl font-bold text-gray-900 leading-tight">{plan.name}</h3>
           <p className="text-sm text-gray-500 mt-1">{plan.dose.replace('•', '·')}</p>
         </div>
         <div className="flex items-center space-x-1 -mr-1.5 -mt-1 shrink-0">
@@ -211,21 +211,22 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
               {describeCycle(current, today)}
             </span>
           )}
-          {/* Próxima entrega | número de entrega. En pantallas angostas (< 420px)
-              cada dato va en su propia fila para que fecha y etiqueta no se partan. */}
-          <div className="bg-gray-50 rounded-2xl border border-[#E2E8F0] px-4 min-[420px]:px-5 py-1 min-[420px]:py-4 flex flex-col min-[420px]:flex-row min-[420px]:items-stretch">
-            <div className="flex-1 min-w-0 flex items-baseline justify-between gap-2 py-3 min-[420px]:py-0 min-[420px]:block">
-              <p className="min-w-0 text-xs min-[420px]:text-[13px] font-medium uppercase tracking-wide text-gray-500 min-[420px]:whitespace-nowrap">
+          {/* Próxima entrega | entrega: siempre en dos columnas, la de la fecha más
+              ancha. Por debajo de 380px se ajustan márgenes, proporción y tamaño
+              de la fecha para que "30 de septiembre" quepa sin partirse. */}
+          <div className="bg-gray-50 rounded-2xl border border-[#E2E8F0] px-3 min-[380px]:px-4 py-3 min-[380px]:py-3.5 flex items-stretch">
+            <div className="flex-[2] min-[380px]:flex-[3] min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 whitespace-nowrap">
                 {current.status === 'open' ? 'Reclamar hasta' : 'Próxima entrega'}
               </p>
-              <p className="shrink-0 text-[17px] min-[420px]:text-[18px] font-bold text-gray-900 min-[420px]:mt-1 whitespace-nowrap">
+              <p className="text-sm min-[380px]:text-[15px] font-bold text-gray-900 mt-1 whitespace-nowrap">
                 {formatDayMonth(current.status === 'open' ? current.lastDate : current.dueDate)}
               </p>
             </div>
-            <div className="h-px min-[420px]:h-auto min-[420px]:w-px bg-[#E2E8F0] min-[420px]:mx-4" />
-            <div className="flex-1 min-w-0 flex items-baseline justify-between gap-2 py-3 min-[420px]:py-0 min-[420px]:block">
-              <p className="min-w-0 text-xs min-[420px]:text-[13px] font-medium uppercase tracking-wide text-gray-500 min-[420px]:whitespace-nowrap">N. de entrega</p>
-              <p className="shrink-0 text-[17px] min-[420px]:text-[18px] font-bold text-gray-900 min-[420px]:mt-1 whitespace-nowrap">
+            <div className="w-px bg-[#E2E8F0] mx-3 min-[380px]:mx-4" />
+            <div className="flex-1 min-[380px]:flex-[2] min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 whitespace-nowrap">Entrega</p>
+              <p className="text-sm min-[380px]:text-[15px] font-bold text-gray-900 mt-1 whitespace-nowrap">
                 {current.number} de {orderMonths}
               </p>
             </div>
@@ -255,14 +256,14 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
       {history.length > 0 && (
         <div className="pt-4 border-t border-[#E2E8F0]">
           <p className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3">Historial</p>
-          <ul className="space-y-2">
+          <ul className="space-y-1.5">
             {history.map((c) => (
               <li key={c.number} className="text-sm">
-                <span className="font-bold text-gray-800">Entrega {c.number}:</span>{' '}
+                <span className="font-medium text-gray-800">Entrega {c.number}:</span>{' '}
                 {c.status === 'claimed' && c.claimedOn ? (
                   <span className="text-gray-500">{formatFullDate(c.claimedOn)}</span>
                 ) : (
-                  <span className="font-bold text-red-500">Perdida</span>
+                  <span className="font-semibold text-red-500">Perdida</span>
                 )}
               </li>
             ))}
