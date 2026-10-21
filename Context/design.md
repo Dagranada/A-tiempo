@@ -114,12 +114,14 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 ### Pastas (`PastasView`) — reclamos en la EPS
 Reglas en ADR 0008. Título "Pastas" (`text-xl font-bold font-heading`) + "Medicamentos que Alberto reclama en la EPS" + CTA primario "Registrar orden de la EPS".
 - **Formulario** (tarjeta base, en la misma vista): Medicamento * (`<select>` con los planes sin reclamo, `appearance-none` + `ChevronDown`) · Primer reclamo * (fecha nativa + `Calendar`) y Meses de la orden * (`Stepper` 1–24, por defecto 6) en `grid-cols-2` · ayuda en `text-xs text-[#0bc4a0] font-semibold` · "Guardar orden" (A, icono `CalendarCheck`) + "Cancelar" (B).
-- **Tarjeta de reclamo**: misma estructura que la de plan (encabezado con divisor de lado a lado; nombre + dosis; eliminar "Quitar el reclamo de …"). Debajo:
-  - **Píldora de estado** `text-[13px] font-bold rounded-full px-3 py-1 border`: menta (`bg-[#d0f8ed] text-[#0b8f75]`) para *Hoy toca reclamar* / *Mañana toca reclamar*; ámbar (`bg-amber-50 text-amber-800 border-amber-200`) para *Atrasado · quedan N días* / *Último día para reclamar*; gris para *Faltan N días*.
-  - `<dl>` como en Mis planes: "Le toca reclamar" (o "Puede reclamar hasta" si ya se abrió) + fecha "17 de octubre", y "Entrega 3 de 6".
+- **Tarjeta de reclamo** (tarjeta base `space-y-4`, **sin divisor bajo el encabezado**):
+  - Encabezado: nombre `text-[22px] font-bold`, dosis `text-sm text-gray-500`; a la derecha editar (`Pencil`, "Editar la orden de …") y quitar (`Trash2`, "Quitar el reclamo de …"), como en la tarjeta de plan.
+  - **Píldora de estado** `text-[13px] font-bold rounded-full px-3 py-1 border`, **solo cuando pide atención**: menta (`bg-[#d0f8ed] text-[#0b8f75]`) para *Hoy toca reclamar* / *Mañana toca reclamar*; ámbar (`bg-amber-50 text-amber-800 border-amber-200`) para *Atrasado · quedan N días* / *Último día para reclamar*. Con más días de margen no se muestra.
+  - **Caja de datos** `bg-gray-50 rounded-2xl border border-[#E2E8F0] px-5 py-4`, dos columnas separadas por `w-px bg-[#E2E8F0]`: etiqueta `text-[13px] font-medium uppercase tracking-wide text-gray-500` ("Próxima entrega", o "Reclamar hasta" con la ventana abierta) y valor `text-[18px] font-bold` ("21 de octubre"); "N. de entrega" / "4 de 4".
   - "Marcar como reclamada" (A, `CheckCircle2`) **solo** cuando la ventana está abierta.
-  - **Historial** (etiqueta de campo + "· N meses perdidos"): una fila por entrega pasada, `CheckCircle2 text-[#0bc4a0]` "Reclamada el 14 de agosto" o `XCircle text-red-500` "Perdida" en `font-bold text-red-500` (la pérdida se ve en color **y** en texto).
-  - Orden terminada: caja `bg-gray-50 rounded-2xl text-sm` "La orden terminó… pide una orden nueva al médico" + "Registrar orden nueva" (A).
+  - **Historial** separado por `pt-4 border-t border-[#E2E8F0]`: etiqueta `text-xs font-bold uppercase tracking-wider text-gray-700` y una línea `text-sm` por entrega pasada: "**Entrega 1:**" (`font-bold text-gray-800`) + fecha completa `text-gray-500` ("21 de julio de 2026") o "**Perdida**" en `font-bold text-red-500`.
+  - Orden terminada: caja `bg-gray-50 rounded-2xl border` "La orden terminó… pide una orden nueva al médico" + "Registrar orden nueva" (A).
+- **Editar / renovar**: el formulario aparece **en el lugar de la tarjeta**, con el medicamento fijo (`<select>` deshabilitado). Editar conserva los reclamos hechos; "Registrar orden nueva" empieza una orden vacía. El formulario de "Registrar orden de la EPS" (nuevo) va arriba de la lista.
 - Orden de las tarjetas: la próxima fecha primero; las terminadas al final.
 - **Estado vacío** neutro (§9), con texto distinto si no hay planes ("Primero crea el plan…" + "Ir a Mis planes") o si hay planes sin orden.
 
