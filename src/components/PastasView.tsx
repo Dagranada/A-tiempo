@@ -28,6 +28,10 @@ const primaryButton =
   'w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2';
 const secondaryButton =
   'w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded-full text-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-1.5';
+// Secundario menta (design.md §3, D): el mismo verde, más claro. Para las acciones
+// verdes que conviven con un primario en la misma pantalla.
+const mintButton =
+  'w-full bg-[#d0f8ed] hover:bg-[#bdf3e3] text-[#087064] font-bold py-2.5 px-5 rounded-full text-sm border border-[#0ee5ba]/30 transition-all active:scale-[0.98] flex items-center justify-center space-x-2';
 const nativePickerClass =
   '[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer';
 
@@ -229,7 +233,7 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
             </div>
           </div>
           {current.status === 'open' && (
-            <button onClick={onMarkClaimed} className={primaryButton}>
+            <button onClick={onMarkClaimed} className={mintButton}>
               <CheckCircle2 className="w-5 h-5" />
               <span>Marcar como reclamada</span>
             </button>
@@ -243,7 +247,7 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
             La orden terminó ({claimedCount} de {orderMonths} entregas reclamadas). Pide una orden nueva al médico y
             regístrala aquí.
           </p>
-          <button onClick={onRenew} className={primaryButton}>
+          <button onClick={onRenew} className={mintButton}>
             <Plus className="w-5 h-5" />
             <span>Registrar orden nueva</span>
           </button>
