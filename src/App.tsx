@@ -33,7 +33,7 @@ import { PlanFormScreen } from './components/PlanFormScreen';
 import { PerfilView } from './components/PerfilView';
 import { BottomNav } from './components/BottomNav';
 import { PastasView } from './components/PastasView';
-import { ClaimAlert } from './components/ClaimAlert';
+import { ClaimAlert, buildTestClaim } from './components/ClaimAlert';
 import { AlarmVersion } from './components/AlarmShell';
 
 export default function App() {
@@ -231,7 +231,8 @@ export default function App() {
 
   // Alarma de prueba (botón temporal del menú): suena y se muestra al instante
   // dentro del mismo toque, así el audio no queda bloqueado por el navegador.
-  // `testAlarmVersion` dice qué diseño se está comparando (2, 3 o 4); null = cerrada.
+  // `testAlarmVersion` = alarma de toma de prueba (4, la real); `isTestClaimOpen` =
+  // aviso de reclamo de prueba (botón "Reclamo"). Ninguno marca nada.
   const [testAlarmVersion, setTestAlarmVersion] = useState<AlarmVersion | null>(null);
   const handleTestAlarm = (version: AlarmVersion) => {
     unlockAudio();
@@ -240,6 +241,14 @@ export default function App() {
     requestNotificationPermission()
       .then((granted) => granted && showTestNotification())
       .catch(() => undefined);
+  };
+  // Aviso de reclamo de prueba: 'today' (botón "Reclamo") o 'tomorrow' (botón "Mañana").
+  const [testClaimKind, setTestClaimKind] = useState<'today' | 'tomorrow' | null>(null);
+  const isTestClaimOpen = testClaimKind !== null;
+  const handleTestClaim = (kind: 'today' | 'tomorrow') => {
+    unlockAudio();
+    playReminderSound();
+    setTestClaimKind(kind);
   };
 
   // --- Reclamos en la EPS (pestaña Pastas) ---
@@ -402,9 +411,9 @@ export default function App() {
             <BottomNav
               activeTab={activeTab}
               onSelectTab={setActiveTab}
-              onTapTestAlarm2={() => handleTestAlarm(2)}
-              onTapTestAlarm3={() => handleTestAlarm(3)}
               onTapTestAlarm4={() => handleTestAlarm(4)}
+              onTapTestClaim={() => handleTestClaim('today')}
+              onTapTestClaimEve={() => handleTestClaim('tomorrow')}
               hasClaimToday={hasClaimToday}
             />
 
@@ -417,7 +426,16 @@ export default function App() {
                 onClose={() => setTestAlarmVersion(null)}
               />
             )}
-            {dueDose && !testAlarmVersion && (
+            {testClaimKind && !testAlarmVersion && (
+              <ClaimAlert
+                key={`prueba-${testClaimKind}`}
+                claim={buildTestClaim(testClaimKind)}
+                onClaimed={() => setTestClaimKind(null)}
+                onAcknowledge={() => setTestClaimKind(null)}
+                onSnooze={() => setTestClaimKind(null)}
+              />
+            )}
+            {dueDose && !testAlarmVersion && !isTestClaimOpen && (
               <ReminderAlert
                 dose={dueDose}
                 plan={plans.find((p) => p.id === dueDose.planId)}
@@ -426,7 +444,7 @@ export default function App() {
               />
             )}
             {/* Aviso de reclamo: solo si no hay una toma ni una prueba en pantalla */}
-            {dueClaim && !dueDose && !testAlarmVersion && (
+            {dueClaim && !dueDose && !testAlarmVersion && !isTestClaimOpen && (
               <ClaimAlert
                 key={dueClaim.key}
                 claim={dueClaim}

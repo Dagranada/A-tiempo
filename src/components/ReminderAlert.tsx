@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { DoseItem, MedicationPlan } from '../types';
-import { REMINDER_INTERVAL_MS } from '../hooks/useDoseReminders';
-import { ALARM_PRIMARY_BUTTON, ALARM_SECONDARY_BUTTON, AlarmShell, AlarmVersion } from './AlarmShell';
+import {
+  ALARM_PRIMARY_BUTTON,
+  ALARM_TEXT,
+  AlarmShell,
+  AlarmVersion,
+  SnoozeControl,
+  alarmNameSize,
+} from './AlarmShell';
 
-// El texto del botón sale de la misma constante que usa el snooze:
-// nunca promete un tiempo distinto al real.
-const SNOOZE_MINUTES = Math.round(REMINDER_INTERVAL_MS / 60000);
+// Posponer de 5 en 5 minutos: no menos de 5 (rompería el paso) y hasta 1 hora.
+const SNOOZE_STEP_MIN = 5;
+const SNOOZE_MAX_MIN = 60;
 
 type ReminderAlertProps =
   | {
@@ -14,13 +20,12 @@ type ReminderAlertProps =
       dose: DoseItem;
       plan?: MedicationPlan; // para las indicaciones, si existen
       onMarkAsTaken: (doseId: string) => void;
-      onSnooze: () => void;
+      onSnooze: (minutes: number) => void;
     }
   // Alarma de prueba: misma pantalla con los textos de la referencia de diseño.
   // Sus botones solo la cierran: no marca ninguna toma. Muestra Metformina por
   // decisión explícita (excepción al invariante 5, ver Context/decisions/0006).
-  // Las versiones 3 y 4 son alternativas solo para comparar (botones "Alarma 3"
-  // y "Alarma 4"); la 4 no tiene píldora y centra el texto.
+  // El botón temporal "Alarma 4" la abre para verla sin esperar una toma.
   | { isTest: true; version?: AlarmVersion; onClose: () => void };
 
 const TEST_MEDICATION = {
@@ -29,9 +34,10 @@ const TEST_MEDICATION = {
   instructions: 'Tomar con el almuerzo para evitar molestias estomacales',
 };
 
-/** Aviso de toma. La versión 2 es el diseño de la alarma real. */
+/** Aviso de toma. La versión 4 (sin píldora, texto al centro) es la alarma real. */
 export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
-  const version: AlarmVersion = props.isTest ? props.version ?? 2 : 2;
+  const version: AlarmVersion = props.isTest ? props.version ?? 4 : 4;
+  const [snoozeMinutes, setSnoozeMinutes] = useState(SNOOZE_STEP_MIN);
   const name = props.isTest ? TEST_MEDICATION.name : props.dose.medicationName;
   const dose = props.isTest ? TEST_MEDICATION.dose : props.dose.dose;
   const instructions = props.isTest ? TEST_MEDICATION.instructions : props.plan?.instructions;
@@ -43,7 +49,7 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
     .join(' - ');
 
   const handleConfirm = props.isTest ? props.onClose : () => props.onMarkAsTaken(props.dose.id);
-  const handleSnooze = props.isTest ? props.onClose : props.onSnooze;
+  const handleSnooze = props.isTest ? props.onClose : () => props.onSnooze(snoozeMinutes);
 
   return (
     <AlarmShell
@@ -56,24 +62,30 @@ export const ReminderAlert: React.FC<ReminderAlertProps> = (props) => {
             <CheckCircle2 className="w-6 h-6" />
             <span>Marcar como tomada</span>
           </button>
-          <button type="button" onClick={handleSnooze} className={ALARM_SECONDARY_BUTTON}>
-            Recordar en {SNOOZE_MINUTES} min
-          </button>
+          <SnoozeControl
+            value={snoozeMinutes}
+            min={SNOOZE_STEP_MIN}
+            max={SNOOZE_MAX_MIN}
+            step={SNOOZE_STEP_MIN}
+            label={`Recordar en ${snoozeMinutes} min`}
+            decreaseLabel="5 minutos menos"
+            increaseLabel="5 minutos más"
+            onChange={setSnoozeMinutes}
+            onSnooze={handleSnooze}
+          />
         </>
       }
     >
-      <p className="text-[1.05rem] font-medium text-[#087064]/80 text-center">Toma:</p>
-      <h2 id="reminder-title" className="text-[2.25rem] leading-tight font-extrabold text-[#087064] text-center">
+      {/* Misma escala que el aviso de reclamo (ALARM_TEXT). Espacios: 4px entre
+          "Toma:" y el nombre; 8px entre los demás */}
+      <p className={ALARM_TEXT.label}>Toma:</p>
+      <h2 id="reminder-title" className={`${alarmNameSize(name)} ${ALARM_TEXT.name} mt-1`}>
         {name}
       </h2>
-      <p id="reminder-desc" className="text-[1.25rem] font-bold text-white text-center mt-1">
+      <p id="reminder-desc" className={`${ALARM_TEXT.strong} mt-2`}>
         {doseLine}
       </p>
-      {instructions && (
-        <p className="w-full max-w-[17rem] mx-auto text-center text-[0.95rem] leading-snug font-medium text-white/90 mt-4">
-          {instructions}
-        </p>
-      )}
+      {instructions && <p className={`${ALARM_TEXT.note} mt-2`}>{instructions}</p>}
     </AlarmShell>
   );
 };

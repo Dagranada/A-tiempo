@@ -42,7 +42,7 @@ function findOverdueDoses(doses: DoseItem[], now: Date): DoseItem[] {
  */
 export function useDoseReminders(doses: DoseItem[], enabled: boolean): {
   dueDose: DoseItem | null;
-  snooze: () => void;
+  snooze: (minutes: number) => void;
 } {
   const [dueDose, setDueDose] = useState<DoseItem | null>(null);
   const lastNotifiedRef = useRef<Map<string, number>>(new Map());
@@ -96,8 +96,9 @@ export function useDoseReminders(doses: DoseItem[], enabled: boolean): {
     return () => clearInterval(interval);
   }, [doses, enabled]);
 
-  function snooze() {
-    snoozedUntilRef.current = Date.now() + REMINDER_INTERVAL_MS;
+  // Pospone los minutos que eligió la persona en la alarma (de 5 en 5).
+  function snooze(minutes: number) {
+    snoozedUntilRef.current = Date.now() + minutes * 60 * 1000;
     if (dueDose) {
       // Se marca como recién avisada para que el próximo aviso también espere.
       lastNotifiedRef.current.set(dueDose.id, Date.now());
