@@ -1,4 +1,12 @@
-# 2026-10-13 · Formulario "Revisa el plan" y fondo blanco
+# 2026-10-13 a 2026-10-22 · Formulario, tarjetas, Pastas (reclamos EPS) y alarma real
+
+**Resumen.** Se rediseñaron el formulario "Revisa el plan", las tarjetas de Mis planes y el Perfil (editable, sin barra superior). Se agregaron la persistencia en el teléfono (ADR 0007) y la pestaña **Pastas** con los reclamos mensuales en la EPS y sus avisos (ADR 0008). La alarma pasó por cuatro versiones comparadas con botones de prueba y quedó la **versión 4** como real, para tomas y reclamos, con posponer de 5 en 5 minutos (ADR 0009). Se quitó la pestaña Escanear (se abre desde "Nuevo plan"). Se publicó en Vercel en cada fusión a `main` (PRs #2 a #18). Reglas nuevas: un solo primario verde por pantalla (secundario menta), animaciones solo con `transform`/`opacity`, divisores dentro del padding, probar a 386 y 320 px con el caso más largo.
+
+**Aprendido.** Animar tamaño trababa o hacía parpadear las ondas; editar `Context/` recarga la app; la consola del panel guarda errores viejos; un video de referencia se puede ver sirviéndolo con Vite y dibujándolo en un canvas; la red con GitHub falla a ratos y hay que verificar el PR por número antes de reintentar (todo en `gotchas/`).
+
+**Abierto.** Ver `../state/current.md` (generar tomas por frecuencia, quitar botones de prueba, Nunito Sans sin aplicar).
+
+## Detalle cronológico
 
 - `PlanFormScreen`: steppers de dosis (cantidad + mg) y frecuencia; dosis no contable cae a texto libre. Tipografía unificada: etiquetas `text-xs font-bold uppercase`, todo valor de campo `text-sm font-medium`.
 - **Convención cambiada (design.md §2/§5):** el canvas de la app pasa de `#f8f9fa` a blanco, a pedido de la persona. `#f8f9fa` queda solo como fondo exterior en desktop (`App.tsx` contenedor de afuera, `index.html`).

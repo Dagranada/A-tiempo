@@ -27,5 +27,14 @@ Al editar `src/data/mockData.ts`, la pantalla puede seguir mostrando los valores
 ## Ver un video de referencia (.mov/.mp4) en este entorno
 No hay `ffmpeg`, y `swift`/`swiftc` con AVFoundation se cuelgan o fallan por los module maps de las Command Line Tools. Lo que sí funciona (2026-10-14): copiar el video temporalmente a la raíz del repo, abrir `http://localhost:3000/index.html` en una pestaña aparte del preview y, con `javascript_tool`, crear un `<video src="/archivo.mov">`, recorrer `currentTime` y dibujar cada cuadro en un `<canvas>` en cuadrícula con su tiempo; luego una captura. H.264 se decodifica bien. **Borra la copia del video al terminar** (no debe entrar en git).
 
-## Animaciones que se traban en el celular
-Animar `width`/`height`, `box-shadow` o `filter: blur()` obliga a repintar en cada cuadro; con varias capas grandes a la vez (las 10 ondas de la alarma) el celular se traba, y empeora a medida que se acumulan. Regla: anima solo `transform` y `opacity`, con el elemento ya del tamaño final (`will-change: transform, opacity`). Pasó con la alarma v3 el 2026-10-14; las ondas v1/v2 (`.alarm-wave`) todavía animan `width`/`height`/`border-width`: si se traban, misma solución.
+## Animaciones que se traban o parpadean en el celular
+Animar `width`/`height`, `border-width`, `box-shadow` o `filter: blur()` obliga a repintar en cada cuadro; con varias capas grandes a la vez (las 10 ondas de la alarma) el celular se traba al rato, y en escritorio se ve **intermitente** con el tiempo. Regla: anima solo `transform` y `opacity`, con el elemento ya del tamaño final (`will-change: transform, opacity`) y escalando desde `--wave-start`. Pasó con la versión 3 (2026-10-14) y con la 4 (2026-10-22); hoy la alarma real (`.alarm-wave-line`) lo cumple. La versión 2 (`.alarm-wave`, sin botón) todavía anima tamaño.
+
+## Editar `Context/*.md` recarga la app entera
+Vite vigila todo el proyecto: guardar un archivo de `Context/` dispara un **page reload**, no un HMR. Se pierde lo que estaba abierto (una alarma de prueba, un formulario, el viewport emulado sigue). Si al volver al navegador "desapareció" algo, es eso; vuelve a abrirlo antes de concluir que es un bug.
+
+## La consola del panel guarda errores viejos
+`read_console_messages` en la pestaña del panel devuelve también mensajes de recargas anteriores (p. ej. "Failed to reload … Toast.tsx" de un archivo ya borrado, o un warning de `key` de un estado intermedio). Antes de reportar un error, **ábrelo en una pestaña nueva** (`tabs_create` + `navigate`) y lee su consola; si ahí no está, era viejo. Cierra la pestaña al terminar.
+
+## Probar lo que depende de la hora sin esperar
+El recuadro de reclamo aparece desde las 12 m y los avisos de reclamo a las 8 a. m. Para verlos sin esperar, en la página (no en el código) reemplaza `Date` por una clase que sume un desfase (`class extends RealDate { constructor(...a){ a.length ? super(...a) : super(RealDate.now()+offset) } static now(){ return RealDate.now()+offset } }`) y espera al siguiente tic de la app (≤ 60 s, el reloj de `App.tsx`). **Recarga después** para volver a la hora real, y avisa a la persona de que lo que ve está adelantado.
