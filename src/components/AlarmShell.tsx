@@ -244,21 +244,22 @@ export const SnoozeControl: React.FC<SnoozeControlProps> = ({
 
 /**
  * Escala de texto común de las alarmas (toma y reclamo), para que se lean igual.
+ * (2026-10-22: todo un 10 % más pequeño que la primera versión, mismas proporciones.)
  * Rol → misma clase en las dos pantallas.
  */
 export const ALARM_TEXT = {
   // Solo en el reclamo: "HOY" / "MAÑANA" / "AÚN"
-  when: 'text-[1.4rem] leading-none font-extrabold uppercase tracking-wide text-[#0f5a4e] text-center',
+  when: 'text-[1.26rem] leading-none font-extrabold uppercase tracking-wide text-[#0f5a4e] text-center',
   // "Toma:" / "debes reclamar:"
-  label: 'text-[1.25rem] leading-tight font-medium text-[#0f5a4e] text-center',
+  label: 'text-[1.125rem] leading-tight font-medium text-[#0f5a4e] text-center',
   // Nombre del medicamento
   name: 'leading-none font-extrabold text-[#0f5a4e] text-center break-words max-w-full',
   // Dosis / fecha: la línea blanca destacada
-  strong: 'text-[1.3rem] leading-tight font-bold text-white text-center',
+  strong: 'text-[1.17rem] leading-tight font-bold text-white text-center',
   // Indicación / "Entrega 3 de 6"
-  note: 'w-full max-w-[17rem] mx-auto text-center text-base leading-snug font-medium text-white',
+  note: 'w-full max-w-[17rem] mx-auto text-center text-[0.9rem] leading-snug font-medium text-white',
 };
 
 /** Tamaño del nombre: los muy largos ("Hidroclorotiazida") bajan para no partirse. */
-export const alarmNameSize = (name: string) => (name.length > 13 ? 'text-[2rem]' : 'text-[2.5rem]');
+export const alarmNameSize = (name: string) => (name.length > 13 ? 'text-[1.8rem]' : 'text-[2.25rem]');
 

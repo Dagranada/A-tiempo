@@ -54,3 +54,4 @@
 - **2026-10-22:** aviso de reclamo con la estructura, tamaños y distancias de la referencia: HOY/MAÑANA (verde oscuro) + fecha (blanca) arriba; "debes reclamar:" + nombre grande (44px, 35px si es muy largo) y "Entrega 3 de 6" debajo.
 - **2026-10-22:** toma y reclamo homologados con una escala de texto común (`ALARM_TEXT` + `alarmNameSize`): etiqueta 20px, nombre 40px (32px si es largo), línea blanca 20.8px, nota 16px, HOY/MAÑANA 22.4px; mismo verde oscuro `#0f5a4e`.
 - **2026-10-22:** en el aviso de reclamo, la distancia entre la fecha y "debes reclamar:" baja de 20px a 8px, como el resto.
+- **2026-10-22:** textos de las alarmas (toma, reclamo hoy y mañana) un 10 % más pequeños con las mismas proporciones: etiqueta 18px, nombre 36px (28.8px si es largo), línea blanca 18.7px, nota 14.4px, HOY/MAÑANA 20.2px.

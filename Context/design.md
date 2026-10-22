@@ -184,11 +184,11 @@ Aparece sola; debe leerse de lejos y resolverse con un toque. `AlarmShell` pone 
 - **Escala de texto común** (`ALARM_TEXT` en `AlarmShell.tsx`), igual en toma y reclamo:
   | Rol | Toma | Reclamo | Clases |
   |---|---|---|---|
-  | Etiqueta | "Toma:" | "debes reclamar:" | `text-[1.25rem] font-medium text-[#0f5a4e]` |
-  | Nombre | Metformina | Metformina | `text-[2.5rem] font-extrabold text-[#0f5a4e]` (`text-[2rem]` si tiene más de 13 letras: `alarmNameSize`) |
-  | Línea blanca | "1 pastilla - 850 mg" | "22 de octubre" | `text-[1.3rem] font-bold text-white` |
-  | Nota | indicación | "Entrega 3 de 6" | `text-base font-medium text-white`, `max-w-[17rem]` |
-  | Cuándo (solo reclamo) | — | "HOY" / "MAÑANA" / "AÚN" | `text-[1.4rem] font-extrabold uppercase tracking-wide text-[#0f5a4e]` |
+  | Etiqueta | "Toma:" | "debes reclamar:" | `text-[1.125rem] font-medium text-[#0f5a4e]` |
+  | Nombre | Metformina | Metformina | `text-[2.25rem] font-extrabold text-[#0f5a4e]` (`text-[1.8rem]` si tiene más de 13 letras: `alarmNameSize`) |
+  | Línea blanca | "1 pastilla - 850 mg" | "22 de octubre" | `text-[1.17rem] font-bold text-white` |
+  | Nota | indicación | "Entrega 3 de 6" | `text-[0.9rem] font-medium text-white`, `max-w-[17rem]` |
+  | Cuándo (solo reclamo) | — | "HOY" / "MAÑANA" / "AÚN" | `text-[1.26rem] font-extrabold uppercase tracking-wide text-[#0f5a4e]` |
   Espacios: 4px entre la etiqueta y el nombre y 8px entre todo lo demás, en las dos pantallas (también entre la fecha y "debes reclamar:" en el reclamo).
 
 **Versiones** (la 1 se eliminó el 2026-10-14):
