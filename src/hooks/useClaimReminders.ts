@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MedicationPlan } from '../types';
-import { ClaimCycle, daysBetween, formatDayMonth, getClaimSchedule, toIsoDate } from '../lib/claims';
+import { ClaimCycle, daysBetween, getClaimSchedule, toIsoDate } from '../lib/claims';
 import { playReminderSound, showClaimNotification } from '../services/notificationService';
 
 // Horas fijas de los avisos de reclamo (no tienen hora propia como las tomas).
@@ -85,11 +85,9 @@ export function useClaimReminders(
       if (soundedRef.current.has(soundKey)) return;
       soundedRef.current.add(soundKey);
       playReminderSound();
+      // Mismo texto que el recuadro del Horario ("Mañana toca reclamar Losartán").
       const when = next.kind === 'tomorrow' ? 'Mañana' : 'Hoy';
-      showClaimNotification(
-        `${when} toca reclamar ${next.plan.name} en la EPS (${formatDayMonth(next.cycle.dueDate)}).`,
-        next.key
-      );
+      showClaimNotification(`${when} toca reclamar ${next.plan.name}`, next.key);
     }
 
     check();

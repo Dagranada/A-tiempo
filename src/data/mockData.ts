@@ -14,6 +14,10 @@ const demoDate = (monthsAgo: number, dayOffset = 0) => {
   return toIsoDate(d);
 };
 
+// Días de atraso del ejemplo "vencido": 5, o menos si el mes acaba de empezar,
+// para que su día caiga siempre dentro del mes en curso.
+const LATE_DAYS = Math.min(5, new Date().getDate() - 1);
+
 export const INITIAL_SENIOR_PROFILE: SeniorProfile = {
   name: 'Alberto Valdés',
   relationship: 'Padre',
@@ -73,7 +77,13 @@ export const INITIAL_PLANS: MedicationPlan[] = [
     startDate: '2026-01-01',
     endDate: '2026-12-31',
     instructions: 'Tomar por la noche antes de dormir',
-    createdAt: '2026-01-01T08:00:00Z'
+    createdAt: '2026-01-01T08:00:00Z',
+    // Orden de 6 meses con el reclamo de este mes atrasado (ejemplo "vencido")
+    claim: {
+      firstDate: demoDate(2, -LATE_DAYS),
+      orderMonths: 6,
+      claimedDates: [demoDate(2, -LATE_DAYS), demoDate(1, -LATE_DAYS)],
+    },
   },
   {
     id: 'plan-4',
