@@ -10,6 +10,6 @@ Solo commitea si la persona lo pidió. Estilo del repo (mira `git log`):
   2. Qué hace ahora la app.
   3. Por qué así y no de otra forma.
   4. **Alcance / limitación conocida**, si la hay (ej.: "funciona con la app abierta").
-- Un commit = un cambio coherente. No mezcles memoria/documentación con cambios de código.
-- Pie: `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
+- Un commit = un cambio coherente. No mezcles memoria/documentación con cambios de código. Si dos cambios de código comparten archivos y no se separan limpiamente (`git apply --cached` de un hunk sirve a veces), un solo commit que los nombre todos.
+- Pie: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` (el modelo que hizo el trabajo; si cambia, actualiza esta línea).
 - Nunca incluyas `.env.local` ni claves.

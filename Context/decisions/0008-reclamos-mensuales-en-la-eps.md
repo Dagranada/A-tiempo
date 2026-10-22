@@ -16,7 +16,7 @@ Algunos medicamentos no se compran: se reclaman en la EPS cada mes mientras dure
 ## Decisión de producto
 - Un reclamo pertenece a un plan de Mis planes (`MedicationPlan.claim`), y se registra desde la pestaña **"Pastas"** (no desde el formulario del plan, que lo conserva al editar).
 - "Marcar como reclamada" solo registra la fecha de hoy; no hay cantidad ni farmacia.
-- Avisos (`useClaimReminders`): **12:00 del día anterior** ("Mañana toca reclamar", con "Entendido") y **8:00 del día de reclamar y de cada día de atraso** ("Hoy toca reclamar" / "Sigue pendiente", con "Ya lo reclamé"). Ambos se pueden posponer de 1 a 12 horas con − / +.
+- Avisos (`useClaimReminders` + `ClaimAlert`, con el diseño de la alarma real): **12:00 del día anterior** ("MAÑANA / fecha / debes reclamar: / medicamento / Entrega N de M", con "Entendido") y **8:00 del día de reclamar y de cada día de atraso** ("HOY" o "AÚN", con "Ya lo reclamé"). Ambos se pueden posponer de 1 a 12 horas con − / +.
 - Como los avisos solo suenan con la app abierta (ADR 0004), además: un recuadro arriba del Horario desde las 12 m del día anterior, con el mismo texto que la notificación ("Mañana toca reclamar Losartán" / "Toca para ver tus pastas"), y un punto en la pestaña cuando toca reclamar hoy, mañana o hay atraso.
 
 ## Consecuencias

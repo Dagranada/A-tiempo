@@ -10,7 +10,8 @@ Persona: **Alberto, 78**; cuidadora: **María (hija)**. Origen: Google AI Studio
 
 **Definición de éxito:** Alberto se toma **todas** las pastillas según lo planeado, **sin confusiones**. Adherencia y claridad — no retención ni tiempo de uso. Juzga cada cambio contra esto.
 
-Flujos: `Horario` (tomas de hoy, marcar "Listo") · `Mis Planes` (CRUD; "Nuevo plan" abre Escanear: foto → Gemini → formulario prellenado) · `Pastas` (reclamos mensuales en la EPS, ADR 0008) · `Perfil`. Los datos se guardan en el teléfono (ADR 0007).
+Flujos: `Horario` (tomas de hoy, marcar "Listo") · `Mis Planes` (CRUD; "Nuevo plan" abre Escanear: foto → Gemini → formulario prellenado) · `Pastas` (reclamos mensuales en la EPS, ADR 0008) · `Perfil`. Alarma a pantalla completa para tomas y reclamos. Los datos se guardan en el teléfono (ADR 0007).
+Publicación: rama `memoria-de-contexto` → PR → `main`; **Vercel despliega `main` a producción** en cada fusión.
 Stack: React 19 + TS + Vite 6 + Tailwind 4 (`@tailwindcss/vite`) + `lucide-react` + `@google/genai`. Sin backend, sin router, sin tests.
 
 ## 2. Reglas duras
@@ -25,7 +26,7 @@ Si una petición contradice una de estas, **detente antes de editar nada**: nomb
 2. **Ningún secreto en el repo.** `.env.local`, API keys ni credenciales, en ningún archivo ni commit.
 3. **Accesibilidad mínima**: nada accionable baja de `text-sm`, todo botón solo-icono lleva `aria-label`, el foco es visible. La app es para una persona de 78 años.
 4. **La salida manual siempre visible**: "Omitir y llenar a mano" / "Crear a mano" no se elimina de ningún paso del flujo de creación.
-5. **Nada en pantalla que no corresponda con la realidad.** Un dato falso o desactualizado sobre qué tomar y cuándo es un bug de seguridad del paciente, no un detalle cosmético. *Excepción acotada: la alarma de prueba del botón temporal "Alarma" muestra Metformina (ADR 0006); caduca al quitar el botón.*
+5. **Nada en pantalla que no corresponda con la realidad.** Un dato falso o desactualizado sobre qué tomar y cuándo es un bug de seguridad del paciente, no un detalle cosmético. *Excepción acotada: las alarmas de prueba de los botones temporales "Alarma 4", "Reclamo" y "Mañana" muestran Metformina (ADR 0006); caduca al quitar esos botones.*
 
 ### 2.B · Convenciones — la persona puede cambiarlas al vuelo
 
@@ -50,6 +51,7 @@ Protocolo completo ante un choque: `skills/conflicto-con-una-regla.md`.
 | Escaneo / IA | `gotchas/gemini.md` → `src/services/geminiService.ts` |
 | Recordatorios | `gotchas/navegador.md` → `src/hooks/useDoseReminders.ts` + `services/notificationService.ts` |
 | Reclamos en la EPS | `decisions/0008` → `src/lib/claims.ts` + `src/hooks/useClaimReminders.ts` |
+| Alarma (toma o reclamo) | `design.md` §9 → `src/components/AlarmShell.tsx` |
 | Modelo de datos | `src/types.ts` → `gotchas/datos-y-estado.md` |
 | "¿Por qué está así?" | `decisions/README.md` → el ADR concreto |
 | Alcance / éxito | `ficha-4d.md` |
@@ -58,18 +60,18 @@ Protocolo completo ante un choque: `skills/conflicto-con-una-regla.md`.
 ## 4. Mapa del código
 
 ```
-src/App.tsx                        428 · TODO el estado + handlers + routing por screen/activeTab
-src/types.ts                        52 · MedicationPlan (+ claim: EpsClaim), DoseItem, SeniorProfile, ScreenView, NavTab
-src/data/mockData.ts               ~215 · INITIAL_PLANS (2 con reclamo, fechas relativas a hoy) / _TODAY_DOSES / _SENIOR_PROFILE, SCAN_PRESETS
-src/lib/claims.ts                  121 · getClaimSchedule (reglas de reclamo), fechas YYYY-MM-DD, textos de estado
+src/App.tsx                        464 · TODO el estado + handlers + routing por screen/activeTab (pide extraer hooks)
+src/types.ts                        57 · MedicationPlan (+ claim: EpsClaim), DoseItem, SeniorProfile, ScreenView, NavTab
+src/data/mockData.ts               238 · INITIAL_PLANS (3 con reclamo, fechas relativas a hoy) / _TODAY_DOSES / _SENIOR_PROFILE, SCAN_PRESETS
+src/lib/claims.ts                  126 · getClaimSchedule (reglas de reclamo), fechas YYYY-MM-DD, textos de estado
 src/services/geminiService.ts       76 · analyzeMedicationImage(base64) → plan
-src/services/notificationService.ts ~125 · permisos, notificaciones (toma, reclamo, prueba), chime Web Audio
+src/services/notificationService.ts 125 · permisos, notificaciones (toma, reclamo, prueba), chime Web Audio
 src/hooks/usePersistentState.ts     34 · useState + localStorage (prefijo a-tiempo:v1:)
-src/hooks/useDoseReminders.ts      109 · vigila el reloj → dueDose + snooze
-src/hooks/useClaimReminders.ts     101 · vigila el reloj → aviso de reclamo (12 m víspera, 8 a. m. el día)
+src/hooks/useDoseReminders.ts      110 · vigila el reloj → dueDose + snooze(minutos)
+src/hooks/useClaimReminders.ts      99 · vigila el reloj → aviso de reclamo (12 m víspera, 8 a. m. el día)
 src/components/                         Header, BottomNav, HorarioView, MisPlanesView, PastasView, PerfilView,
-                                        CameraScanScreen, LoadingScreen, PlanFormScreen, Stepper,
-                                        AlarmShell (fondo + ondas), ReminderAlert, ClaimAlert
+                                        CameraScanScreen, LoadingScreen, PlanFormScreen, Stepper, ConfirmDialog,
+                                        AlarmShell (fondo, ondas, SnoozeControl, ALARM_TEXT), ReminderAlert, ClaimAlert
 ```
 `npm run dev` (:3000) · `npm run lint` · `npm run build`. Para ver la app: preview con `a-tiempo-dev` de `.claude/launch.json`, **nunca** `npm run dev` por Bash.
 

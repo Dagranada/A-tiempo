@@ -34,4 +34,4 @@ Lo operativo está reflejado en `AGENTS.md` (§2 reglas duras, §7 DoD) y en `de
 
 ## Dónde falla hoy el código contra esta ficha
 
-El éxito se mide en **adherencia** y **ausencia de confusión**. Los cuatro huecos —tomas no generadas por frecuencia, recordatorio solo con la app abierta, datos falsos en pantalla, nada persiste— están descritos con detalle y prioridad en `state/current.md`. Las verificaciones de D3/D4 (30 s, celular real, deploy público) también.
+El éxito se mide en **adherencia** y **ausencia de confusión**. Los huecos que quedan —tomas no generadas por frecuencia, recordatorios solo con la app abierta, la fecha inventada del `Header`— están descritos con prioridad en `state/current.md`. Desde el 2026-10-14 los datos ya persisten (ADR 0007) y hay deploy en Vercel. Siguen pendientes las verificaciones de D3/D4: medir los 30 s en móvil, probar los recordatorios en un celular real y el checklist QA sobre la URL de Vercel.

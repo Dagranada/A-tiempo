@@ -2,7 +2,7 @@
 
 Fuente de verdad visual. Documenta lo que la app ya hace: si cambias un componente, actualiza aquí.
 Los bloques de clases son **canónicos** (cópialos tal cual). Lo demás describe el patrón y apunta al componente.
-Revisado 2026-10-14 contra el código.
+Revisado 2026-10-22 contra el código.
 
 ## 1. Principios
 - **Legibilidad para adultos mayores** por encima de todo: texto grande, contraste alto, áreas táctiles amplias.
@@ -29,7 +29,7 @@ Revisado 2026-10-14 contra el código.
 | Destructivo | `red-500` + `hover:bg-red-50`; botón `bg-red-500` | Eliminar plan (con `ConfirmDialog`) y quitar un reclamo |
 | Aviso IA | `amber-50` / `amber-200/80` / `amber-800` | Banner "esto es una sugerencia" |
 | Cámara | `#000` + `white/10` | Contexto oscuro de la cámara |
-| Alarma | degradados verdes propios + texto blanco; acción `#009688` | Solo `ReminderAlert` (§9) |
+| Alarma | degradado verde agua (§9) + texto blanco y verde oscuro `#0f5a4e`; acción `#009688`; secundarios `#00695e` al 30 % | Solo `ReminderAlert` y `ClaimAlert` (§9) |
 
 Variables en `src/index.css` (`--color-accent`, `--color-accent-dark`, `--color-nav-active-bg`, `--color-success`; esta última ya no se usa en pantalla). Color huérfano pendiente: ver §11.
 
@@ -110,7 +110,7 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 ```
 
 ### Mis planes (`MisPlanesView`)
-- Título "Mis Planes" (`text-xl font-bold font-heading`) + subtítulo y CTA primario "Nuevo plan" ancho completo.
+- Título "Mis Planes" (`text-xl font-bold font-heading`) + subtítulo "Planes de medicación activos" (las bajadas no nombran a Alberto; los estados vacíos sí) y CTA primario "Nuevo plan" ancho completo, que abre el escáner.
 - **Tarjeta de plan**: base + `space-y-4` (`p-4` por debajo de 380px, como la de Pastas).
   - Encabezado: nombre `text-[18px] font-bold`, descripción `text-sm text-gray-500`, editar/eliminar a la derecha. Separado del resto por un divisor `pb-4 border-b border-[#E2E8F0]` **dentro del padding** (no llega a los bordes).
   - Detalles en una **cuadrícula de dos columnas** `<dl className="grid grid-cols-[6.5rem_1fr] gap-x-3 gap-y-2.5 text-sm">` (por debajo de 380px `grid-cols-[5.5rem_1fr] gap-x-2`): etiqueta `text-gray-500` y valor `font-bold text-gray-900` **alineado a la izquierda** en la segunda columna (referencia de diseño). Cada parte de la dosis y cada fecha de la vigencia van en `whitespace-nowrap`: si la vigencia no cabe, corta solo después del guion. Dosis (partes separadas por `·` gris) · Frecuencia ("1 cada 8 horas") · Hora inicial en 12 h ("02:00 PM") · Vigencia legible ("1 Feb 2026 – 1 Ago 2026").
@@ -162,47 +162,36 @@ Lo usan `PlanFormScreen` y `PerfilView`.
 
 - **Header**: `bg-white px-5 py-4 border-b border-gray-100 sticky top-0 z-10`. Avatar `w-[50px] rounded-full border-2 border-[#0ee5ba]/20`, **solo el primer nombre** `text-[19px] font-bold`, fecha `text-[14px] text-[#0bc4a0] font-semibold`. Se muestra en Horario, Mis planes y Pastas; **no en Perfil**.
   **Campana** con dos estados: activa `text-[#0bc4a0] bg-[#d0f8ed]` · inactiva `text-gray-500 hover:bg-gray-50`; punto `w-2.5 h-2.5 bg-[#ff5f56] ring-2 ring-white animate-pulse` si hay tomas pendientes; `aria-label` que cambia con el estado.
-- **BottomNav**: `bg-white border-t border-gray-200 px-2 py-2 fixed bottom-0 z-30` + envelope. Botones `py-2 px-0.5`; píldora `px-4 py-1 rounded-full` + label `text-[11px] font-semibold whitespace-nowrap` (con 6 botones, a 320px "Mis planes" queda justo; se resuelve al quitar los de prueba). Activa `bg-[#d0f8ed] text-[#0bc4a0]`, inactiva `text-gray-400`/`text-gray-500`.
+- **BottomNav**: `bg-white border-t border-gray-200 px-2 py-2 fixed bottom-0 z-30` + envelope. Botones `py-2 px-0.5`; píldora `px-4 py-1 rounded-full` + label `text-[11px] font-semibold whitespace-nowrap`. Activa `bg-[#d0f8ed] text-[#0bc4a0]`, inactiva `text-gray-400`/`text-gray-500`.
   **Hoy tiene siete botones `w-1/7`**: Horario · Mis planes · **Pastas** · Alarma 4 · Reclamo · Mañana · Perfil. Con siete, "Mis planes" no cabe en su espacio a 386px; se resuelve al quitar los de prueba. La pestaña **Escanear se quitó** (2026-10-14): escanear se abre desde "Nuevo plan" en Mis planes y desde los estados vacíos, siempre con "Omitir y llenar a mano" al lado.
   - **Pastas** (icono `Pill`) lleva punto `w-2.5 h-2.5 bg-[#ff5f56] ring-2 ring-white motion-safe:animate-pulse` cuando hay que reclamar hoy, mañana o hay atraso; su `aria-label` cambia a "Pastas: hay un reclamo pendiente".
-  - **"Alarma 4", "Reclamo" y "Mañana" son temporales**: icono `BellRing`, nunca quedan activos y no son pestañas. "Alarma 4" abre la alarma de toma de prueba (la real, versión 4); "Reclamo" el aviso de reclamo de prueba (`buildTestClaim('today')`: "Hoy debes reclamar:" / Metformina / fecha de hoy / Entrega 3 de 6) y "Mañana" el del día anterior (`buildTestClaim('tomorrow')`: "Mañana debes reclamar:", fecha de mañana, botón "Entendido"); sus botones solo cierran. "Alarma 2" y "Alarma 3" se quitaron el 2026-10-22 (las versiones siguen en el código). La versión 1 y su botón se eliminaron el 2026-10-14. Cuando se elija, se quitan y la nav vuelve a cuatro botones `w-1/4`.
+  - **"Alarma 4", "Reclamo" y "Mañana" son temporales**: icono `BellRing`, nunca quedan activos y no son pestañas. "Alarma 4" abre la alarma de toma de prueba (la real, versión 4); "Reclamo" el aviso de reclamo de hoy (`buildTestClaim('today')`) y "Mañana" el de la víspera (`buildTestClaim('tomorrow')`); detalle en §9. Sus botones solo cierran. "Alarma 2" y "Alarma 3" se quitaron el 2026-10-22 y la versión 1 el 2026-10-14. **Antes de un lanzamiento real se quitan los tres** y la nav vuelve a cuatro botones `w-1/4`.
 
 ## 9. Overlays
 
 ### Alarma (`AlarmShell` + `ReminderAlert` / `ClaimAlert`) — la pantalla más importante de la app
-Aparece sola; debe leerse de lejos y resolverse con un toque. `AlarmShell` pone el fondo, la píldora y las ondas; `ReminderAlert` (toma) y `ClaimAlert` (reclamo en la EPS) ponen textos y botones. Botones compartidos: `ALARM_PRIMARY_BUTTON` / `ALARM_SECONDARY_BUTTON`.
+Aparece sola; debe leerse de lejos y resolverse con un toque. `AlarmShell` pone el fondo y las ondas (y la píldora en las versiones 2 y 3); `ReminderAlert` (toma) y `ClaimAlert` (reclamo en la EPS) ponen textos y botones. Compartido en `AlarmShell.tsx`: `ALARM_PRIMARY_BUTTON`, `ALARM_SECONDARY_BUTTON`, `SnoozeControl`, `ALARM_TEXT`, `alarmNameSize`.
 
-**Estructura común:**
-- Pantalla completa `fixed inset-0 z-50` + envelope, `px-6 pt-16 pb-10`, todo en Nunito Sans (`font-heading` en la raíz), texto blanco. **Sin hora arriba.**
-- Píldora: SVG propio (cápsula `-rotate-45`, `w-12`) en un disco sólido `w-[110px] rounded-full bg-[#00e5cf] border border-white/50`; un contenedor `w-[210px]` reserva el espacio de las ondas. **Sin anillos estáticos.**
-- **Ondas** en una capa de fondo a pantalla completa centrada en la píldora (posición medida con `ResizeObserver`): sale una cada **0.8 s** (`WAVE_GAP_S`), cada una tarda **8 s** (`WAVE_DURATION_S`, debe coincidir con el CSS), diez en total, con 2–3 visibles a la vez; crecen del disco hasta la esquina más lejana y se apagan rápido (invisibles desde el 70 % del recorrido). No tapan toques (`pointer-events-none`). Con "reducir movimiento" no se ven.
-- Botones grandes y del mismo tamaño (`py-4 rounded-full text-[1.1rem] font-bold`, `gap-3`):
-  - Primario blanco "Marcar como tomada", texto `#009688`, icono `CheckCircle2 w-6`, sombra `shadow-[0_10px_30px_-8px_rgba(0,70,64,0.35)]`.
-  - **Posponer** (`SnoozeControl`, compartido): `[ − ] Recordar en N min [ + ]`. Botones redondos `w-12 h-12 bg-[#00695e]/30` con `Minus`/`Plus` `w-6` a los lados (`gap-2.5`) y el botón central `bg-[#00695e]/30` blanco sin icono, **siempre en una línea** (`whitespace-nowrap`); por debajo de 380px su letra pasa a `text-base` y el `gap` a `1.5` para que "Recordar en 12 horas" quepa a 320px. En la toma sube y baja **de 5 en 5 minutos, de 5 a 60**: el "−" se desactiva (`opacity-40`) en 5 porque menos rompería el paso, y el "+" en 60. Pospone exactamente los minutos elegidos (`snooze(minutes)` en `useDoseReminders`). En el aviso de reclamo, el mismo control va de 1 en 1 hora (1–12).
-- **Obligatorio**: `role="alertdialog"`, `aria-modal`, `aria-labelledby`, `aria-describedby`.
-
-- **Escala de texto común** (`ALARM_TEXT` en `AlarmShell.tsx`), igual en toma y reclamo:
+**La alarma real es la versión 4** (desde 2026-10-22), en toma y en reclamo:
+- Pantalla completa `fixed inset-0 z-50` + envelope, `px-6 pt-16 pb-10`, todo en Nunito Sans (`font-heading` en la raíz). Fondo `radial-gradient(circle at 50% 35%, #2ee6cc 0%, #10d2b8 30%, #00bfa8 62%, #00a693 100%)`. **Sin píldora, sin hora arriba, sin anillos estáticos**: el bloque de texto queda al centro.
+- **Ondas** `.alarm-wave-line` en una capa de fondo a pantalla completa centrada en el texto (posición medida con `ResizeObserver`): nacen a 300px alrededor del texto (`TEXT_WAVE_START_PX`) y crecen hasta la esquina más lejana. Sale una cada **0.8 s** (`WAVE_GAP_S`), cada una tarda **8 s** (`WAVE_DURATION_S`, igual que el CSS), diez en total, 2–3 visibles; opacidad 0.9 → 0.4 → 0.1 → 0, invisibles desde el 70 %. Línea blanca de borde 5px que ya nace del tamaño final y **solo anima `transform: scale` + `opacity`** (animar `width`/`height` las hacía intermitentes con el tiempo); medido a 61 fps. `pointer-events-none`; con "reducir movimiento" no se ven.
+- **Escala de texto común** (`ALARM_TEXT`), igual en toma y reclamo (2026-10-22: un 10 % más pequeña que la primera versión):
   | Rol | Toma | Reclamo | Clases |
   |---|---|---|---|
+  | Cuándo (solo reclamo) | — | "HOY" / "MAÑANA" / "AÚN" | `text-[1.26rem] font-extrabold uppercase tracking-wide text-[#0f5a4e]` |
+  | Línea blanca | "1 pastilla - 850 mg" | "22 de octubre" | `text-[1.17rem] font-bold text-white` |
   | Etiqueta | "Toma:" | "debes reclamar:" | `text-[1.125rem] font-medium text-[#0f5a4e]` |
   | Nombre | Metformina | Metformina | `text-[2.25rem] font-extrabold text-[#0f5a4e]` (`text-[1.8rem]` si tiene más de 13 letras: `alarmNameSize`) |
-  | Línea blanca | "1 pastilla - 850 mg" | "22 de octubre" | `text-[1.17rem] font-bold text-white` |
-  | Nota | indicación | "Entrega 3 de 6" | `text-[0.9rem] font-medium text-white`, `max-w-[17rem]` |
-  | Cuándo (solo reclamo) | — | "HOY" / "MAÑANA" / "AÚN" | `text-[1.26rem] font-extrabold uppercase tracking-wide text-[#0f5a4e]` |
-  Espacios: 4px entre la etiqueta y el nombre y 8px entre todo lo demás, en las dos pantallas (también entre la fecha y "debes reclamar:" en el reclamo).
+  | Nota | indicación del plan | "Entrega 3 de 6" | `text-[0.9rem] font-medium text-white`, `max-w-[17rem]` (14.4px: no bajar más) |
+- **Orden y espacios.** Toma: "Toma:" → 4px → nombre → 8px → dosis → 8px → indicación. Reclamo (estructura de la referencia): "HOY" → 8px → fecha del día en que debe reclamar → 8px → "debes reclamar:" → 4px → nombre → 8px → "Entrega 3 de 6".
+- **Botones** grandes y del mismo alto (`py-4 rounded-full text-[1.1rem] font-bold`, `gap-3`):
+  - Primario blanco con texto `#009688`, icono `CheckCircle2 w-6`, sombra `shadow-[0_10px_30px_-8px_rgba(0,70,64,0.35)]`: "Marcar como tomada" (toma) · "Ya lo reclamé" (reclamo hoy o atrasado) · "Entendido" (reclamo la víspera, todavía no se puede reclamar).
+  - **Posponer** (`SnoozeControl`): `[ − ] Recordar en N min [ + ]`, círculos `w-12 h-12 bg-[#00695e]/30` con `Minus`/`Plus` `w-6` a los lados (`gap-2.5`) y botón central `bg-[#00695e]/30` blanco, sin icono y **siempre en una línea** (`whitespace-nowrap`; por debajo de 380px letra `text-base` y `gap-1.5`, para que "Recordar en 12 horas" quepa a 320px). En la toma va **de 5 en 5 minutos, de 5 a 60**: el "−" se desactiva (`opacity-40`) en 5 y el "+" en 60; la app pospone exactamente esos minutos (`snooze(minutes)`). En el reclamo, "Recordar en N horas" de 1 en 1 (1–12, por defecto 2).
+- **Obligatorio**: `role="alertdialog"`, `aria-modal`, `aria-labelledby`, `aria-describedby`.
 
-**Versiones** (la 1 se eliminó el 2026-10-14):
+**Pruebas** (`isTest` / `buildTestClaim`, botones temporales del menú): "Alarma 4" abre la toma con `TEST_MEDICATION` (Metformina, 1 pastilla · 850 mg, "Tomar con el almuerzo para evitar molestias estomacales"); "Reclamo" y "Mañana" abren el aviso de reclamo de hoy y de la víspera (Metformina, entrega 3 de 6). Sus botones **solo cierran**: no marcan ni posponen nada. Muestran un medicamento real por excepción explícita al invariante 5 (ADR 0006).
 
-| | Versión 2 — la alarma real (y los avisos de reclamo) | Versión 3 (solo prueba) |
-|---|---|---|
-| Fondo | `radial-gradient(circle at 50% 35%, #2ee6cc 0%, #10d2b8 30%, #00bfa8 62%, #00a693 100%)` | `radial-gradient(circle at 50% 32%, #0cdbc9 0%, #01bcae 42%, #009d90 100%)` + 4 manchas cálidas `blur-3xl` (`#f6d365`/25, `#ffd166`/20, `#ffb703`/25, `#ffe49e`/15) + grano SVG (`feTurbulence`, `opacity-40 mix-blend-overlay`) |
-| Ondas | líneas `.alarm-wave`: borde blanco 2.5px → 1px | bandas de luz difusas `.alarm-wave-soft` (degradado radial blanco de opacidad máx. 0.2 + sombra verde apenas visible) |
-
-- **Versión 4 — LA ALARMA REAL desde 2026-10-22** (`ReminderAlert` y `ClaimAlert`): la 2 sin píldora. El bloque de texto ("Toma:", nombre, dosis, indicación) queda al centro de la pantalla y **las ondas nacen a 300px alrededor del texto** (`TEXT_WAVE_START_PX`). Sus ondas son `.alarm-wave-line`: líneas blancas (borde 5px) que ya nacen del tamaño final y **solo animan `transform: scale` + `opacity`** (con `width`/`height` se veían intermitentes con el tiempo); medido a 61 fps sin cuadros lentos. Mismo fondo que la 2.
-
-- **Rendimiento**: `.alarm-wave` (v2) anima `width`/`height`/`border-width`; `.alarm-wave-soft` (v3) nace del tamaño final y solo anima `transform: scale` (de `--wave-start` = 110px/tamaño a 1) y `opacity`, porque animar tamaño, sombras o `filter` trababa el celular. Regla en `gotchas/navegador.md`.
-- **Aviso de reclamo** (`ClaimAlert`, versión 4), con la estructura de la referencia de diseño y la escala común de arriba: "HOY" → 8px → fecha ("22 de octubre") → 8px → "debes reclamar:" → 4px → nombre → 8px → "Entrega 3 de 6" Primario "Ya lo reclamé" (día de reclamar o atraso) o "Entendido" (víspera). Posponer: `[ − ] Recordar en N horas [ + ]`, botones redondos `w-14 h-14 bg-[#00695e]/30` con `Minus`/`Plus` `w-6` ("Menos horas"/"Más horas"), de 1 a 12 h, por defecto 2.
-- **Alarma de prueba** (`isTest`, botones temporales "Alarma 2" y "Alarma 3"): muestra los textos exactos de la referencia (`TEST_MEDICATION`: Metformina, 1 pastilla · 850 mg, "Tomar con el almuerzo para evitar molestias estomacales"). Sus dos botones **solo la cierran**: no marcan ni posponen ninguna toma. Muestra un medicamento real por excepción explícita al invariante 5 (ADR 0006).
+**Versiones que quedan en el código sin botón** (para comparar si hace falta): la **2** es la 4 con la píldora (disco sólido `w-[110px] bg-[#00e5cf] border-white/50` en un contenedor `w-[210px]`) y ondas `.alarm-wave` que animan tamaño y borde (2.5px → 1px); la **3** es la 2 con otro fondo (`radial-gradient(circle at 50% 32%, #0cdbc9 0%, #01bcae 42%, #009d90 100%)` + 4 manchas cálidas `blur-3xl` + grano SVG `opacity-40 mix-blend-overlay`) y ondas `.alarm-wave-soft` de luz difusa (solo `transform`/`opacity`). La versión 1 se eliminó el 2026-10-14.
 
 ### Confirmación destructiva (`ConfirmDialog`)
 Antes de eliminar un plan (Mis planes). Overlay `fixed inset-0 z-50 bg-black/60 backdrop-blur-sm` + envelope; tarjeta base `p-6 text-center space-y-5`; icono `Trash2 w-6` en círculo `w-14 h-14 bg-red-50 text-red-500`; título `text-xl font-bold font-heading` con el nombre ("¿Eliminar Metformina?"); mensaje `text-sm text-gray-500` que dice **qué se pierde** (si el plan tiene orden de la EPS, también el historial de reclamos) y "No se puede deshacer". Botones: destructivo `bg-red-500 hover:bg-red-600 text-white` con la forma de §3 ("Sí, eliminar") y secundario B "Cancelar". El foco arranca en "Cancelar"; Escape o tocar fuera cancelan. `role="alertdialog"` + `aria-modal` + `aria-labelledby` + `aria-describedby`.
@@ -233,7 +222,7 @@ Antes de eliminar un plan (Mis planes). Overlay `fixed inset-0 z-50 bg-black/60 
 Cosas que el código hace y **no** deben replicarse:
 1. **La app no muestra Nunito Sans**: `font-sans` en la raíz de `src/App.tsx` pisa la fuente del `body` con la del sistema. Solo la alarma la corrige (`font-heading`). Además el `<link>` de `index.html` solo carga los pesos 600–800.
 2. **`#69E1BC` en `LoadingScreen:66,68`**: verde fuera de paleta, visible solo ahí. **Decisión pendiente**: reemplazar por `#0ee5ba` (recomendado) o adoptarlo como token con nombre.
-3. **Ondas v2 (la alarma real) animan tamaño** (`width`/`height`/`border-width`): si se traban en el celular, pasarlas al método de la v3 (§9).
+3. **Las versiones 2 y 3 de la alarma siguen en el código** sin botón; la 2 anima tamaño en sus ondas (`.alarm-wave`). Si se descartan, borrarlas junto con su CSS.
 4. **`motion` v12 instalado y sin usar**: todas las animaciones son Tailwind o CSS propio. O se usa, o sale de `package.json`.
 5. **Dos escalas tipográficas** conviviendo (Tailwind + px arbitrarios), más la propia de la alarma. Funciona; si crece, consolidar.
 6. **`--color-success` (`#27c93f`)** sigue en `src/index.css` sin uso desde que el Perfil dejó de mostrar "Perfil activo".
