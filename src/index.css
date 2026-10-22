@@ -118,3 +118,44 @@
     opacity: 0;
   }
 }
+
+/* Ondas de la alarma real (versión 4): líneas blancas que nacen alrededor del
+   texto y se apagan al alejarse. Como la versión 3, el elemento ya tiene el
+   tamaño final y solo se anima transform + opacity (sin repintar): animar
+   width/height/border hacía que se vieran intermitentes con el tiempo. El
+   borde crece con la escala, pero cuando es grueso la onda ya casi no se ve. */
+.alarm-wave-line {
+  translate: -50% -50%;
+  border: 5px solid rgba(255, 255, 255, 0.7);
+  opacity: 0;
+  transform: scale(var(--wave-start, 0.2));
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .alarm-wave-line {
+    animation: alarm-wave-line 8s cubic-bezier(0.3, 0.5, 0.5, 1) infinite;
+  }
+}
+@keyframes alarm-wave-line {
+  0% {
+    transform: scale(var(--wave-start, 0.2));
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.9;
+  }
+  25% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.1;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}

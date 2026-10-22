@@ -1,8 +1,44 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Minus, Plus } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { DueClaim } from '../hooks/useClaimReminders';
 import { formatDayMonth, toIsoDate } from '../lib/claims';
-import { ALARM_PRIMARY_BUTTON, ALARM_SECONDARY_BUTTON, AlarmShell } from './AlarmShell';
+import { ALARM_PRIMARY_BUTTON, ALARM_TEXT, AlarmShell, SnoozeControl, alarmNameSize } from './AlarmShell';
+
+/**
+ * Aviso de reclamo de prueba (botones temporales del menú): "Reclamo" = hoy
+ * debes reclamar; "Mañana" = el aviso del día anterior. Entrega 3 de 6, con el
+ * mismo medicamento que la alarma de prueba (Metformina, ADR 0006). Sus
+ * botones solo cierran la pantalla.
+ */
+export function buildTestClaim(kind: DueClaim['kind'] = 'today'): DueClaim {
+  const today = new Date();
+  const dueDay = new Date(today);
+  if (kind === 'tomorrow') dueDay.setDate(dueDay.getDate() + 1);
+  const lastDay = new Date(dueDay.getFullYear(), dueDay.getMonth() + 1, 0);
+  return {
+    key: `prueba-${kind}`,
+    kind,
+    orderMonths: 6,
+    plan: {
+      id: 'prueba',
+      name: 'Metformina',
+      description: 'Control de glucosa en sangre',
+      dose: '1 pastilla • 850mg',
+      initialTime: '14:00',
+      frequencyValue: 24,
+      frequencyUnit: 'horas',
+      startDate: toIsoDate(today),
+      endDate: toIsoDate(lastDay),
+      createdAt: today.toISOString(),
+    },
+    cycle: {
+      number: 3,
+      dueDate: toIsoDate(dueDay),
+      lastDate: toIsoDate(lastDay),
+      status: kind === 'tomorrow' ? 'upcoming' : 'open',
+    },
+  };
+}
 
 const MIN_SNOOZE_HOURS = 1;
 const MAX_SNOOZE_HOURS = 12;
@@ -25,20 +61,17 @@ export const ClaimAlert: React.FC<ClaimAlertProps> = ({ claim, onClaimed, onAckn
   const { plan, cycle, kind, orderMonths } = claim;
   const isLate = kind === 'today' && toIsoDate(new Date()) > cycle.dueDate;
 
-  const heading =
-    kind === 'tomorrow' ? 'Mañana toca reclamar:' : isLate ? 'Sigue pendiente reclamar:' : 'Hoy toca reclamar:';
-  const detail =
-    kind === 'tomorrow'
-      ? `En la EPS, el ${formatDayMonth(cycle.dueDate)}`
-      : `En la EPS, hasta el ${formatDayMonth(cycle.lastDate)}`;
+  // "Hoy debes reclamar: / Metformina / 22 de octubre / Entrega 3 de 6"
+  // "HOY" / "MAÑANA" destacado en su propia línea (blanco, mayúsculas) para que
+  // no se confundan los dos avisos seguidos; debajo, "debes reclamar:".
+  const when = kind === 'tomorrow' ? 'Mañana' : isLate ? 'Aún' : 'Hoy';
+  // La fecha del día en que debe reclamar: mañana, o hoy (también si va atrasado).
+  const detail = formatDayMonth(kind === 'tomorrow' ? cycle.dueDate : toIsoDate(new Date()));
 
   const hoursLabel = `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
-  const stepButton =
-    'w-14 h-14 shrink-0 rounded-full bg-[#00695e]/30 hover:bg-[#00695e]/40 text-white flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70';
-
   return (
     <AlarmShell
-      version={2}
+      version={4}
       titleId="claim-title"
       descriptionId="claim-desc"
       actions={
@@ -55,46 +88,33 @@ export const ClaimAlert: React.FC<ClaimAlertProps> = ({ claim, onClaimed, onAckn
             </button>
           )}
 
-          {/* Posponer: [ − ] Recordarme en N horas [ + ] */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setHours((h) => Math.max(MIN_SNOOZE_HOURS, h - 1))}
-              disabled={hours <= MIN_SNOOZE_HOURS}
-              aria-label="Menos horas"
-              className={stepButton}
-            >
-              <Minus className="w-6 h-6" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onSnooze(claim.key, hours)}
-              className={`${ALARM_SECONDARY_BUTTON} px-2`}
-            >
-              Recordarme en {hoursLabel}
-            </button>
-            <button
-              type="button"
-              onClick={() => setHours((h) => Math.min(MAX_SNOOZE_HOURS, h + 1))}
-              disabled={hours >= MAX_SNOOZE_HOURS}
-              aria-label="Más horas"
-              className={stepButton}
-            >
-              <Plus className="w-6 h-6" />
-            </button>
-          </div>
+          <SnoozeControl
+            value={hours}
+            min={MIN_SNOOZE_HOURS}
+            max={MAX_SNOOZE_HOURS}
+            step={1}
+            label={`Recordar en ${hoursLabel}`}
+            decreaseLabel="Menos horas"
+            increaseLabel="Más horas"
+            onChange={setHours}
+            onSnooze={() => onSnooze(claim.key, hours)}
+          />
         </>
       }
     >
-      <p className="text-[1.05rem] font-medium text-[#087064]/80 text-center">{heading}</p>
-      <h2 id="claim-title" className="text-[2.25rem] leading-tight font-extrabold text-[#087064] text-center">
-        {plan.name}
-      </h2>
-      <p id="claim-desc" className="text-[1.25rem] font-bold text-white text-center mt-1">
+      {/* Estructura de la referencia: [HOY + fecha] arriba, luego [debes reclamar:
+          + nombre] y "Entrega N de M". Misma escala que la alarma de toma
+          (ALARM_TEXT): etiqueta, nombre, línea blanca y nota. */}
+      <p className={ALARM_TEXT.when}>{when}</p>
+      <p id="claim-desc" className={`${ALARM_TEXT.strong} mt-2`}>
         {detail}
       </p>
-      <p className="w-full text-center text-[0.95rem] leading-snug font-medium text-white/90 mt-4 px-6">
-        Entrega {cycle.number} de {orderMonths}. Si no la reclamas este mes, se pierde.
+      <p className={`${ALARM_TEXT.label} mt-2`}>debes reclamar:</p>
+      <h2 id="claim-title" className={`${alarmNameSize(plan.name)} ${ALARM_TEXT.name} mt-1`}>
+        {plan.name}
+      </h2>
+      <p className={`${ALARM_TEXT.note} mt-2`}>
+        Entrega {cycle.number} de {orderMonths}
       </p>
     </AlarmShell>
   );

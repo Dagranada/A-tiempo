@@ -5,18 +5,18 @@ import { NavTab } from '../types';
 interface BottomNavProps {
   activeTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
-  onTapTestAlarm2: () => void;
-  onTapTestAlarm3: () => void;
   onTapTestAlarm4: () => void;
+  onTapTestClaim: () => void;
+  onTapTestClaimEve: () => void;
   hasClaimToday: boolean; // punto en "Pastas" si hay que reclamar hoy o mañana
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({
   activeTab,
   onSelectTab,
-  onTapTestAlarm2,
-  onTapTestAlarm3,
   onTapTestAlarm4,
+  onTapTestClaim,
+  onTapTestClaimEve,
   hasClaimToday,
 }) => {
   return (
@@ -92,31 +92,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         </span>
       </button>
 
-      {/* 4. Alarma, versión 2 (temporal): diseño alternativo para comparar */}
-      <button
-        onClick={onTapTestAlarm2}
-        aria-label="Probar alarma, versión 2"
-        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
-      >
-        <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
-          <BellRing className="w-5 h-5" />
-        </div>
-        <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Alarma 2</span>
-      </button>
-
-      {/* 5. Alarma, versión 3 (temporal): la 2 con otro fondo */}
-      <button
-        onClick={onTapTestAlarm3}
-        aria-label="Probar alarma, versión 3"
-        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
-      >
-        <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
-          <BellRing className="w-5 h-5" />
-        </div>
-        <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Alarma 3</span>
-      </button>
-
-      {/* 6. Alarma, versión 4 (temporal): sin píldora, texto al centro */}
+      {/* 4. Alarma, versión 4 (temporal): la alarma real, para verla sin esperar una toma */}
       <button
         onClick={onTapTestAlarm4}
         aria-label="Probar alarma, versión 4"
@@ -126,6 +102,30 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <BellRing className="w-5 h-5" />
         </div>
         <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Alarma 4</span>
+      </button>
+
+      {/* 5. Aviso de reclamo de prueba (temporal) */}
+      <button
+        onClick={onTapTestClaim}
+        aria-label="Probar aviso de reclamo"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
+      >
+        <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
+          <BellRing className="w-5 h-5" />
+        </div>
+        <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Reclamo</span>
+      </button>
+
+      {/* 6. Aviso de reclamo del día anterior, de prueba (temporal) */}
+      <button
+        onClick={onTapTestClaimEve}
+        aria-label="Probar aviso de reclamo del día anterior"
+        className="flex flex-col items-center py-2 px-0.5 w-1/7 transition-colors"
+      >
+        <div className="px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
+          <BellRing className="w-5 h-5" />
+        </div>
+        <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Mañana</span>
       </button>
 
       {/* 7. Perfil */}
