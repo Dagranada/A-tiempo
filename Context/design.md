@@ -42,10 +42,15 @@ Variables en `src/index.css` (`--color-accent`, `--color-accent-dark`, `--color-
 // B. Secundario — "Crear a mano", "Omitir y llenar a mano"
 "w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded-full text-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-1.5"
 
+// D. Secundario menta — acciones verdes que conviven con un primario (A) en la misma pantalla:
+//    "Marcar como reclamada", "Registrar orden nueva" en las tarjetas de Pastas
+"w-full bg-[#d0f8ed] hover:bg-[#bdf3e3] text-[#087064] font-bold py-2.5 px-5 rounded-full text-sm border border-[#0ee5ba]/30 transition-all active:scale-[0.98] flex items-center justify-center space-x-2"
+
 // C. Secundario sobre cámara
 "w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 px-5 rounded-full text-sm transition-all border border-white/10 active:scale-[0.98] flex items-center justify-center space-x-2"
 ```
 - **Invariantes**: `py-2.5 px-5` · `rounded-full` · `text-sm font-bold` · `active:scale-[0.98]`.
+- **Un solo primario (A) por pantalla.** Si hay más acciones verdes, van como **secundario menta (D)**: el mismo verde, más claro. El texto es `#087064` (no `#0bc4a0`) para que se lea bien sobre el menta. El gris (B) queda para acciones neutras (Cancelar, salidas alternativas).
 - **Única excepción: la alarma** (§9), cuyos botones son más grandes (`py-4 text-[1.1rem]`) porque tienen que leerse y tocarse de lejos.
 - **Botón de icono** (barra): `p-2 rounded-full hover:bg-gray-100 text-gray-600` (claro) o `bg-white/10 text-white hover:bg-white/20` (oscuro). `aria-label` obligatorio.
 - **Acción rápida en tarjeta de plan**: editar `text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100` · eliminar igual pero `hover:text-red-500 hover:bg-red-50`; iconos `w-5`, `aria-label` con el nombre ("Editar plan de Metformina").
@@ -89,7 +94,7 @@ Escala mixta (Tailwind + px arbitrarios). Reutiliza uno de estos valores; no int
 ```
 
 ### Horario (`HorarioView`)
-- **Recuadro de reclamo** arriba de todo cuando hay que reclamar hoy, mañana o hay atraso (se ve aunque los recordatorios estén apagados): botón-tarjeta `bg-white rounded-3xl p-4 border border-[#0ee5ba]/40 shadow-sm`, icono `Pill` en `w-12 h-12 rounded-2xl bg-[#d0f8ed] text-[#0bc4a0]`, una línea `text-sm font-bold` por aviso ("Mañana toca reclamar Losartán en la EPS"), "Toca para ver tus pastas" y `ChevronRight`. Lleva a la pestaña Pastas.
+- **Recuadro de reclamo** arriba de todo: acompaña **la primera notificación**, la del día anterior. Aparece **desde las 12 m del día anterior** a la fecha de reclamo (uno por medicamento; la vista revisa el reloj cada minuto) y se ve aunque los recordatorios estén apagados. Hoy y los atrasos no llevan recuadro: los cubren el aviso de las 8 a. m. y el punto de la pestaña. Según la referencia de diseño: `bg-[#d0f8ed]/80 rounded-3xl shadow-sm`, **sin borde**; ícono `Pill w-6` en círculo `w-12 h-12 rounded-full bg-[#0ee5ba]/25 text-[#087064]`; título `text-base font-semibold text-[#087064]` "Mañana toca reclamar Losartán" (**mismo texto que la notificación del sistema**) y "Toca para ver tus pastas" en `text-sm text-[#087064]/75`. Tocarlo lleva a Pastas; la **X** (`w-6`, "Ocultar el aviso de … por hoy") lo oculta hasta la próxima fecha (se guarda en `claim-alerts`); el punto de la pestaña Pastas no se apaga.
 
 **Principio rector:** lo pendiente es una tarjeta con acción; lo hecho es una fila sin acción. La jerarquía visual baja a medida que la toma deja de requerir atención.
 
@@ -118,16 +123,16 @@ Reglas en ADR 0008. Título "Pastas" (`text-xl font-bold font-heading`) + "Medic
   - Encabezado: nombre `text-xl font-bold`, dosis `text-sm text-gray-500`; a la derecha editar (`Pencil`, "Editar la orden de …") y quitar (`Trash2`, "Quitar el reclamo de …").
   - **Píldora de estado** `text-[13px] font-bold rounded-full px-3 py-1 border`, **solo cuando ya se puede reclamar** (aparece junto con el botón): menta (`bg-[#d0f8ed] text-[#0b8f75]`) para *Hoy toca reclamar*; ámbar (`bg-amber-50 text-amber-800 border-amber-200`) para *Atrasado · quedan N días* / *Último día para reclamar*. "Mañana" no lleva píldora (lo avisan el recuadro del Horario y el punto de la pestaña).
   - **Caja de datos** `bg-gray-50 rounded-2xl border border-[#E2E8F0]`, **siempre en dos columnas** (como la referencia) separadas por `w-px bg-[#E2E8F0]`, la de la fecha más ancha. Etiqueta `text-xs font-medium uppercase tracking-wide text-gray-500` ("Próxima entrega", o "Reclamar hasta" con la ventana abierta · "Entrega") y valor `font-bold whitespace-nowrap` ("21 de octubre" · "4 de 4"). **Desde 380px**: `px-4 py-3.5`, columnas `flex-[3]`/`flex-[2]`, `mx-4`, valor `text-[15px]`. **Por debajo**: `px-3 py-3`, columnas `flex-[2]`/`flex-1`, `mx-3`, valor `text-sm`, y la tarjeta pasa a `p-4`. Probado con el caso más largo ("Reclamar hasta · 30 de septiembre", "12 de 24") a 320, 360, 379 y 386px.
-  - "Marcar como reclamada" (A, `CheckCircle2`) **solo** cuando la ventana está abierta.
+  - "Marcar como reclamada" (**D, secundario menta**, `CheckCircle2`) **solo** cuando la ventana está abierta. El primario de la pantalla es "Registrar orden de la EPS".
   - **Historial** sin línea divisoria (la caja de datos ya lo separa; `pt-1`): etiqueta `text-xs font-bold uppercase tracking-wider text-gray-700` y una línea `text-sm` por entrega pasada (`space-y-1.5`): "Entrega 1:" en `font-medium text-gray-800` + fecha completa `text-gray-500` ("21 de julio de 2026") o "Perdida" en `font-semibold text-red-500`.
-  - Orden terminada: caja `bg-gray-50 rounded-2xl border` "La orden terminó… pide una orden nueva al médico" + "Registrar orden nueva" (A).
+  - Orden terminada: caja `bg-gray-50 rounded-2xl border` "La orden terminó… pide una orden nueva al médico" + "Registrar orden nueva" (D).
 - **Editar / renovar**: el formulario aparece **en el lugar de la tarjeta**, con el medicamento fijo (`<select>` deshabilitado). Editar conserva los reclamos hechos; "Registrar orden nueva" empieza una orden vacía. El formulario de "Registrar orden de la EPS" (nuevo) va arriba de la lista.
 - Orden de las tarjetas: la próxima fecha primero; las terminadas al final.
 - **Estado vacío** neutro (§9), con texto distinto si no hay planes ("Primero crea el plan…" + "Ir a Mis planes") o si hay planes sin orden.
 
 ### Perfil (`PerfilView`)
 - **Sin `Header`**: la foto y el nombre ya encabezan la vista (no se repiten).
-- Formulario de borrador local que se aplica con "Guardar cambios" (primario A con `Check`, debajo `role="status"` "Cambios guardados" en `text-xs text-[#0bc4a0]`).
+- Formulario de borrador local que se aplica con "Guardar cambios" (primario A con `Check`, debajo `role="status"` "Cambios guardados" en `text-xs text-[#0bc4a0]`). Debajo, "Restablecer datos de ejemplo" (secundario B con `RotateCcw`), que pide confirmación con `ConfirmDialog` y reemplaza planes, tomas, órdenes y avisos de reclamo por los de ejemplo (no toca el perfil).
 - Tres tarjetas base (`space-y-4`), cada una con **título de sección**: punto `w-2 h-2 rounded-full bg-[#0ee5ba]` + `text-[13px] font-bold tracking-wider text-gray-900 uppercase`.
   1. **Foto + Información básica**: foto `w-28 h-28 rounded-full border-4 border-white ring-1 ring-[#E2E8F0]` con botón de cámara `w-10 h-10` abajo a la derecha (input de archivo `sr-only` con `aria-label`); nombre `text-xl font-bold font-heading`. Campos: nombre completo, fecha de nacimiento, sexo, teléfono, con iconos `User`/`Calendar`/`ChevronDown`/`Phone` a la derecha.
   2. **Información médica**: `grid grid-cols-2 gap-3` con peso (`kg`) y estatura (`m`) como sufijo `text-sm text-gray-400`, grupo sanguíneo y factor RH en `<select>`.

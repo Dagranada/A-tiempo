@@ -2,7 +2,7 @@
 
 ## Todo persiste en el navegador (desde 2026-10-14)
 `profile`, `plans`, `doses` y `claim-alerts` usan `usePersistentState` (ADR 0007): se guardan en `localStorage` con el prefijo `a-tiempo:v1:`. Consecuencias al probar:
-- **Cambiar `mockData.ts` no cambia lo que ves**: el navegador ya tiene datos guardados. Para volver a los de ejemplo, en la consola: `Object.keys(localStorage).filter(k => k.startsWith('a-tiempo:')).forEach(k => localStorage.removeItem(k))` y recarga.
+- **Cambiar `mockData.ts` no cambia lo que ves**: el navegador ya tiene datos guardados. Para volver a los de ejemplo: **Perfil → "Restablecer datos de ejemplo"** (también en el celular), o en la consola: `Object.keys(localStorage).filter(k => k.startsWith('a-tiempo:')).forEach(k => localStorage.removeItem(k))` y recarga.
 - Si cambias la forma de un dato guardado, sube el prefijo a `v2` o migra; si no, los datos viejos pueden romper la vista.
 - Las fechas de reclamo de ejemplo se calculan **desde el día en que se cargaron por primera vez**; días después ya no muestran "mañana".
 
