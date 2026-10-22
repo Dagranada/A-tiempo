@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   INITIAL_PLANS,
   INITIAL_SENIOR_PROFILE,
@@ -15,7 +15,12 @@ import {
 import { useDoseReminders } from './hooks/useDoseReminders';
 import { usePersistentState } from './hooks/usePersistentState';
 import { DoseItem, EpsClaim, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
-import { ClaimAlertState, EMPTY_CLAIM_ALERTS, useClaimReminders } from './hooks/useClaimReminders';
+import {
+  CLAIM_EVE_HOUR,
+  ClaimAlertState,
+  EMPTY_CLAIM_ALERTS,
+  useClaimReminders,
+} from './hooks/useClaimReminders';
 import { daysBetween, getClaimSchedule, toIsoDate } from './lib/claims';
 
 import { Header } from './components/Header';
@@ -267,25 +272,41 @@ export default function App() {
       snoozedUntil: { ...prev.snoozedUntil, [key]: Date.now() + hours * 60 * 60 * 1000 },
     }));
 
-  // Punto en la pestaña Pastas: hay que reclamar hoy (o se atrasó) o es mañana.
-  const todayIso = toIsoDate(new Date());
-  const claimNotices = plans.flatMap((p) => {
-    const current = p.claim && getClaimSchedule(p.claim, todayIso).current;
-    if (!current) return [];
-    if (current.status === 'open') {
-      return current.dueDate === todayIso
-        ? [`Hoy toca reclamar ${p.name} en la EPS`]
-        : [`${p.name}: reclámala antes de fin de mes`];
-    }
-    return daysBetween(todayIso, current.dueDate) === 1
-      ? [`Mañana toca reclamar ${p.name} en la EPS`]
-      : [];
-  });
-  const hasClaimToday = claimNotices.length > 0;
+  // Reloj de la vista: se actualiza cada minuto para que el recuadro aparezca a
+  // las 12 m sin tener que recargar.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const todayIso = toIsoDate(now);
 
+  // Punto en la pestaña Pastas: hay que reclamar hoy (o se atrasó) o es mañana.
+  const hasClaimToday = plans.some((p) => {
+    const current = p.claim && getClaimSchedule(p.claim, todayIso).current;
+    return !!current && (current.status === 'open' || daysBetween(todayIso, current.dueDate) === 1);
+  });
+
+  // Recuadro del Horario: acompaña la primera notificación, la del día anterior
+  // (desde las 12 m), con el mismo texto. Hoy y los atrasos los cubren el aviso
+  // de las 8 a. m. y el punto de la pestaña.
+  const claimNotices =
+    now.getHours() < CLAIM_EVE_HOUR
+      ? []
+      : plans.flatMap((p) => {
+          const current = p.claim && getClaimSchedule(p.claim, todayIso).current;
+          if (!current || current.status !== 'upcoming' || daysBetween(todayIso, current.dueDate) !== 1) {
+            return [];
+          }
+          return [{ key: `banner:${p.id}:${current.dueDate}`, planName: p.name, text: `Mañana toca reclamar ${p.name}` }];
+        });
+  const visibleClaimNotices = claimNotices.filter((n) => !claimAlerts.dismissed.includes(n.key));
+
+  // Vuelve a los datos de ejemplo (botón en Perfil): planes, tomas y avisos.
   const handleResetData = () => {
     setPlans(INITIAL_PLANS);
     setDoses(INITIAL_TODAY_DOSES);
+    setClaimAlerts(EMPTY_CLAIM_ALERTS);
     setIsEmptyState(false);
   };
 
@@ -340,8 +361,9 @@ export default function App() {
                   onMarkAsTaken={handleMarkAsTaken}
                   onNavigateToScan={handleTapScan}
                   onNavigateToForm={handleSkipToManualForm}
-                  claimNotices={claimNotices}
+                  claimNotices={visibleClaimNotices}
                   onOpenPastas={() => setActiveTab('pastas')}
+                  onDismissNotice={handleAcknowledgeClaim}
                 />
               )}
 
@@ -372,6 +394,7 @@ export default function App() {
                   remindersEnabled={remindersEnabled}
                   onToggleReminders={handleToggleReminders}
                   onSaveProfile={handleSaveProfile}
+                  onResetData={handleResetData}
                 />
               )}
             </main>

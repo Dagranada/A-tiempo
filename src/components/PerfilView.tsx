@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Bell, Calendar, Camera, Check, ChevronDown, Phone, User } from 'lucide-react';
+import { Bell, Calendar, Camera, Check, ChevronDown, Phone, RotateCcw, User } from 'lucide-react';
 import { SeniorProfile } from '../types';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface PerfilViewProps {
   profile: SeniorProfile;
   remindersEnabled: boolean;
   onToggleReminders: () => void;
   onSaveProfile: (profile: SeniorProfile) => void;
+  onResetData: () => void; // vuelve a los planes y reclamos de ejemplo
 }
 
 const labelClass = 'block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5';
@@ -47,11 +49,13 @@ export const PerfilView: React.FC<PerfilViewProps> = ({
   remindersEnabled,
   onToggleReminders,
   onSaveProfile,
+  onResetData,
 }) => {
   // Borrador local: nada se aplica hasta "Guardar cambios"
   const [draft, setDraft] = useState<SeniorProfile>(profile);
   const [nameError, setNameError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const update = <K extends keyof SeniorProfile>(key: K, value: SeniorProfile[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -326,7 +330,28 @@ export const PerfilView: React.FC<PerfilViewProps> = ({
             Cambios guardados
           </p>
         )}
+        <button
+          type="button"
+          onClick={() => setConfirmReset(true)}
+          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded-full text-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-1.5"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span>Restablecer datos de ejemplo</span>
+        </button>
       </div>
+
+      {confirmReset && (
+        <ConfirmDialog
+          title="¿Restablecer los datos de ejemplo?"
+          message="Se reemplazarán los planes, las tomas y las órdenes de la EPS por los de ejemplo. No se puede deshacer."
+          confirmLabel="Sí, restablecer"
+          onConfirm={() => {
+            onResetData();
+            setConfirmReset(false);
+          }}
+          onCancel={() => setConfirmReset(false)}
+        />
+      )}
     </form>
   );
 };

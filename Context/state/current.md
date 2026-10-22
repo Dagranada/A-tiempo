@@ -15,7 +15,7 @@ Navegación de 4 pestañas · CRUD de planes con validación · marcar toma con 
 4. **`upcoming` nunca pasa a `pending`** con el reloj. `useDoseReminders` lo esquiva; `HorarioView` sí los distingue.
 5. **`startDate`/`endDate` decorativos**: se guardan y se muestran, no filtran nada.
 6. **Fecha del `Header` escrita a mano**: siempre `"Lunes, 24 de febrero"` (`src/components/Header.tsx:38`). Dato falso en pantalla → confusión.
-7. **`handleResetData` sin conectar** a ninguna vista; ahora que todo se guarda, sería útil un "restablecer datos de ejemplo" en Perfil (que también borre `claim-alerts`).
+7. ~~`handleResetData` sin conectar~~ Resuelto 2026-10-21: botón "Restablecer datos de ejemplo" en Perfil (con confirmación; también borra `claim-alerts`).
 8. **Botones temporales "Alarma 2", "Alarma 3" y "Alarma 4" en la `BottomNav`** para comparar diseños (la v1 se eliminó; la v2 es la alarma real; la v4 es la 2 sin píldora). Con 7 botones, a 320px las etiquetas del menú se tocan. Elegir y quitarlos antes de un lanzamiento real: la prueba muestra Metformina (ADR 0006).
 9. **La app no usa Nunito Sans** (2026-10-14): `font-sans` en la raíz de `src/App.tsx:233` pisa la fuente del `body` con la del sistema, contra `design.md` §4. La alarma ya lo corrige con `font-heading`; falta el resto (y el `<link>` de `index.html` solo carga los pesos 600–800).
 10. **`App.tsx` pasó de 400 líneas** (428): ADR 0001 pide extraer un hook (`usePlans`/`useClaims`) con los handlers.

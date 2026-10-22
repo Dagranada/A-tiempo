@@ -70,12 +70,12 @@ export function showDoseNotification(medicationName: string, dose: string, tag: 
   });
 }
 
-/** Notificación del sistema de un reclamo en la EPS (mañana u hoy). */
+/** Notificación del sistema de un reclamo en la EPS: mismo texto que el recuadro del Horario. */
 export function showClaimNotification(body: string, tag: string): void {
   if (!isNotificationSupported() || Notification.permission !== 'granted') return;
 
-  new Notification('A Tiempo · Reclamo en la EPS', {
-    body,
+  new Notification(body, {
+    body: 'Toca para ver tus pastas',
     tag: `claim-${tag}`,
     silent: false,
   });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, ChevronRight, Clock, Pill, Plus, Sparkles } from 'lucide-react';
+import { CheckCircle2, Clock, Pill, Plus, Sparkles, X } from 'lucide-react';
 import { DoseItem } from '../types';
 
 interface HorarioViewProps {
@@ -8,8 +8,9 @@ interface HorarioViewProps {
   onMarkAsTaken: (doseId: string) => void;
   onNavigateToScan: () => void;
   onNavigateToForm: () => void;
-  claimNotices: string[]; // p. ej. "Mañana toca reclamar Losartán en la EPS"
+  claimNotices: { key: string; planName: string; text: string }[]; // p. ej. "Mañana toca reclamar Losartán"
   onOpenPastas: () => void;
+  onDismissNotice: (key: string) => void; // ocultar ese aviso por hoy
 }
 
 export const HorarioView: React.FC<HorarioViewProps> = ({
@@ -20,6 +21,7 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
   onNavigateToForm,
   claimNotices,
   onOpenPastas,
+  onDismissNotice,
 }) => {
   const pendingDoses = isEmptyState ? [] : doses.filter((d) => d.status === 'pending');
   const upcomingDoses = isEmptyState ? [] : doses.filter((d) => d.status === 'upcoming');
@@ -30,23 +32,34 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
       {/* Reclamos en la EPS de hoy o mañana: se ven al abrir la app aunque los
           recordatorios estén apagados (solo suenan con la app abierta). */}
       {claimNotices.length > 0 && (
-        <button
-          onClick={onOpenPastas}
-          className="w-full bg-white rounded-3xl p-4 border border-[#0ee5ba]/40 shadow-sm flex items-center space-x-3.5 text-left hover:bg-gray-50/80 transition-colors"
-        >
-          <span className="w-12 h-12 rounded-2xl bg-[#d0f8ed] text-[#0bc4a0] flex items-center justify-center shrink-0">
-            <Pill className="w-5 h-5" />
-          </span>
-          <span className="flex-1 min-w-0 space-y-0.5">
-            {claimNotices.map((notice) => (
-              <span key={notice} className="block text-sm font-bold text-gray-900">
-                {notice}
-              </span>
-            ))}
-            <span className="block text-xs text-gray-500 font-medium">Toca para ver tus pastas</span>
-          </span>
-          <ChevronRight className="w-5 h-5 text-gray-400 shrink-0" />
-        </button>
+        <div className="space-y-3">
+          {claimNotices.map((notice) => (
+            <div
+              key={notice.key}
+              className="bg-[#d0f8ed]/80 rounded-3xl shadow-sm flex items-center pr-2"
+            >
+              <button
+                onClick={onOpenPastas}
+                className="flex-1 min-w-0 flex items-center space-x-4 p-4 text-left rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba]"
+              >
+                <span className="w-12 h-12 rounded-full bg-[#0ee5ba]/25 text-[#087064] flex items-center justify-center shrink-0">
+                  <Pill className="w-6 h-6" />
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-base font-semibold text-[#087064] leading-snug">{notice.text}</span>
+                  <span className="block text-sm text-[#087064]/75 mt-0.5">Toca para ver tus pastas</span>
+                </span>
+              </button>
+              <button
+                onClick={() => onDismissNotice(notice.key)}
+                aria-label={`Ocultar el aviso de ${notice.planName} por hoy`}
+                className="p-2.5 rounded-full text-[#087064]/70 hover:text-[#087064] hover:bg-[#0ee5ba]/15 transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba]"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* EMPTY STATE */}
