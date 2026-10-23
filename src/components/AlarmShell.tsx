@@ -21,8 +21,39 @@ const WAVE_CLASS: Record<AlarmVersion, string> = {
   4: 'alarm-wave-line',
 };
 
+/**
+ * Tono de color: toma (verde, alarma de pastillas) o reclamo (rosado, avisos de
+ * reclamo en la EPS) para distinguirlos a simple vista. Mismo diseño; solo
+ * cambian el fondo y los colores de texto y botones, vía variables CSS.
+ */
+export type AlarmTone = 'toma' | 'reclamo';
+
+const TONES: Record<AlarmTone, { background: string; vars: Record<string, string> }> = {
+  toma: {
+    background: 'radial-gradient(circle at 50% 35%, #2ee6cc 0%, #10d2b8 30%, #00bfa8 62%, #00a693 100%)',
+    vars: {
+      '--alarm-ink': '#0f5a4e', // textos oscuros (Toma:, nombre)
+      '--alarm-action': '#009688', // texto e icono del botón blanco
+      '--alarm-soft': 'rgba(0, 105, 94, 0.3)', // posponer y sus − / +
+      '--alarm-soft-hover': 'rgba(0, 105, 94, 0.4)',
+    },
+  },
+  reclamo: {
+    // Rosado con la misma saturación y el mismo degradado que el verde de la toma:
+    // centro claro e intenso hacia bordes más oscuros, en los mismos puntos.
+    background: 'radial-gradient(circle at 50% 35%, #ff6b9d 0%, #f24d86 30%, #e03574 62%, #c8235f 100%)',
+    vars: {
+      '--alarm-ink': '#5a0d27',
+      '--alarm-action': '#d12a63',
+      '--alarm-soft': 'rgba(128, 14, 52, 0.4)',
+      '--alarm-soft-hover': 'rgba(128, 14, 52, 0.5)',
+    },
+  },
+};
+
 interface AlarmShellProps {
   version: AlarmVersion; // 4 = la alarma real; 2 y 3 = alternativas de prueba
+  tone?: AlarmTone; // por defecto, toma
   titleId: string;
   descriptionId: string;
   children: React.ReactNode; // textos bajo la píldora
@@ -36,6 +67,7 @@ interface AlarmShellProps {
  */
 export const AlarmShell: React.FC<AlarmShellProps> = ({
   version,
+  tone = 'toma',
   titleId,
   descriptionId,
   children,
@@ -73,12 +105,15 @@ export const AlarmShell: React.FC<AlarmShellProps> = ({
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
-      style={{
-        background:
-          version === 3
-            ? 'radial-gradient(circle at 50% 32%, #0cdbc9 0%, #01bcae 42%, #009d90 100%)'
-            : 'radial-gradient(circle at 50% 35%, #2ee6cc 0%, #10d2b8 30%, #00bfa8 62%, #00a693 100%)',
-      }}
+      style={
+        {
+          ...TONES[tone].vars,
+          background:
+            version === 3 && tone === 'toma'
+              ? 'radial-gradient(circle at 50% 32%, #0cdbc9 0%, #01bcae 42%, #009d90 100%)'
+              : TONES[tone].background,
+        } as React.CSSProperties
+      }
       className="fixed inset-0 z-50 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl font-heading text-white flex flex-col justify-between px-6 pt-16 pb-10 overflow-y-auto select-none"
     >
       {version === 3 && (
@@ -182,9 +217,9 @@ export const AlarmShell: React.FC<AlarmShellProps> = ({
 // Clases compartidas por los botones de las alarmas (más grandes que §3 de
 // design.md: tienen que leerse y tocarse de lejos).
 export const ALARM_PRIMARY_BUTTON =
-  'w-full bg-white hover:bg-white/95 text-[#009688] font-bold py-4 px-5 rounded-full text-[1.1rem] shadow-[0_10px_30px_-8px_rgba(0,70,64,0.35)] transition-all active:scale-[0.98] flex items-center justify-center space-x-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70';
+  'w-full bg-white hover:bg-white/95 text-[color:var(--alarm-action)] font-bold py-4 px-5 rounded-full text-[1.1rem] shadow-[0_10px_30px_-8px_rgba(0,70,64,0.35)] transition-all active:scale-[0.98] flex items-center justify-center space-x-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70';
 export const ALARM_SECONDARY_BUTTON =
-  'w-full bg-[#00695e]/30 hover:bg-[#00695e]/40 text-white font-bold py-4 px-5 rounded-full text-[1.1rem] transition-all active:scale-[0.98] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70';
+  'w-full bg-[color:var(--alarm-soft)] hover:bg-[color:var(--alarm-soft-hover)] text-white font-bold py-4 px-5 rounded-full text-[1.1rem] transition-all active:scale-[0.98] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70';
 
 interface SnoozeControlProps {
   value: number;
@@ -214,7 +249,7 @@ export const SnoozeControl: React.FC<SnoozeControlProps> = ({
   onSnooze,
 }) => {
   const stepButton =
-    'w-12 h-12 shrink-0 rounded-full bg-[#00695e]/30 hover:bg-[#00695e]/40 text-white flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70';
+    'w-12 h-12 shrink-0 rounded-full bg-[color:var(--alarm-soft)] hover:bg-[color:var(--alarm-soft-hover)] text-white flex items-center justify-center transition-all active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70';
   return (
     <div className="flex items-center gap-2.5 max-[379px]:gap-1.5">
       <button
@@ -249,11 +284,11 @@ export const SnoozeControl: React.FC<SnoozeControlProps> = ({
  */
 export const ALARM_TEXT = {
   // Solo en el reclamo: "HOY" / "MAÑANA" / "AÚN"
-  when: 'text-[1.26rem] leading-none font-extrabold uppercase tracking-wide text-[#0f5a4e] text-center',
+  when: 'text-[1.26rem] leading-none font-extrabold uppercase tracking-wide text-[color:var(--alarm-ink)] text-center',
   // "Toma:" / "debes reclamar:"
-  label: 'text-[1.125rem] leading-tight font-medium text-[#0f5a4e] text-center',
+  label: 'text-[1.125rem] leading-tight font-medium text-[color:var(--alarm-ink)] text-center',
   // Nombre del medicamento
-  name: 'leading-none font-extrabold text-[#0f5a4e] text-center break-words max-w-full',
+  name: 'leading-none font-extrabold text-[color:var(--alarm-ink)] text-center break-words max-w-full',
   // Dosis / fecha: la línea blanca destacada
   strong: 'text-[1.17rem] leading-tight font-bold text-white text-center',
   // Indicación / "Entrega 3 de 6"

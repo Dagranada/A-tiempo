@@ -72,6 +72,7 @@ export const ClaimAlert: React.FC<ClaimAlertProps> = ({ claim, onClaimed, onAckn
   return (
     <AlarmShell
       version={4}
+      tone="reclamo"
       titleId="claim-title"
       descriptionId="claim-desc"
       actions={
