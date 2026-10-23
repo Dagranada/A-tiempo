@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import {
   INITIAL_PLANS,
   INITIAL_SENIOR_PROFILE,
@@ -9,8 +10,6 @@ import { analyzeMedicationImage } from './services/geminiService';
 import {
   requestNotificationPermission,
   unlockAudio,
-  playReminderSound,
-  showTestNotification,
 } from './services/notificationService';
 import { useDoseReminders } from './hooks/useDoseReminders';
 import { usePersistentState } from './hooks/usePersistentState';
@@ -31,10 +30,13 @@ import { CameraScanScreen } from './components/CameraScanScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { PlanFormScreen } from './components/PlanFormScreen';
 import { PerfilView } from './components/PerfilView';
+import { ProfileCreateScreen } from './components/ProfileCreateScreen';
 import { BottomNav } from './components/BottomNav';
 import { PastasView } from './components/PastasView';
-import { ClaimAlert, buildTestClaim } from './components/ClaimAlert';
-import { AlarmVersion } from './components/AlarmShell';
+import { ClaimAlert } from './components/ClaimAlert';
+
+// Pestañas que recorre el botón temporal "Siguiente" del modo Empty states.
+const EMPTY_STATE_TABS: NavTab[] = ['horario', 'planes', 'pastas'];
 
 export default function App() {
   // Datos del cuidador: se guardan en el teléfono (ADR 0007)
@@ -229,28 +231,6 @@ export default function App() {
     setProfile(updated);
   };
 
-  // Alarma de prueba (botón temporal del menú): suena y se muestra al instante
-  // dentro del mismo toque, así el audio no queda bloqueado por el navegador.
-  // `testAlarmVersion` = alarma de toma de prueba (4, la real); `isTestClaimOpen` =
-  // aviso de reclamo de prueba (botón "Reclamo"). Ninguno marca nada.
-  const [testAlarmVersion, setTestAlarmVersion] = useState<AlarmVersion | null>(null);
-  const handleTestAlarm = (version: AlarmVersion) => {
-    unlockAudio();
-    playReminderSound();
-    setTestAlarmVersion(version);
-    requestNotificationPermission()
-      .then((granted) => granted && showTestNotification())
-      .catch(() => undefined);
-  };
-  // Aviso de reclamo de prueba: 'today' (botón "Reclamo") o 'tomorrow' (botón "Mañana").
-  const [testClaimKind, setTestClaimKind] = useState<'today' | 'tomorrow' | null>(null);
-  const isTestClaimOpen = testClaimKind !== null;
-  const handleTestClaim = (kind: 'today' | 'tomorrow') => {
-    unlockAudio();
-    playReminderSound();
-    setTestClaimKind(kind);
-  };
-
   // --- Reclamos en la EPS (pestaña Pastas) ---
   const updateClaim = (planId: string, change: (claim: EpsClaim) => EpsClaim | undefined) =>
     setPlans((prev) =>
@@ -346,6 +326,17 @@ export default function App() {
           />
         )}
 
+        {/* Temporal: "Crear perfil" de la nav muestra el flujo, pero aún no guarda
+            el perfil nuevo (falta separar planes y datos por perfil). */}
+        {screen === 'profile_create' && (
+          <ProfileCreateScreen
+            remindersEnabled={remindersEnabled}
+            onToggleReminders={handleToggleReminders}
+            onCreateProfile={() => setScreen('home')}
+            onCancel={() => setScreen('home')}
+          />
+        )}
+
         {/* Main Home App View */}
         {screen === 'home' && (
           <>
@@ -362,14 +353,14 @@ export default function App() {
               />
             )}
 
-            <main className="flex-1 overflow-y-auto">
+            {/* flex: las vistas ocupan todo el alto, para centrar sus estados vacíos */}
+            <main className="flex-1 overflow-y-auto flex flex-col">
               {activeTab === 'horario' && (
                 <HorarioView
                   doses={doses}
                   isEmptyState={isEmptyState}
                   onMarkAsTaken={handleMarkAsTaken}
                   onNavigateToScan={handleTapScan}
-                  onNavigateToForm={handleSkipToManualForm}
                   claimNotices={visibleClaimNotices}
                   onOpenPastas={() => setActiveTab('pastas')}
                   onDismissNotice={handleAcknowledgeClaim}
@@ -381,7 +372,6 @@ export default function App() {
                   plans={plans}
                   isEmptyState={isEmptyState}
                   onNavigateToScan={handleTapScan}
-                  onNavigateToForm={handleSkipToManualForm}
                   onEditPlan={handleEditPlan}
                   onDeletePlan={handleDeletePlan}
                 />
@@ -390,10 +380,11 @@ export default function App() {
               {activeTab === 'pastas' && (
                 <PastasView
                   plans={plans}
+                  isEmptyState={isEmptyState}
                   onSaveClaim={handleSaveClaim}
                   onMarkClaimed={handleMarkClaimed}
                   onRemoveClaim={handleRemoveClaim}
-                  onNavigateToPlans={() => setActiveTab('planes')}
+                  onCreatePlan={handleTapScan}
                 />
               )}
 
@@ -411,31 +402,37 @@ export default function App() {
             <BottomNav
               activeTab={activeTab}
               onSelectTab={setActiveTab}
-              onTapTestAlarm4={() => handleTestAlarm(4)}
-              onTapTestClaim={() => handleTestClaim('today')}
-              onTapTestClaimEve={() => handleTestClaim('tomorrow')}
-              hasClaimToday={hasClaimToday}
+              isEmptyState={isEmptyState}
+              onToggleEmptyState={() => {
+                if (!isEmptyState) setActiveTab('horario');
+                setIsEmptyState(!isEmptyState);
+              }}
+              hasClaimToday={hasClaimToday && !isEmptyState}
+              onCreateProfile={() => setScreen('profile_create')}
             />
+
+            {/* Temporal: recorre los tres estados vacíos (Horario → Mis planes → Pastas) */}
+            {isEmptyState && (
+              <button
+                onClick={() => {
+                  const i = EMPTY_STATE_TABS.indexOf(activeTab);
+                  setActiveTab(EMPTY_STATE_TABS[(i + 1) % EMPTY_STATE_TABS.length]);
+                }}
+                className="fixed bottom-24 right-5 z-30 bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 pl-4 pr-3 rounded-full text-sm shadow-lg flex items-center space-x-1.5 active:scale-[0.98] transition-all"
+              >
+                <span>
+                  Siguiente{' '}
+                  <span className="font-medium text-white/70">
+                    {Math.max(EMPTY_STATE_TABS.indexOf(activeTab), 0) + 1}/{EMPTY_STATE_TABS.length}
+                  </span>
+                </span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
 
             {/* Recordatorio de toma: solo sobre la vista principal, para no
                 interrumpir el escáner ni el formulario de plan. */}
-            {testAlarmVersion && (
-              <ReminderAlert
-                isTest
-                version={testAlarmVersion}
-                onClose={() => setTestAlarmVersion(null)}
-              />
-            )}
-            {testClaimKind && !testAlarmVersion && (
-              <ClaimAlert
-                key={`prueba-${testClaimKind}`}
-                claim={buildTestClaim(testClaimKind)}
-                onClaimed={() => setTestClaimKind(null)}
-                onAcknowledge={() => setTestClaimKind(null)}
-                onSnooze={() => setTestClaimKind(null)}
-              />
-            )}
-            {dueDose && !testAlarmVersion && !isTestClaimOpen && (
+            {dueDose && (
               <ReminderAlert
                 dose={dueDose}
                 plan={plans.find((p) => p.id === dueDose.planId)}
@@ -443,8 +440,8 @@ export default function App() {
                 onSnooze={snooze}
               />
             )}
-            {/* Aviso de reclamo: solo si no hay una toma ni una prueba en pantalla */}
-            {dueClaim && !dueDose && !testAlarmVersion && !isTestClaimOpen && (
+            {/* Aviso de reclamo: solo si no hay una toma en pantalla */}
+            {dueClaim && !dueDose && (
               <ClaimAlert
                 key={dueClaim.key}
                 claim={dueClaim}

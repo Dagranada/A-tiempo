@@ -26,7 +26,7 @@ Si una petición contradice una de estas, **detente antes de editar nada**: nomb
 2. **Ningún secreto en el repo.** `.env.local`, API keys ni credenciales, en ningún archivo ni commit.
 3. **Accesibilidad mínima**: nada accionable baja de `text-sm`, todo botón solo-icono lleva `aria-label`, el foco es visible. La app es para una persona de 78 años.
 4. **La salida manual siempre visible**: "Omitir y llenar a mano" / "Crear a mano" no se elimina de ningún paso del flujo de creación.
-5. **Nada en pantalla que no corresponda con la realidad.** Un dato falso o desactualizado sobre qué tomar y cuándo es un bug de seguridad del paciente, no un detalle cosmético. *Excepción acotada: las alarmas de prueba de los botones temporales "Alarma 4", "Reclamo" y "Mañana" muestran Metformina (ADR 0006); caduca al quitar esos botones.*
+5. **Nada en pantalla que no corresponda con la realidad.** Un dato falso o desactualizado sobre qué tomar y cuándo es un bug de seguridad del paciente, no un detalle cosmético. *Excepción acotada: las alarmas de prueba ("Alarma 4", "Reclamo", "Mañana") muestran Metformina (ADR 0006). Sus botones se quitaron del menú el 2026-10-23; si se vuelven a conectar, la excepción sigue valiendo.*
 
 ### 2.B · Convenciones — la persona puede cambiarlas al vuelo
 
@@ -71,7 +71,8 @@ src/hooks/useDoseReminders.ts      110 · vigila el reloj → dueDose + snooze(m
 src/hooks/useClaimReminders.ts      99 · vigila el reloj → aviso de reclamo (12 m víspera, 8 a. m. el día)
 src/components/                         Header, BottomNav, HorarioView, MisPlanesView, PastasView, PerfilView,
                                         CameraScanScreen, LoadingScreen, PlanFormScreen, Stepper, ConfirmDialog,
-                                        AlarmShell (fondo, ondas, SnoozeControl, ALARM_TEXT), ReminderAlert, ClaimAlert
+                                        AlarmShell (fondo, ondas, SnoozeControl, ALARM_TEXT), ReminderAlert, ClaimAlert,
+                                        EmptyState, PlanClaimStep, ProfileFields (campos del perfil), ProfileCreateScreen
 ```
 `npm run dev` (:3000) · `npm run lint` · `npm run build`. Para ver la app: preview con `a-tiempo-dev` de `.claude/launch.json`, **nunca** `npm run dev` por Bash.
 

@@ -1,13 +1,13 @@
 import React from 'react';
-import { CheckCircle2, Clock, Pill, Plus, Sparkles, X } from 'lucide-react';
+import { CheckCircle2, Clock, Pill, X } from 'lucide-react';
 import { DoseItem } from '../types';
+import { EmptyState } from './EmptyState';
 
 interface HorarioViewProps {
   doses: DoseItem[];
   isEmptyState: boolean;
   onMarkAsTaken: (doseId: string) => void;
-  onNavigateToScan: () => void;
-  onNavigateToForm: () => void;
+  onNavigateToScan: () => void; // "Crear plan" abre el escáner
   claimNotices: { key: string; planName: string; text: string }[]; // p. ej. "Mañana toca reclamar Losartán"
   onOpenPastas: () => void;
   onDismissNotice: (key: string) => void; // ocultar ese aviso por hoy
@@ -18,7 +18,6 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
   isEmptyState,
   onMarkAsTaken,
   onNavigateToScan,
-  onNavigateToForm,
   claimNotices,
   onOpenPastas,
   onDismissNotice,
@@ -28,10 +27,10 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
   const takenDoses = isEmptyState ? [] : doses.filter((d) => d.status === 'taken');
 
   return (
-    <div className="px-5 py-6 space-y-7 pb-28">
+    <div className="px-5 py-6 space-y-7 pb-28 flex-1 flex flex-col">
       {/* Reclamos en la EPS de hoy o mañana: se ven al abrir la app aunque los
           recordatorios estén apagados (solo suenan con la app abierta). */}
-      {claimNotices.length > 0 && (
+      {!isEmptyState && claimNotices.length > 0 && (
         <div className="space-y-3">
           {claimNotices.map((notice) => (
             <div
@@ -62,36 +61,9 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
         </div>
       )}
 
-      {/* EMPTY STATE */}
+      {/* Estado vacío: aún no hay plan, así que no hay horario */}
       {(isEmptyState || doses.length === 0) && (
-        <div className="bg-white rounded-3xl p-8 border border-gray-100 text-center shadow-sm space-y-5 my-4">
-          <div className="w-20 h-20 bg-[#d0f8ed] text-[#0bc4a0] rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <Sparkles className="w-10 h-10" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 font-heading">
-              Sin medicamentos programados
-            </h3>
-            <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto leading-relaxed">
-              No tienes tomas pendientes. Escanea la foto de una receta o caja para armar el horario de Alberto en segundos.
-            </p>
-          </div>
-          <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={onNavigateToScan}
-              className="bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold px-5 py-2.5 rounded-full transition-all text-sm shadow-sm flex items-center justify-center space-x-2 active:scale-[0.98]"
-            >
-              <span>Escanear medicamento</span>
-            </button>
-            <button
-              onClick={onNavigateToForm}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-5 py-2.5 rounded-full transition-all flex items-center justify-center space-x-1.5 text-sm active:scale-[0.98]"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Crear a mano</span>
-            </button>
-          </div>
-        </div>
+        <EmptyState title="No tienes un horario" onCreate={onNavigateToScan} />
       )}
 
       {/* PENDIENTES DE HOY */}

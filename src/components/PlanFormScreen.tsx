@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Calendar, ChevronDown, Clock, Info, X } from 'lucide-react';
 import { MedicationPlan } from '../types';
 import { Stepper } from './Stepper';
+import { PlanClaimStep } from './PlanClaimStep';
 
 interface PlanFormScreenProps {
   initialData?: Omit<MedicationPlan, 'id' | 'createdAt'> | MedicationPlan | null;
@@ -54,6 +55,10 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
   onCancel,
 }) => {
   const isFromAi = Boolean(initialData?.name);
+  // Un plan nuevo (también el escaneado, que no trae id) sigue al paso 2, el
+  // reclamo en la EPS; editar un plan guarda directo y su orden se ve en Pastas.
+  const isEditing = Boolean(initialData && 'id' in initialData);
+  const [draftPlan, setDraftPlan] = useState<MedicationPlan | null>(null);
 
   // Form State
   const [name, setName] = useState(initialData?.name || '');
@@ -140,8 +145,22 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
       claim: initialData?.claim,
     };
 
-    onSavePlan(newPlan);
+    if (isEditing) onSavePlan(newPlan);
+    else setDraftPlan(newPlan);
   };
+
+  // Paso 2: este componente sigue montado, así que al volver el paso 1 conserva
+  // lo escrito.
+  if (draftPlan) {
+    return (
+      <PlanClaimStep
+        plan={draftPlan}
+        onSavePlan={onSavePlan}
+        onBack={() => setDraftPlan(null)}
+        onCancel={onCancel}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto flex flex-col">
@@ -154,9 +173,12 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-bold text-gray-900 font-heading text-center">
-          {isFromAi ? 'Revisa el plan' : 'Nuevo plan'}
-        </h1>
+        <div className="text-center">
+          <h1 className="text-lg font-bold text-gray-900 font-heading">
+            {isFromAi ? 'Revisa el plan' : 'Nuevo plan'}
+          </h1>
+          {!isEditing && <p className="text-xs text-gray-500">Paso 1 de 2</p>}
+        </div>
         <div className="w-9" /> {/* Spacer */}
       </header>
 
@@ -400,7 +422,7 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
           type="submit"
           className="w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2 mt-4"
         >
-          <span>Guardar plan</span>
+          <span>{isEditing ? 'Guardar plan' : 'Siguiente'}</span>
         </button>
       </form>
     </div>

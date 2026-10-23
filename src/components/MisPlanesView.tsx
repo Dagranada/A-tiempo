@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Pencil, Pill, Plus, Scan, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { MedicationPlan } from '../types';
 import { ConfirmDialog } from './ConfirmDialog';
+import { EmptyState } from './EmptyState';
 
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -25,7 +26,6 @@ interface MisPlanesViewProps {
   plans: MedicationPlan[];
   isEmptyState: boolean;
   onNavigateToScan: () => void;
-  onNavigateToForm: () => void;
   onEditPlan?: (plan: MedicationPlan) => void;
   onDeletePlan: (planId: string) => void;
 }
@@ -34,7 +34,6 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
   plans,
   isEmptyState,
   onNavigateToScan,
-  onNavigateToForm,
   onEditPlan,
   onDeletePlan
 }) => {
@@ -43,57 +42,32 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
   const [planToDelete, setPlanToDelete] = useState<MedicationPlan | null>(null);
 
   return (
-    <div className="px-5 py-6 space-y-6 pb-28">
-      {/* Top Title & CTA */}
-      <div className="space-y-3">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 font-heading">
-            Mis Planes
-          </h2>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Planes de medicación activos
-          </p>
-        </div>
-        <button
-          onClick={onNavigateToScan}
-          className="w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-4 rounded-full text-sm flex items-center justify-center space-x-2 shadow-sm transition-all active:scale-[0.98]"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nuevo plan</span>
-        </button>
-      </div>
-
-      {/* Empty State */}
-      {activePlans.length === 0 && (
-        <div className="bg-white rounded-3xl p-8 border border-gray-100 text-center shadow-sm space-y-4 my-4">
-          <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto">
-            <Pill className="w-8 h-8" />
-          </div>
+    <div className="px-5 py-6 space-y-6 pb-28 flex-1 flex flex-col">
+      {/* Título y CTA; en el estado vacío no van: queda solo el EmptyState,
+          igual que en Horario y Pastas */}
+      {activePlans.length > 0 && (
+        <div className="space-y-3">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 font-heading">
-              No tienes ningún plan creado
-            </h3>
-            <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto leading-relaxed">
-              Escanea una foto de la caja o receta médica, o agrega las dosis manualmente.
+            <h2 className="text-xl font-bold text-gray-900 font-heading">
+              Mis Planes
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Planes de medicación activos
             </p>
           </div>
-          <div className="pt-2 flex flex-col gap-2.5">
-            <button
-              onClick={onNavigateToScan}
-              className="bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold px-5 py-2.5 rounded-full text-sm shadow-sm transition-all flex items-center justify-center space-x-2 active:scale-[0.98]"
-            >
-              <Scan className="w-4 h-4" />
-              <span>Escanear medicamento</span>
-            </button>
-            <button
-              onClick={onNavigateToForm}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-5 py-2.5 rounded-full text-sm flex items-center justify-center space-x-1 transition-all active:scale-[0.98]"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Omitir y llenar a mano</span>
-            </button>
-          </div>
+          <button
+            onClick={onNavigateToScan}
+            className="w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-4 rounded-full text-sm flex items-center justify-center space-x-2 shadow-sm transition-all active:scale-[0.98]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nuevo plan</span>
+          </button>
         </div>
+      )}
+
+      {/* Estado vacío: un solo botón para crear el plan */}
+      {activePlans.length === 0 && (
+        <EmptyState title="No tienes un plan" onCreate={onNavigateToScan} />
       )}
 
       {/* Plan List */}

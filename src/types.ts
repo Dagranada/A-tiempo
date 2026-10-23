@@ -38,7 +38,7 @@ export interface DoseItem {
   nextTakeNotice?: string; // e.g. "Próxima toma en 7 horas"
 }
 
-export type ScreenView = 'home' | 'scan' | 'loading' | 'plan_form';
+export type ScreenView = 'home' | 'scan' | 'loading' | 'plan_form' | 'profile_create';
 export type NavTab = 'horario' | 'planes' | 'pastas' | 'perfil';
 
 export interface SeniorProfile {
