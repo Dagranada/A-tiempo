@@ -117,8 +117,8 @@ export function describeCycle(cycle: ClaimCycle, todayIso: string): string {
   if (cycle.status === 'open') {
     const left = daysBetween(todayIso, cycle.lastDate);
     if (cycle.dueDate === todayIso) return 'Hoy toca reclamar';
-    if (left === 0) return 'Último día para reclamar';
-    return `Atrasado · quedan ${left + 1} días`;
+    if (left === 0) return 'Reclamo atrasado, hoy es el último día antes de que pierdas la oportunidad';
+    return `Reclamo atrasado, quedan ${left + 1} días antes de que pierdas la oportunidad`;
   }
   const until = daysBetween(todayIso, cycle.dueDate);
   if (until === 1) return 'Mañana toca reclamar';

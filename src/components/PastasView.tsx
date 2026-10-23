@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, CalendarCheck, CheckCircle2, ChevronDown, Pencil, Pill, Plus, Trash2 } from 'lucide-react';
+import { Calendar, CalendarCheck, CheckCircle2, ChevronDown, Info, Pencil, Pill, Plus, Trash2 } from 'lucide-react';
 import { EpsClaim, MedicationPlan } from '../types';
 import {
   ClaimCycle,
@@ -12,13 +12,15 @@ import {
   toIsoDate,
 } from '../lib/claims';
 import { Stepper } from './Stepper';
+import { EmptyState } from './EmptyState';
 
 interface PastasViewProps {
   plans: MedicationPlan[];
+  isEmptyState: boolean; // botón "Empty states": se ve como sin planes
   onSaveClaim: (planId: string, claim: EpsClaim) => void;
   onMarkClaimed: (planId: string) => void;
   onRemoveClaim: (planId: string) => void;
-  onNavigateToPlans: () => void;
+  onCreatePlan: () => void; // "Crear plan" abre el escáner
 }
 
 const inputClass =
@@ -177,6 +179,7 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
   // La píldora de estado solo aparece cuando ya se puede reclamar (hoy o con
   // atraso): es cuando hay que actuar y aparece el botón.
   const isUrgent = current?.status === 'open';
+  const isLate = isUrgent && current?.dueDate !== today;
 
   return (
     <article className="bg-white rounded-3xl p-4 min-[380px]:p-5 border border-[#E2E8F0] shadow-sm space-y-4">
@@ -205,7 +208,14 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
 
       {current && (
         <div className="space-y-3">
-          {isUrgent && (
+          {/* Atrasado: aviso ámbar como el de "Revisa el plan" (sin X: es el
+              estado del mes, no se oculta). Hoy: píldora menta. */}
+          {isLate ? (
+            <div className="bg-amber-50 border border-amber-200/80 p-3.5 rounded-2xl flex items-start space-x-3 text-xs">
+              <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="font-medium text-amber-800 leading-snug">{describeCycle(current, today)}</p>
+            </div>
+          ) : isUrgent && (
             <span
               className={`inline-flex items-center text-[13px] font-bold rounded-full px-3 py-1 border ${statusTone(current, today)}`}
             >
@@ -277,12 +287,14 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
 
 /** Pestaña "Pastas": medicamentos que se reclaman cada mes en la EPS. */
 export const PastasView: React.FC<PastasViewProps> = ({
-  plans,
+  plans: allPlans,
+  isEmptyState,
   onSaveClaim,
   onMarkClaimed,
   onRemoveClaim,
-  onNavigateToPlans,
+  onCreatePlan,
 }) => {
+  const plans = isEmptyState ? [] : allPlans;
   // Solo estado visual: qué formulario está abierto.
   // `new` = arriba de la lista; `edit`/`renew` = en el lugar de esa tarjeta.
   const [form, setForm] = useState<{ mode: 'new' | 'edit' | 'renew'; planId?: string } | null>(null);
@@ -302,19 +314,22 @@ export const PastasView: React.FC<PastasViewProps> = ({
   const closeForm = () => setForm(null);
 
   return (
-    <div className="px-5 py-6 space-y-6 pb-28">
-      <div className="space-y-3">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 font-heading">Pastas</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Medicamentos para reclamar en la EPS</p>
+    <div className="px-5 py-6 space-y-6 pb-28 flex-1 flex flex-col">
+      {/* Sin planes no va el título: queda solo el EmptyState, como en Horario */}
+      {plans.length > 0 && (
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 font-heading">Pastas</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Medicamentos para reclamar en la EPS</p>
+          </div>
+          {!isFormOpen && plans.length > 0 && availablePlans.length > 0 && (
+            <button onClick={() => setForm({ mode: 'new' })} className={primaryButton}>
+              <Plus className="w-4 h-4" />
+              <span>Registrar orden de la EPS</span>
+            </button>
+          )}
         </div>
-        {!isFormOpen && plans.length > 0 && availablePlans.length > 0 && (
-          <button onClick={() => setForm({ mode: 'new' })} className={primaryButton}>
-            <Plus className="w-4 h-4" />
-            <span>Registrar orden de la EPS</span>
-          </button>
-        )}
-      </div>
+      )}
 
       {form?.mode === 'new' && (
         <ClaimForm
@@ -327,8 +342,10 @@ export const PastasView: React.FC<PastasViewProps> = ({
         />
       )}
 
-      {/* Estado vacío: sin planes no hay qué reclamar; con planes, invitar a registrar */}
-      {claimPlans.length === 0 && !isFormOpen && (
+      {/* Estado vacío: sin planes no hay pastas (se crean con el plan, en su
+          paso 2); con planes sin orden, invitar a registrarla */}
+      {plans.length === 0 && <EmptyState title="No tienes pastas" onCreate={onCreatePlan} />}
+      {plans.length > 0 && claimPlans.length === 0 && !isFormOpen && (
         <div className="bg-white rounded-3xl p-8 border border-gray-100 text-center shadow-sm space-y-4">
           <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto">
             <Pill className="w-8 h-8" />
@@ -336,16 +353,9 @@ export const PastasView: React.FC<PastasViewProps> = ({
           <div>
             <h3 className="text-lg font-bold text-gray-900 font-heading">Ninguna pasta por reclamar</h3>
             <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto leading-relaxed">
-              {plans.length === 0
-                ? 'Primero crea el plan del medicamento de Alberto y luego registra aquí su orden de la EPS.'
-                : 'Registra la orden de la EPS de un medicamento de Alberto para recordarle cada mes cuándo reclamarlo.'}
+              Registra la orden de la EPS de un medicamento de Alberto para recordarle cada mes cuándo reclamarlo.
             </p>
           </div>
-          {plans.length === 0 && (
-            <button onClick={onNavigateToPlans} className={secondaryButton}>
-              Ir a Mis planes
-            </button>
-          )}
         </div>
       )}
 
