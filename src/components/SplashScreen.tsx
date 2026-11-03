@@ -34,7 +34,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onClose }) => (
       <span className="w-[90px] h-[90px] rounded-full bg-white/15 flex items-center justify-center">
         <Pill className="w-11 h-11 rotate-90" strokeWidth={1.75} aria-hidden="true" />
       </span>
-      <span className="text-[3.6rem] leading-none font-light tracking-tight mt-6">A tiempo</span>
+      <span className="text-[2.4rem] leading-none font-light tracking-tight mt-6">A tiempo</span>
     </span>
   </button>
 );
