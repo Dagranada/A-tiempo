@@ -22,7 +22,7 @@ const WAVE_CLASS: Record<AlarmVersion, string> = {
 };
 
 /**
- * Tono de color: toma (verde, alarma de pastillas) o reclamo (rosado, avisos de
+ * Tono de color: toma (verde, alarma de pastillas) o reclamo (azul, avisos de
  * reclamo en la EPS) para distinguirlos a simple vista. Mismo diseño; solo
  * cambian el fondo y los colores de texto y botones, vía variables CSS.
  */
@@ -39,14 +39,14 @@ const TONES: Record<AlarmTone, { background: string; vars: Record<string, string
     },
   },
   reclamo: {
-    // Rosado con la misma saturación y el mismo degradado que el verde de la toma:
-    // centro claro e intenso hacia bordes más oscuros, en los mismos puntos.
-    background: 'radial-gradient(circle at 50% 35%, #ff6b9d 0%, #f24d86 30%, #e03574 62%, #c8235f 100%)',
+    // Azul #19CDFF con el mismo degradado que el verde de la toma: centro claro
+    // e intenso hacia bordes más oscuros, en los mismos puntos.
+    background: 'radial-gradient(circle at 50% 35%, #52dcff 0%, #19cdff 30%, #08b4ea 62%, #0597cc 100%)',
     vars: {
-      '--alarm-ink': '#5a0d27',
-      '--alarm-action': '#d12a63',
-      '--alarm-soft': 'rgba(128, 14, 52, 0.4)',
-      '--alarm-soft-hover': 'rgba(128, 14, 52, 0.5)',
+      '--alarm-ink': '#063a55',
+      '--alarm-action': '#0790c4',
+      '--alarm-soft': 'rgba(3, 72, 112, 0.32)',
+      '--alarm-soft-hover': 'rgba(3, 72, 112, 0.42)',
     },
   },
 };

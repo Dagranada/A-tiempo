@@ -8,6 +8,7 @@ import {
 } from './data/mockData';
 import { analyzeMedicationImage } from './services/geminiService';
 import {
+  playReminderSound,
   requestNotificationPermission,
   unlockAudio,
 } from './services/notificationService';
@@ -31,9 +32,10 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { PlanFormScreen } from './components/PlanFormScreen';
 import { PerfilView } from './components/PerfilView';
 import { ProfileCreateScreen } from './components/ProfileCreateScreen';
+import { SplashScreen } from './components/SplashScreen';
 import { BottomNav } from './components/BottomNav';
 import { PastasView } from './components/PastasView';
-import { ClaimAlert } from './components/ClaimAlert';
+import { ClaimAlert, buildTestClaim } from './components/ClaimAlert';
 
 // Pestañas que recorre el botón temporal "Siguiente" del modo Empty states.
 const EMPTY_STATE_TABS: NavTab[] = ['horario', 'planes', 'pastas'];
@@ -68,6 +70,19 @@ export default function App() {
     EMPTY_CLAIM_ALERTS
   );
   const dueClaim = useClaimReminders(plans, claimAlerts, remindersEnabled);
+
+  // Temporal (botón "Reclamo" del menú): muestra el aviso del día anterior y,
+  // al cerrarlo, el del día de reclamar. Solo cierra: no cambia ningún reclamo.
+  // Temporal (botón "Splash" del menú): muestra la pantalla de bienvenida.
+  const [isSplashOpen, setIsSplashOpen] = useState(false);
+
+  const [testClaimKind, setTestClaimKind] = useState<'today' | 'tomorrow' | null>(null);
+  const handleTestClaim = () => {
+    unlockAudio();
+    playReminderSound();
+    setTestClaimKind('tomorrow');
+  };
+  const handleNextTestClaim = () => setTestClaimKind(testClaimKind === 'tomorrow' ? 'today' : null);
 
   const handleEnableReminders = () => {
     if (remindersEnabled) return;
@@ -409,6 +424,8 @@ export default function App() {
               }}
               hasClaimToday={hasClaimToday && !isEmptyState}
               onCreateProfile={() => setScreen('profile_create')}
+              onTapTestClaim={handleTestClaim}
+              onShowSplash={() => setIsSplashOpen(true)}
             />
 
             {/* Temporal: recorre los tres estados vacíos (Horario → Mis planes → Pastas) */}
@@ -432,7 +449,17 @@ export default function App() {
 
             {/* Recordatorio de toma: solo sobre la vista principal, para no
                 interrumpir el escáner ni el formulario de plan. */}
-            {dueDose && (
+            {isSplashOpen && <SplashScreen onClose={() => setIsSplashOpen(false)} />}
+            {testClaimKind && (
+              <ClaimAlert
+                key={`prueba-${testClaimKind}`}
+                claim={buildTestClaim(testClaimKind)}
+                onClaimed={handleNextTestClaim}
+                onAcknowledge={handleNextTestClaim}
+                onSnooze={handleNextTestClaim}
+              />
+            )}
+            {dueDose && !testClaimKind && (
               <ReminderAlert
                 dose={dueDose}
                 plan={plans.find((p) => p.id === dueDose.planId)}
@@ -441,7 +468,7 @@ export default function App() {
               />
             )}
             {/* Aviso de reclamo: solo si no hay una toma en pantalla */}
-            {dueClaim && !dueDose && (
+            {dueClaim && !dueDose && !testClaimKind && (
               <ClaimAlert
                 key={dueClaim.key}
                 claim={dueClaim}
