@@ -78,3 +78,4 @@
 - **2026-11-03 (prueba):** los avisos de reclamo (víspera y día) cambian del rosado al azul `#19CDFF`, con el mismo degradado de cuatro paradas y textos y botones en azul oscuro.
 - **2026-11-03:** pantalla de bienvenida (`SplashScreen`) como la referencia: degradado del verde al azul `#19CDFF`, anillos concéntricos finos y el logo "A / tiempo" en blanco (se carga el peso 300 de Nunito Sans). Se ve con el botón temporal "Splash" y se cierra al tocarla. Menú en ocho botones; bajo 380px las etiquetas bajan a 10px para caber. Probado a 386 y 320px.
 - **2026-11-03:** splash según la segunda referencia: "A tiempo" en una sola línea fina y, encima, la pastilla en un círculo blanco translúcido.
+- **2026-11-03:** el texto "A tiempo" del splash baja un tercio, de 57.6px (`3.6rem`) a 38.4px (`2.4rem`).
