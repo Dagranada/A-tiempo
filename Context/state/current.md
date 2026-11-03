@@ -1,11 +1,11 @@
 # Estado actual — 2026-10-22
 
-Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #18). Hogar canónico de "qué falta y qué bloquea".
+Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #21). Hogar canónico de "qué falta y qué bloquea".
 
 **Éxito =** Alberto se toma todas las pastillas según lo planeado, sin confusiones. Lo que no acerque a eso, no es prioritario.
 
 ## Funciona
-- **Pestañas**: Horario · Mis planes · Pastas · Perfil (+ botones temporales "Empty states" y "Crear perfil", ver Pendiente 8). Escanear ya no es pestaña: se abre desde "Nuevo plan" y desde "Crear plan" de los estados vacíos.
+- **Pestañas**: Horario · Mis planes · Pastas · Perfil (+ botones temporales "Empty states", "Crear perfil", "Reclamo" y "Splash", ver Pendiente 8). Escanear ya no es pestaña: se abre desde "Nuevo plan" y desde "Crear plan" de los estados vacíos.
 - **Planes**: CRUD con validación; formulario "Revisa el plan" con steppers de dosis (cantidad + mg) y frecuencia; eliminar pide confirmación (`ConfirmDialog`). Un plan nuevo tiene paso 2, "Reclamo en la EPS" (todos se reclaman en la EPS por ahora), que registra la orden con la entrega 1 ya reclamada.
 - **Horario**: marcar toma con hora real; recuadro "Mañana toca reclamar …" desde las 12 m de la víspera, con X para ocultarlo.
 - **Escaneo real** (cámara → Gemini → formulario), con fallback a preset y a formulario vacío.
@@ -26,7 +26,7 @@ Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Verc
 5. **`startDate`/`endDate` del plan decorativos**: se guardan y se muestran, no filtran nada.
 6. **Fecha del `Header` escrita a mano**: siempre `"Lunes, 24 de febrero"` (`src/components/Header.tsx:38`). Dato falso en pantalla → confusión.
 7. **Texto del recuadro y notificación de la víspera** ("Mañana toca reclamar …") distinto del de la alarma ("MAÑANA / debes reclamar:"). Se dejó así a pedido; preguntar si se unifica.
-8. **Botón temporal "Empty states" en la `BottomNav`** (enciende `isEmptyState`). **Quitarlo antes de un lanzamiento real.** Los botones "Alarma 4", "Reclamo" y "Mañana" se quitaron del menú (2026-10-23), pero su código de prueba (`isTest` en `ReminderAlert`, `buildTestClaim`) y las versiones 2 y 3 de la alarma siguen sin usarse: borrarlos si no vuelven.
+8. **Botón temporal "Empty states" en la `BottomNav`** (enciende `isEmptyState`). **Quitarlo antes de un lanzamiento real.** "Crear perfil", "Reclamo" (avisos de reclamo de prueba, víspera y día, con `buildTestClaim`) y "Splash" (pantalla de bienvenida, que aún no sale al abrir la app) también son temporales. El código de "Alarma 4" (`isTest` en `ReminderAlert`) y las versiones 2 y 3 de la alarma siguen sin usarse: borrarlos si no vuelven.
 9. **La app no usa Nunito Sans**: `font-sans` en la raíz de `src/App.tsx:325` pisa la fuente del `body`. Las alarmas la corrigen con `font-heading`; falta el resto (y `index.html` solo carga los pesos 600–800).
 10. **`App.tsx` tiene 464 líneas**: ADR 0001 pide extraer un hook (`usePlans`/`useClaims`) con los handlers a partir de 400.
 11. **Avisos de reclamo sin probar en tiempo real**: la lógica se probó con fechas simuladas y adelantando el reloj de la página; falta verlos sonar a las 12 m y 8 a. m. en un celular.
