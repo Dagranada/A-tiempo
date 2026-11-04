@@ -11,6 +11,9 @@ import {
 import { deleteAlarmSound, loadAlarmSound, saveAlarmSound } from './lib/soundStore';
 import { useDoseReminders } from './hooks/useDoseReminders';
 import { clearLeftoverStoredData, usePersistentState } from './hooks/usePersistentState';
+import { deleteCloudData, useCloudSync } from './hooks/useCloudSync';
+import { describeSupabaseError, isSupabaseConfigured, supabase } from './lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 import { EpsClaim, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
 import {
   CLAIM_EVE_HOUR,
@@ -32,6 +35,7 @@ import { PerfilView } from './components/PerfilView';
 import { AccountScreen } from './components/AccountScreen';
 import { ProfileCreateScreen } from './components/ProfileCreateScreen';
 import { SplashScreen } from './components/SplashScreen';
+import { CloudLoadingScreen } from './components/CloudLoadingScreen';
 import { BottomNav } from './components/BottomNav';
 import { PastasView } from './components/PastasView';
 import { ClaimAlert } from './components/ClaimAlert';
@@ -40,11 +44,20 @@ import { ClaimAlert } from './components/ClaimAlert';
 const MAX_SOUND_BYTES = 20 * 1024 * 1024;
 
 export default function App() {
-  // Datos de quien toma los medicamentos: se guardan en el teléfono (ADR 0007). Una instalación
-  // nueva arranca sin cuenta, perfil ni planes: splash → "Crea tu cuenta" →
-  // "Nuevo perfil" → estados vacíos. La cuenta es provisional (solo el correo)
-  // hasta conectar Supabase.
-  const [account, setAccount] = usePersistentState<{ email: string } | null>('account', null);
+  // Cuenta (Supabase, código al correo, sin contraseña). undefined = todavía
+  // leyendo la sesión guardada en el teléfono.
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  const userId = session?.user.id ?? null;
+
+  // Datos de quien toma los medicamentos: una copia en el teléfono (ADR 0007),
+  // para que todo funcione sin internet, sincronizada con su cuenta en Supabase
+  // (useCloudSync). Una cuenta nueva arranca sin perfil ni planes: splash →
+  // "Crea tu cuenta" → "Nuevo perfil" → estados vacíos.
   const [profile, setProfile] = usePersistentState<SeniorProfile | null>('profile', null);
   const [plans, setPlans] = usePersistentState<MedicationPlan[]>('plans', []);
   // Las tomas de hoy se calculan desde los planes (src/lib/doses.ts); solo se
@@ -80,7 +93,7 @@ export default function App() {
 
   // Recordatorios: son parte básica de la app, no una opción. Están activos
   // desde que existe el perfil (antes no hay nada que recordar).
-  const remindersActive = Boolean(account && profile);
+  const remindersActive = Boolean(session && profile);
   const { dueDose, snooze } = useDoseReminders(doses, remindersActive);
 
   // Sonido de la alarma escogido del celular: el nombre va con los datos y el
@@ -154,6 +167,24 @@ export default function App() {
     EMPTY_CLAIM_ALERTS
   );
   const dueClaim = useClaimReminders(plans, claimAlerts, remindersActive);
+
+  // Sincronización con la nube (ver useCloudSync).
+  const cloud = useCloudSync(
+    userId,
+    { profile, plans, takenDoses, claimAlerts },
+    { setProfile, setPlans, setTakenDoses, setClaimAlerts }
+  );
+
+  const handleSendCode = async (email: string): Promise<string | null> => {
+    if (!isSupabaseConfigured) return 'Falta configurar la conexión de la app. Intenta más tarde.';
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    return error ? describeSupabaseError(error) : null;
+  };
+
+  const handleVerifyCode = async (email: string, code: string): Promise<string | null> => {
+    const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+    return error ? describeSupabaseError(error) : null; // si salió bien, onAuthStateChange entra solo
+  };
 
   // El sonido escogido suena mientras la alarma está en pantalla: al responderla
   // (Listo, Recordar en…, Entendido) se detiene.
@@ -319,9 +350,8 @@ export default function App() {
         });
   const visibleClaimNotices = claimNotices.filter((n) => !claimAlerts.dismissed.includes(n.key));
 
-  // "Borrar todo y empezar de nuevo" (Perfil, con confirmación): el teléfono
-  // queda como recién instalado y la app vuelve a "Nuevo perfil".
-  const handleDeleteAll = () => {
+  // Deja el teléfono como recién instalado (sin tocar la nube).
+  const clearPhoneData = () => {
     clearLeftoverStoredData();
     handleClearSound();
     setSoundEnabled(true);
@@ -330,9 +360,30 @@ export default function App() {
     setTakenDoses({});
     setClaimAlerts(EMPTY_CLAIM_ALERTS);
     setProfile(null);
-    setAccount(null);
     setScreen('home');
     setActiveTab('horario');
+  };
+
+  // "Cerrar sesión": los datos quedan en la nube; se borran del teléfono para
+  // que la próxima cuenta que entre aquí no los vea. Primero se cierra la
+  // sesión: así la sincronización no sube el teléfono vacío como "borrado".
+  const handleSignOut = async () => {
+    await supabase.auth.signOut({ scope: 'local' });
+    setSession(null);
+    clearPhoneData();
+  };
+
+  // "Borrar todo y empezar de nuevo" (Perfil, con confirmación): borra los datos
+  // de la cuenta también en la nube y cierra la sesión. Necesita internet.
+  const handleDeleteAll = async (): Promise<string | null> => {
+    if (!userId) return null;
+    try {
+      await deleteCloudData(userId);
+    } catch (err) {
+      return describeSupabaseError(err);
+    }
+    await handleSignOut();
+    return null;
   };
 
   const pendingDosesCount = doses.filter((d) => d.status === 'pending').length;
@@ -362,14 +413,16 @@ export default function App() {
           />
         )}
 
-        {/* Primera vez: crear la cuenta (correo + código) y después el perfil */}
-        {!account && <AccountScreen onCreateAccount={(email) => setAccount({ email })} />}
-        {account && !profile && (
+        {/* Sin sesión: entrar o crear la cuenta (correo + código). Con sesión,
+            primero se traen los datos de la nube y, si no hay perfil, se crea. */}
+        {session === null && <AccountScreen onSendCode={handleSendCode} onVerifyCode={handleVerifyCode} />}
+        {session && cloud === 'loading' && <CloudLoadingScreen />}
+        {session && cloud === 'ready' && !profile && (
           <ProfileCreateScreen onCreateProfile={handleCreateProfile} notifications={notificationProps} />
         )}
 
         {/* Main Home App View */}
-        {account && profile && screen === 'home' && (
+        {session && cloud === 'ready' && profile && screen === 'home' && (
           <>
             {/* En Perfil no hay Header: la foto y el nombre ya encabezan la vista,
                 y los recordatorios se controlan con su propio interruptor */}
@@ -420,6 +473,8 @@ export default function App() {
                   profile={profile}
                   onSaveProfile={handleSaveProfile}
                   onDeleteAll={handleDeleteAll}
+                  onSignOut={handleSignOut}
+                  accountEmail={session.user.email ?? ''}
                   notifications={notificationProps}
                 />
               )}

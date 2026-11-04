@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Info, Mail } from 'lucide-react';
+import { ArrowLeft, Loader2, Mail } from 'lucide-react';
 import { SectionTitle } from './ProfileFields';
 
 interface AccountScreenProps {
-  onCreateAccount: (email: string) => void;
+  // Devuelven un error para mostrar, o null si salió bien.
+  onSendCode: (email: string) => Promise<string | null>;
+  onVerifyCode: (email: string, code: string) => Promise<string | null>; // al acertar, App entra solo
 }
 
 const labelClass = 'block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5';
@@ -18,14 +20,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const EMPTY_CODE: string[] = Array(CODE_LENGTH).fill('');
 
 /**
- * Crear la cuenta, sin contraseña: correo → código de 6 números que llega al
- * correo. Va después del splash y antes de "Nuevo perfil".
- *
- * PROVISIONAL hasta conectar Supabase: no se envía ningún correo y cualquier
- * código de 6 números sirve. La pantalla lo dice para que nadie espere un
- * correo que no va a llegar.
+ * Entrar o crear la cuenta, sin contraseña: correo → código de 6 números que
+ * Supabase manda al correo. Va después del splash y antes de "Nuevo perfil".
+ * Sirve igual para una cuenta nueva y para volver a entrar (otro teléfono).
  */
-export const AccountScreen: React.FC<AccountScreenProps> = ({ onCreateAccount }) => {
+export const AccountScreen: React.FC<AccountScreenProps> = ({ onSendCode, onVerifyCode }) => {
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
   // Un número por cuadro; '' = cuadro vacío.
@@ -34,6 +33,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onCreateAccount })
   const code = digits.join('');
   const [error, setError] = useState('');
   const [resendIn, setResendIn] = useState(0);
+  const [isBusy, setIsBusy] = useState(false); // esperando a Supabase
 
   // Cuenta regresiva para "Reenviar el código".
   useEffect(() => {
@@ -72,22 +72,32 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onCreateAccount })
     }
   };
 
-  const sendCode = () => {
-    setDigits(EMPTY_CODE);
+  const sendCode = async (address: string) => {
+    setIsBusy(true);
     setError('');
+    const failure = await onSendCode(address);
+    setIsBusy(false);
+    if (failure) return setError(failure);
+    setDigits(EMPTY_CODE);
     setResendIn(RESEND_SECONDS);
     setStep('code');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBusy) return;
     if (step === 'email') {
-      if (!EMAIL_PATTERN.test(email.trim())) return setError('Escribe un correo válido, por ejemplo ana@gmail.com');
-      setEmail(email.trim().toLowerCase());
-      return sendCode();
+      const address = email.trim().toLowerCase();
+      if (!EMAIL_PATTERN.test(address)) return setError('Escribe un correo válido, por ejemplo ana@gmail.com');
+      setEmail(address);
+      return sendCode(address);
     }
     if (code.length !== CODE_LENGTH) return setError(`Escribe los ${CODE_LENGTH} números del código`);
-    onCreateAccount(email);
+    setIsBusy(true);
+    setError('');
+    const failure = await onVerifyCode(email, code);
+    setIsBusy(false);
+    if (failure) setError(failure);
   };
 
   return (
@@ -199,27 +209,23 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onCreateAccount })
 
             <button
               type="button"
-              onClick={sendCode}
-              disabled={resendIn > 0}
+              onClick={() => void sendCode(email)}
+              disabled={resendIn > 0 || isBusy}
               className="text-sm font-semibold text-[#0bc4a0] hover:text-[#087064] disabled:text-gray-400 px-1 py-1 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba]"
             >
               {resendIn > 0 ? `Reenviar el código en ${resendIn} s` : 'Reenviar el código'}
             </button>
 
-            {/* Provisional: quitar al conectar Supabase */}
-            <div className="bg-amber-50 border border-amber-200/80 p-3.5 rounded-2xl flex items-start space-x-3 text-xs">
-              <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <p className="font-medium text-amber-800 leading-snug">
-                Versión de prueba: todavía no enviamos el correo. Escribe cualquier código de {CODE_LENGTH} números.
-              </p>
-            </div>
           </div>
         )}
 
         {/* Botón al final de la pantalla */}
         <div className="pt-2 mt-auto">
-          <button type="submit" className={primaryButton}>
-            <span>{step === 'email' ? 'Enviarme el código' : 'Continuar'}</span>
+          <button type="submit" disabled={isBusy} className={`${primaryButton} disabled:opacity-70`}>
+            {isBusy && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>
+              {step === 'email' ? (isBusy ? 'Enviando el código…' : 'Enviarme el código') : isBusy ? 'Revisando…' : 'Continuar'}
+            </span>
           </button>
         </div>
       </form>
