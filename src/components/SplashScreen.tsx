@@ -1,5 +1,4 @@
 import React from 'react';
-import { Pill } from 'lucide-react';
 
 interface SplashScreenProps {
   onClose: () => void;
@@ -32,7 +31,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onClose }) => (
 
     <span className="relative flex flex-col items-center text-white font-heading select-none">
       <span className="w-[90px] h-[90px] rounded-full bg-white/15 flex items-center justify-center">
-        <Pill className="w-11 h-11 rotate-90" strokeWidth={1.75} aria-hidden="true" />
+        {/* Pastilla del diseño (svg pill.svg), a su tamaño original de 38px */}
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+          <path
+            d="M7.55877 7.55867C11.7306 3.38687 18.5045 3.38687 22.6763 7.55867L30.2351 15.1174C34.4069 19.2892 34.4069 26.0632 30.2351 30.235C26.0633 34.4068 19.2893 34.4068 15.1175 30.235L7.55877 22.6762C3.38697 18.5044 3.38697 11.7305 7.55877 7.55867Z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M10.7515 25.3677C19.9517 17.3677 25.2515 12.3677 26.7515 10.8677" />
+        </svg>
       </span>
       <span className="text-[2.4rem] leading-none font-light tracking-tight mt-6">A tiempo</span>
     </span>
