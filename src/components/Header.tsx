@@ -1,20 +1,24 @@
 import React from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, User } from 'lucide-react';
 import { SeniorProfile } from '../types';
 
 interface HeaderProps {
   profile: SeniorProfile;
-  isEmptyState: boolean;
-  onToggleEmptyState: () => void;
+  today: Date; // reloj de App: cambia solo al pasar la medianoche
   todayCountPending: number;
   remindersEnabled: boolean;
   onEnableReminders: () => void;
 }
 
+// "lunes, 3 de noviembre" → "Lunes, 3 de noviembre"
+const formatToday = (date: Date) => {
+  const text = date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
+
 export const Header: React.FC<HeaderProps> = ({
   profile,
-  isEmptyState,
-  onToggleEmptyState,
+  today,
   todayCountPending,
   remindersEnabled,
   onEnableReminders
@@ -22,20 +26,26 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-white px-5 py-4 flex justify-between items-center border-b border-gray-100 shrink-0 sticky top-0 z-10">
       <div className="flex items-center space-x-3.5">
-        {/* User Avatar */}
+        {/* Foto del perfil; sin foto, la silueta (igual que en Perfil) */}
         <div className="relative">
-          <img
-            alt={`Foto de perfil de ${profile.name}`}
-            className="w-[50px] h-[50px] rounded-full object-cover border-2 border-[#0ee5ba]/20"
-            src={profile.avatarUrl}
-          />
+          {profile.avatarUrl ? (
+            <img
+              alt={`Foto de perfil de ${profile.name}`}
+              className="w-[50px] h-[50px] rounded-full object-cover border-2 border-[#0ee5ba]/20"
+              src={profile.avatarUrl}
+            />
+          ) : (
+            <div className="w-[50px] h-[50px] rounded-full bg-gray-100 text-gray-400 border-2 border-[#0ee5ba]/20 flex items-center justify-center">
+              <User className="w-6 h-6" strokeWidth={1.75} aria-hidden="true" />
+            </div>
+          )}
         </div>
         <div>
           <h1 className="text-[19px] font-bold text-[#1b1c1c] leading-tight">
             {profile.name.split(' ')[0]}
           </h1>
           <p className="text-[14px] text-[#0bc4a0] font-semibold leading-tight mt-0.5">
-            Lunes, 24 de febrero
+            {formatToday(today)}
           </p>
         </div>
       </div>
@@ -56,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           <Bell className="w-6 h-6" />
-          {todayCountPending > 0 && !isEmptyState && (
+          {todayCountPending > 0 && (
             <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#ff5f56] rounded-full ring-2 ring-white animate-pulse" />
           )}
         </button>

@@ -9,7 +9,7 @@ export const CLAIM_DAY_HOUR = 8; // el día de reclamar (y cada día de atraso),
 
 const CHECK_INTERVAL_MS = 30 * 1000;
 
-/** Lo que el cuidador ya respondió a cada aviso; se guarda en el teléfono. */
+/** Lo que ya se respondió a cada aviso; se guarda en el teléfono. */
 export interface ClaimAlertState {
   dismissed: string[]; // avisos "Entendido" o ya resueltos
   snoozedUntil: Record<string, number>; // aviso → hasta cuándo está pospuesto (ms)

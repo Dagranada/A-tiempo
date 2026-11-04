@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, RotateCcw } from 'lucide-react';
+import { Check, Trash2 } from 'lucide-react';
 import { SeniorProfile } from '../types';
 import { ConfirmDialog } from './ConfirmDialog';
 import {
@@ -16,7 +16,7 @@ interface PerfilViewProps {
   remindersEnabled: boolean;
   onToggleReminders: () => void;
   onSaveProfile: (profile: SeniorProfile) => void;
-  onResetData: () => void; // vuelve a los planes y reclamos de ejemplo
+  onDeleteAll: () => void; // borra perfil, planes y tomas: vuelve a "Nuevo perfil"
 }
 
 export const PerfilView: React.FC<PerfilViewProps> = ({
@@ -24,13 +24,13 @@ export const PerfilView: React.FC<PerfilViewProps> = ({
   remindersEnabled,
   onToggleReminders,
   onSaveProfile,
-  onResetData,
+  onDeleteAll,
 }) => {
   // Borrador local: nada se aplica hasta "Guardar cambios"
   const [draft, setDraft] = useState<SeniorProfile>(profile);
   const [nameError, setNameError] = useState('');
   const [saved, setSaved] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const update = <K extends keyof SeniorProfile>(key: K, value: SeniorProfile[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -98,24 +98,24 @@ export const PerfilView: React.FC<PerfilViewProps> = ({
         )}
         <button
           type="button"
-          onClick={() => setConfirmReset(true)}
+          onClick={() => setConfirmDelete(true)}
           className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded-full text-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-1.5"
         >
-          <RotateCcw className="w-4 h-4" />
-          <span>Restablecer datos de ejemplo</span>
+          <Trash2 className="w-4 h-4" />
+          <span>Borrar todo y empezar de nuevo</span>
         </button>
       </div>
 
-      {confirmReset && (
+      {confirmDelete && (
         <ConfirmDialog
-          title="¿Restablecer los datos de ejemplo?"
-          message="Se reemplazarán los planes, las tomas y las órdenes de la EPS por los de ejemplo. No se puede deshacer."
-          confirmLabel="Sí, restablecer"
+          title="¿Borrar todo?"
+          message="Se borrarán la cuenta, el perfil, los planes, las tomas marcadas y las órdenes de la EPS de este teléfono. No se puede deshacer."
+          confirmLabel="Sí, borrar todo"
           onConfirm={() => {
-            onResetData();
-            setConfirmReset(false);
+            setConfirmDelete(false);
+            onDeleteAll();
           }}
-          onCancel={() => setConfirmReset(false)}
+          onCancel={() => setConfirmDelete(false)}
         />
       )}
     </form>

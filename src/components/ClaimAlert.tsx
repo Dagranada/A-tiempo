@@ -4,42 +4,6 @@ import { DueClaim } from '../hooks/useClaimReminders';
 import { formatDayMonth, toIsoDate } from '../lib/claims';
 import { ALARM_PRIMARY_BUTTON, ALARM_TEXT, AlarmShell, SnoozeControl, alarmNameSize } from './AlarmShell';
 
-/**
- * Aviso de reclamo de prueba (botones temporales del menú): "Reclamo" = hoy
- * debes reclamar; "Mañana" = el aviso del día anterior. Entrega 3 de 6, con el
- * mismo medicamento que la alarma de prueba (Metformina, ADR 0006). Sus
- * botones solo cierran la pantalla.
- */
-export function buildTestClaim(kind: DueClaim['kind'] = 'today'): DueClaim {
-  const today = new Date();
-  const dueDay = new Date(today);
-  if (kind === 'tomorrow') dueDay.setDate(dueDay.getDate() + 1);
-  const lastDay = new Date(dueDay.getFullYear(), dueDay.getMonth() + 1, 0);
-  return {
-    key: `prueba-${kind}`,
-    kind,
-    orderMonths: 6,
-    plan: {
-      id: 'prueba',
-      name: 'Metformina',
-      description: 'Control de glucosa en sangre',
-      dose: '1 pastilla • 850mg',
-      initialTime: '14:00',
-      frequencyValue: 24,
-      frequencyUnit: 'horas',
-      startDate: toIsoDate(today),
-      endDate: toIsoDate(lastDay),
-      createdAt: today.toISOString(),
-    },
-    cycle: {
-      number: 3,
-      dueDate: toIsoDate(dueDay),
-      lastDate: toIsoDate(lastDay),
-      status: kind === 'tomorrow' ? 'upcoming' : 'open',
-    },
-  };
-}
-
 const MIN_SNOOZE_HOURS = 1;
 const MAX_SNOOZE_HOURS = 12;
 const DEFAULT_SNOOZE_HOURS = 2;

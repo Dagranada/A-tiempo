@@ -13,10 +13,10 @@ import {
 } from '../lib/claims';
 import { Stepper } from './Stepper';
 import { EmptyState } from './EmptyState';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface PastasViewProps {
   plans: MedicationPlan[];
-  isEmptyState: boolean; // botón "Empty states": se ve como sin planes
   onSaveClaim: (planId: string, claim: EpsClaim) => void;
   onMarkClaimed: (planId: string) => void;
   onRemoveClaim: (planId: string) => void;
@@ -287,17 +287,17 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
 
 /** Pestaña "Pastas": medicamentos que se reclaman cada mes en la EPS. */
 export const PastasView: React.FC<PastasViewProps> = ({
-  plans: allPlans,
-  isEmptyState,
+  plans,
   onSaveClaim,
   onMarkClaimed,
   onRemoveClaim,
   onCreatePlan,
 }) => {
-  const plans = isEmptyState ? [] : allPlans;
   // Solo estado visual: qué formulario está abierto.
   // `new` = arriba de la lista; `edit`/`renew` = en el lugar de esa tarjeta.
   const [form, setForm] = useState<{ mode: 'new' | 'edit' | 'renew'; planId?: string } | null>(null);
+  // Qué reclamo espera confirmación para quitarse (como eliminar un plan).
+  const [claimToRemove, setClaimToRemove] = useState<MedicationPlan | null>(null);
   const isFormOpen = form !== null;
   const today = toIsoDate(new Date());
 
@@ -353,7 +353,7 @@ export const PastasView: React.FC<PastasViewProps> = ({
           <div>
             <h3 className="text-lg font-bold text-gray-900 font-heading">Ninguna pasta por reclamar</h3>
             <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto leading-relaxed">
-              Registra la orden de la EPS de un medicamento de Alberto para recordarle cada mes cuándo reclamarlo.
+              Registra la orden de la EPS de un medicamento y te recordamos cada mes cuándo reclamarlo.
             </p>
           </div>
         </div>
@@ -383,12 +383,25 @@ export const PastasView: React.FC<PastasViewProps> = ({
                 today={today}
                 onMarkClaimed={() => onMarkClaimed(plan.id)}
                 onEdit={() => setForm({ mode: 'edit', planId: plan.id })}
-                onRemove={() => onRemoveClaim(plan.id)}
+                onRemove={() => setClaimToRemove(plan)}
                 onRenew={() => setForm({ mode: 'renew', planId: plan.id })}
               />
             )
           )}
         </div>
+      )}
+
+      {claimToRemove && (
+        <ConfirmDialog
+          title={`¿Quitar el reclamo de ${claimToRemove.name}?`}
+          message="Se borrarán la orden de la EPS y su historial de entregas. El plan y sus tomas no cambian. No se puede deshacer."
+          confirmLabel="Sí, quitar"
+          onConfirm={() => {
+            onRemoveClaim(claimToRemove.id);
+            setClaimToRemove(null);
+          }}
+          onCancel={() => setClaimToRemove(null)}
+        />
       )}
     </div>
   );

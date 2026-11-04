@@ -11,7 +11,7 @@ const STEPS = [
   'Procesando imagen del medicamento...',
   'Identificando nombre y concentración...',
   'Calculando dosis y frecuencia diaria...',
-  'Generando horario sugerido para Alberto...'
+  'Generando tu horario sugerido...',
 ];
 
 const MAX_WAIT_MS = 15000; // Por si el análisis tarda demasiado o se cuelga.

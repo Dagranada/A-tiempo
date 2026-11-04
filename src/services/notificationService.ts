@@ -81,17 +81,6 @@ export function showClaimNotification(body: string, tag: string): void {
   });
 }
 
-/** Notificación del sistema de prueba: no menciona ningún medicamento real. */
-export function showTestNotification(): void {
-  if (!isNotificationSupported() || Notification.permission !== 'granted') return;
-
-  new Notification(NOTIFICATION_TITLE, {
-    body: 'Alarma de prueba: así llegará el aviso a la hora de cada toma.',
-    tag: 'alarma-de-prueba',
-    silent: false,
-  });
-}
-
 /** Sonido de aviso: dos notas cortas, suficientes para llamar la atención. */
 export function playReminderSound(): void {
   const ctx = getAudioContext();

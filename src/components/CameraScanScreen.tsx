@@ -3,7 +3,7 @@ import { ArrowLeft, Camera, Edit3 } from 'lucide-react';
 
 interface CameraScanScreenProps {
   // base64Image es la foto capturada (sin el prefijo data:...), o null si no hay
-  // cámara real disponible y se debe usar un ejemplo de muestra.
+  // cámara real disponible (entonces se llena el plan a mano).
   onTakePhoto: (base64Image: string | null) => void;
   onSkipToManualForm: () => void;
   onBack: () => void;
@@ -77,7 +77,7 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
       }
     }
 
-    // Sin cámara real disponible: se usará un ejemplo de muestra.
+    // Sin cámara real disponible: se llena el plan a mano.
     onTakePhoto(null);
   };
 

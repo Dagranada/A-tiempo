@@ -1,12 +1,13 @@
 import React from 'react';
-import { CheckCircle2, Clock, Pill, X } from 'lucide-react';
+import { CalendarCheck, CheckCircle2, Clock, Pill, X } from 'lucide-react';
 import { DoseItem } from '../types';
 import { EmptyState } from './EmptyState';
 
 interface HorarioViewProps {
-  doses: DoseItem[];
-  isEmptyState: boolean;
+  doses: DoseItem[]; // tomas de hoy, calculadas desde los planes
+  hasPlans: boolean; // hay planes aunque hoy no tengan tomas (cada 2 días, aún no empieza…)
   onMarkAsTaken: (doseId: string) => void;
+  onUndoTaken: (doseId: string) => void; // "Deshacer" en Ya tomadas, si se marcó por error
   onNavigateToScan: () => void; // "Crear plan" abre el escáner
   claimNotices: { key: string; planName: string; text: string }[]; // p. ej. "Mañana toca reclamar Losartán"
   onOpenPastas: () => void;
@@ -15,22 +16,23 @@ interface HorarioViewProps {
 
 export const HorarioView: React.FC<HorarioViewProps> = ({
   doses,
-  isEmptyState,
+  hasPlans,
   onMarkAsTaken,
+  onUndoTaken,
   onNavigateToScan,
   claimNotices,
   onOpenPastas,
   onDismissNotice,
 }) => {
-  const pendingDoses = isEmptyState ? [] : doses.filter((d) => d.status === 'pending');
-  const upcomingDoses = isEmptyState ? [] : doses.filter((d) => d.status === 'upcoming');
-  const takenDoses = isEmptyState ? [] : doses.filter((d) => d.status === 'taken');
+  const pendingDoses = doses.filter((d) => d.status === 'pending');
+  const upcomingDoses = doses.filter((d) => d.status === 'upcoming');
+  const takenDoses = doses.filter((d) => d.status === 'taken');
 
   return (
     <div className="px-5 py-6 space-y-7 pb-28 flex-1 flex flex-col">
       {/* Reclamos en la EPS de hoy o mañana: se ven al abrir la app aunque los
           recordatorios estén apagados (solo suenan con la app abierta). */}
-      {!isEmptyState && claimNotices.length > 0 && (
+      {claimNotices.length > 0 && (
         <div className="space-y-3">
           {claimNotices.map((notice) => (
             <div
@@ -62,17 +64,31 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
       )}
 
       {/* Estado vacío: aún no hay plan, así que no hay horario */}
-      {(isEmptyState || doses.length === 0) && (
-        <EmptyState title="No tienes un horario" onCreate={onNavigateToScan} />
+      {!hasPlans && <EmptyState title="No tienes un horario" onCreate={onNavigateToScan} />}
+
+      {/* Hay planes, pero ninguno tiene tomas hoy: no es un estado vacío */}
+      {hasPlans && doses.length === 0 && (
+        <div className="bg-white rounded-3xl p-8 border border-gray-100 text-center shadow-sm space-y-4">
+          <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto">
+            <CalendarCheck className="w-8 h-8" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 font-heading">Hoy no hay tomas</h3>
+            <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto leading-relaxed">
+              Ningún plan tiene tomas para hoy. Puedes revisarlos en Mis planes.
+            </p>
+          </div>
+        </div>
       )}
 
       {/* PENDIENTES DE HOY */}
-      {!isEmptyState && (pendingDoses.length > 0 || upcomingDoses.length > 0) && (
+      {(pendingDoses.length > 0 || upcomingDoses.length > 0) && (
         <section>
           <h2 className="text-[13px] font-bold tracking-wider text-gray-500 uppercase mb-3.5 flex items-center justify-between font-inter">
             <span>Pendientes de hoy</span>
             <span className="text-xs font-normal text-gray-400 font-sans">
-              {pendingDoses.length + upcomingDoses.length} tomas restantes
+              {pendingDoses.length + upcomingDoses.length}{' '}
+              {pendingDoses.length + upcomingDoses.length === 1 ? 'toma restante' : 'tomas restantes'}
             </span>
           </h2>
 
@@ -157,12 +173,12 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
       )}
 
       {/* YA TOMADAS SECTION */}
-      {!isEmptyState && takenDoses.length > 0 && (
+      {takenDoses.length > 0 && (
         <section className="pt-2">
           <h2 className="text-[13px] font-bold tracking-wider text-gray-500 uppercase mb-3 flex items-center justify-between font-inter">
             <span>Ya Tomadas</span>
             <span className="text-xs text-emerald-600 font-medium font-sans">
-              {takenDoses.length} completadas
+              {takenDoses.length} {takenDoses.length === 1 ? 'completada' : 'completadas'}
             </span>
           </h2>
 
@@ -185,9 +201,19 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
                     <p className="text-[13px] text-gray-500">{dose.dose}</p>
                   </div>
                 </div>
-                <span className="text-[13px] font-semibold text-gray-600 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
-                  {dose.takenAt || dose.timeFormatted}
-                </span>
+                {/* Hora en que se marcó y, debajo, "Deshacer" por si fue un error */}
+                <div className="flex flex-col items-end shrink-0 ml-3">
+                  <span className="text-[13px] font-semibold text-gray-600 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+                    {dose.takenAt || dose.timeFormatted}
+                  </span>
+                  <button
+                    onClick={() => onUndoTaken(dose.id)}
+                    aria-label={`Deshacer: ${dose.medicationName} de las ${dose.timeFormatted} vuelve a pendiente`}
+                    className="mt-1 text-sm font-semibold text-gray-500 hover:text-gray-900 px-2 py-0.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba]"
+                  >
+                    Deshacer
+                  </button>
+                </div>
               </div>
             ))}
           </div>

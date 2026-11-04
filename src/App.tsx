@@ -1,20 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { ChevronRight } from 'lucide-react';
-import {
-  INITIAL_PLANS,
-  INITIAL_SENIOR_PROFILE,
-  INITIAL_TODAY_DOSES,
-  SCAN_PRESETS,
-} from './data/mockData';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { analyzeMedicationImage } from './services/geminiService';
 import {
-  playReminderSound,
   requestNotificationPermission,
   unlockAudio,
 } from './services/notificationService';
 import { useDoseReminders } from './hooks/useDoseReminders';
-import { usePersistentState } from './hooks/usePersistentState';
-import { DoseItem, EpsClaim, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
+import { clearLeftoverStoredData, usePersistentState } from './hooks/usePersistentState';
+import { EpsClaim, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
 import {
   CLAIM_EVE_HOUR,
   ClaimAlertState,
@@ -22,6 +14,7 @@ import {
   useClaimReminders,
 } from './hooks/useClaimReminders';
 import { daysBetween, getClaimSchedule, toIsoDate } from './lib/claims';
+import { TakenDoses, getDosesForDay, markTaken } from './lib/doses';
 
 import { Header } from './components/Header';
 import { ReminderAlert } from './components/ReminderAlert';
@@ -31,25 +24,44 @@ import { CameraScanScreen } from './components/CameraScanScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { PlanFormScreen } from './components/PlanFormScreen';
 import { PerfilView } from './components/PerfilView';
+import { AccountScreen } from './components/AccountScreen';
 import { ProfileCreateScreen } from './components/ProfileCreateScreen';
 import { SplashScreen } from './components/SplashScreen';
 import { BottomNav } from './components/BottomNav';
 import { PastasView } from './components/PastasView';
-import { ClaimAlert, buildTestClaim } from './components/ClaimAlert';
-
-// Pestañas que recorre el botón temporal "Siguiente" del modo Empty states.
-const EMPTY_STATE_TABS: NavTab[] = ['horario', 'planes', 'pastas'];
+import { ClaimAlert } from './components/ClaimAlert';
 
 export default function App() {
-  // Datos del cuidador: se guardan en el teléfono (ADR 0007)
-  const [profile, setProfile] = usePersistentState('profile', INITIAL_SENIOR_PROFILE);
-  const [plans, setPlans] = usePersistentState<MedicationPlan[]>('plans', INITIAL_PLANS);
-  const [doses, setDoses] = usePersistentState<DoseItem[]>('doses', INITIAL_TODAY_DOSES);
+  // Datos de quien toma los medicamentos: se guardan en el teléfono (ADR 0007). Una instalación
+  // nueva arranca sin cuenta, perfil ni planes: splash → "Crea tu cuenta" →
+  // "Nuevo perfil" → estados vacíos. La cuenta es provisional (solo el correo)
+  // hasta conectar Supabase.
+  const [account, setAccount] = usePersistentState<{ email: string } | null>('account', null);
+  const [profile, setProfile] = usePersistentState<SeniorProfile | null>('profile', null);
+  const [plans, setPlans] = usePersistentState<MedicationPlan[]>('plans', []);
+  // Las tomas de hoy se calculan desde los planes (src/lib/doses.ts); solo se
+  // guardan las marcadas "Listo".
+  const [takenDoses, setTakenDoses] = usePersistentState<TakenDoses>('taken-doses', {});
+
+  // Reloj de la vista: se actualiza cada minuto para que las tomas pasen a
+  // pendientes a su hora, el día cambie a medianoche y el recuadro de reclamo
+  // aparezca a las 12 m sin tener que recargar.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const todayIso = toIsoDate(now);
+  const doses = useMemo(() => getDosesForDay(plans, now, takenDoses), [plans, now, takenDoses]);
 
   // App Navigation & Screen State
   const [screen, setScreen] = useState<ScreenView>('home');
   const [activeTab, setActiveTab] = useState<NavTab>('horario');
-  const [isEmptyState, setIsEmptyState] = useState<boolean>(false);
+
+  // Splash: sale cada vez que se abre la app. Función estable para que el
+  // reloj de la vista no reinicie su temporizador.
+  const [isSplashOpen, setIsSplashOpen] = useState(true);
+  const closeSplash = useCallback(() => setIsSplashOpen(false), []);
 
   // Draft plan passed from scan -> loading -> form
   const [pendingScannedPlan, setPendingScannedPlan] = useState<
@@ -58,31 +70,27 @@ export default function App() {
   // true cuando el análisis de la imagen (real o de ejemplo) ya terminó
   const [isPlanReady, setIsPlanReady] = useState(false);
 
-  // Recordatorios de toma: se activan explícitamente desde la campana para no
-  // sorprender con alarmas apenas se abre la app.
-  const [remindersEnabled, setRemindersEnabled] = useState(false);
+  // Recordatorios de toma: se activan explícitamente (campana, Perfil o el paso
+  // 3 de "Nuevo perfil") y la elección se guarda en el teléfono.
+  const [remindersEnabled, setRemindersEnabled] = usePersistentState('reminders-enabled', false);
   const { dueDose, snooze } = useDoseReminders(doses, remindersEnabled);
 
-  // Avisos de reclamo en la EPS: qué respondió el cuidador a cada uno se guarda
+  // Al reabrir la app con los recordatorios ya activos, el navegador vuelve a
+  // bloquear el sonido: se desbloquea con el primer toque en cualquier parte.
+  useEffect(() => {
+    if (!remindersEnabled) return;
+    const unlock = () => unlockAudio();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    return () => window.removeEventListener('pointerdown', unlock);
+  }, [remindersEnabled]);
+
+  // Avisos de reclamo en la EPS: qué se respondió a cada uno se guarda
   // en el teléfono para no repetir un aviso ya resuelto al recargar.
   const [claimAlerts, setClaimAlerts] = usePersistentState<ClaimAlertState>(
     'claim-alerts',
     EMPTY_CLAIM_ALERTS
   );
   const dueClaim = useClaimReminders(plans, claimAlerts, remindersEnabled);
-
-  // Temporal (botón "Reclamo" del menú): muestra el aviso del día anterior y,
-  // al cerrarlo, el del día de reclamar. Solo cierra: no cambia ningún reclamo.
-  // Temporal (botón "Splash" del menú): muestra la pantalla de bienvenida.
-  const [isSplashOpen, setIsSplashOpen] = useState(false);
-
-  const [testClaimKind, setTestClaimKind] = useState<'today' | 'tomorrow' | null>(null);
-  const handleTestClaim = () => {
-    unlockAudio();
-    playReminderSound();
-    setTestClaimKind('tomorrow');
-  };
-  const handleNextTestClaim = () => setTestClaimKind(testClaimKind === 'tomorrow' ? 'today' : null);
 
   const handleEnableReminders = () => {
     if (remindersEnabled) return;
@@ -112,19 +120,12 @@ export default function App() {
       hour12: true,
     });
 
-    setDoses((prevDoses) =>
-      prevDoses.map((d) => {
-        if (d.id === doseId) {
-          return {
-            ...d,
-            status: 'taken',
-            takenAt: timeFormatted,
-          };
-        }
-        return d;
-      })
-    );
+    setTakenDoses((prev) => markTaken(prev, doseId, timeFormatted, now));
   };
+
+  // "Deshacer" en Ya tomadas: la toma vuelve a pendiente (o a próxima, si aún no es la hora).
+  const handleUndoTaken = (doseId: string) =>
+    setTakenDoses((prev) => Object.fromEntries(Object.entries(prev).filter(([key]) => key !== doseId)));
 
   // Handlers for scanning workflow
   const handleTapScan = () => {
@@ -132,15 +133,15 @@ export default function App() {
   };
 
   const handleTakePhoto = (base64Image: string | null) => {
-    setIsPlanReady(false);
-    setScreen('loading');
-
     if (!base64Image) {
-      // No hay cámara real disponible: se usa un ejemplo de muestra.
-      setPendingScannedPlan(SCAN_PRESETS[0]?.extractedPlan ?? null);
-      setIsPlanReady(true);
+      // Sin cámara real no hay nada que analizar: formulario vacío, a mano.
+      setPendingScannedPlan(null);
+      setScreen('plan_form');
       return;
     }
+
+    setIsPlanReady(false);
+    setScreen('loading');
 
     analyzeMedicationImage(base64Image)
       .then((extractedPlan) => {
@@ -148,7 +149,7 @@ export default function App() {
       })
       .catch((err) => {
         console.error('No se pudo analizar la imagen con Gemini:', err);
-        // El cuidador completa el formulario a mano si el análisis falla.
+        // Si el análisis falla, el plan se completa a mano.
         setPendingScannedPlan(null);
       })
       .finally(() => {
@@ -176,49 +177,9 @@ export default function App() {
       return [newPlan, ...prev];
     });
 
-    // 2. Generate or update daily dose item for this plan
-    const hourNum = parseInt(newPlan.initialTime.split(':')[0]) || 8;
-    const minNum = parseInt(newPlan.initialTime.split(':')[1]) || 0;
-    const period = hourNum >= 12 ? 'PM' : 'AM';
-    const hour12 = hourNum % 12 || 12;
-    const timeFormatted = `${hour12 < 10 ? '0' + hour12 : hour12}:${
-      minNum < 10 ? '0' + minNum : minNum
-    } ${period}`;
+    // 2. Las tomas salen del plan (src/lib/doses.ts): no hay nada más que crear.
 
-    setDoses((prev) => {
-      const existingDoseIndex = prev.findIndex((d) => d.planId === newPlan.id);
-      if (existingDoseIndex !== -1) {
-        return prev.map((d) =>
-          d.planId === newPlan.id
-            ? {
-                ...d,
-                medicationName: newPlan.name,
-                dose: newPlan.dose,
-                timeFormatted,
-                timeHour: hourNum,
-                timeMinute: minNum,
-              }
-            : d
-        );
-      } else {
-        const newDose: DoseItem = {
-          id: `dose-${Date.now()}`,
-          planId: newPlan.id,
-          medicationName: newPlan.name,
-          dose: newPlan.dose,
-          timeFormatted,
-          timeHour: hourNum,
-          timeMinute: minNum,
-          status: 'pending',
-        };
-        return [newDose, ...prev];
-      }
-    });
-
-    // 3. Deactivate empty state if it was active
-    setIsEmptyState(false);
-
-    // 4. Return to Home / Mis Planes view
+    // 3. Return to Home / Mis Planes view
     setScreen('home');
     setActiveTab('planes');
   };
@@ -230,7 +191,9 @@ export default function App() {
 
   const handleDeletePlan = (planId: string) => {
     setPlans((prev) => prev.filter((p) => p.id !== planId));
-    setDoses((prev) => prev.filter((d) => d.planId !== planId));
+    setTakenDoses((prev) =>
+      Object.fromEntries(Object.entries(prev).filter(([key]) => !key.startsWith(`${planId}@`)))
+    );
   };
 
   // Apagar no necesita gesto ni permisos; encender pasa por el flujo de la campana
@@ -244,6 +207,13 @@ export default function App() {
 
   const handleSaveProfile = (updated: SeniorProfile) => {
     setProfile(updated);
+  };
+
+  // Fin de "Nuevo perfil": entra al Horario, vacío hasta crear el primer plan.
+  const handleCreateProfile = (created: SeniorProfile) => {
+    setProfile(created);
+    setScreen('home');
+    setActiveTab('horario');
   };
 
   // --- Reclamos en la EPS (pestaña Pastas) ---
@@ -276,15 +246,6 @@ export default function App() {
       snoozedUntil: { ...prev.snoozedUntil, [key]: Date.now() + hours * 60 * 60 * 1000 },
     }));
 
-  // Reloj de la vista: se actualiza cada minuto para que el recuadro aparezca a
-  // las 12 m sin tener que recargar.
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60 * 1000);
-    return () => clearInterval(timer);
-  }, []);
-  const todayIso = toIsoDate(now);
-
   // Punto en la pestaña Pastas: hay que reclamar hoy (o se atrasó) o es mañana.
   const hasClaimToday = plans.some((p) => {
     const current = p.claim && getClaimSchedule(p.claim, todayIso).current;
@@ -306,12 +267,18 @@ export default function App() {
         });
   const visibleClaimNotices = claimNotices.filter((n) => !claimAlerts.dismissed.includes(n.key));
 
-  // Vuelve a los datos de ejemplo (botón en Perfil): planes, tomas y avisos.
-  const handleResetData = () => {
-    setPlans(INITIAL_PLANS);
-    setDoses(INITIAL_TODAY_DOSES);
+  // "Borrar todo y empezar de nuevo" (Perfil, con confirmación): el teléfono
+  // queda como recién instalado y la app vuelve a "Nuevo perfil".
+  const handleDeleteAll = () => {
+    clearLeftoverStoredData();
+    setPlans([]);
+    setTakenDoses({});
     setClaimAlerts(EMPTY_CLAIM_ALERTS);
-    setIsEmptyState(false);
+    setRemindersEnabled(false);
+    setProfile(null);
+    setAccount(null);
+    setScreen('home');
+    setActiveTab('horario');
   };
 
   const pendingDosesCount = doses.filter((d) => d.status === 'pending').length;
@@ -341,27 +308,25 @@ export default function App() {
           />
         )}
 
-        {/* Temporal: "Crear perfil" de la nav muestra el flujo, pero aún no guarda
-            el perfil nuevo (falta separar planes y datos por perfil). */}
-        {screen === 'profile_create' && (
+        {/* Primera vez: crear la cuenta (correo + código) y después el perfil */}
+        {!account && <AccountScreen onCreateAccount={(email) => setAccount({ email })} />}
+        {account && !profile && (
           <ProfileCreateScreen
             remindersEnabled={remindersEnabled}
             onToggleReminders={handleToggleReminders}
-            onCreateProfile={() => setScreen('home')}
-            onCancel={() => setScreen('home')}
+            onCreateProfile={handleCreateProfile}
           />
         )}
 
         {/* Main Home App View */}
-        {screen === 'home' && (
+        {account && profile && screen === 'home' && (
           <>
             {/* En Perfil no hay Header: la foto y el nombre ya encabezan la vista,
                 y los recordatorios se controlan con su propio interruptor */}
             {activeTab !== 'perfil' && (
               <Header
                 profile={profile}
-                isEmptyState={isEmptyState}
-                onToggleEmptyState={() => setIsEmptyState(!isEmptyState)}
+                today={now}
                 todayCountPending={pendingDosesCount}
                 remindersEnabled={remindersEnabled}
                 onEnableReminders={handleEnableReminders}
@@ -373,8 +338,9 @@ export default function App() {
               {activeTab === 'horario' && (
                 <HorarioView
                   doses={doses}
-                  isEmptyState={isEmptyState}
+                  hasPlans={plans.length > 0}
                   onMarkAsTaken={handleMarkAsTaken}
+                  onUndoTaken={handleUndoTaken}
                   onNavigateToScan={handleTapScan}
                   claimNotices={visibleClaimNotices}
                   onOpenPastas={() => setActiveTab('pastas')}
@@ -385,7 +351,6 @@ export default function App() {
               {activeTab === 'planes' && (
                 <MisPlanesView
                   plans={plans}
-                  isEmptyState={isEmptyState}
                   onNavigateToScan={handleTapScan}
                   onEditPlan={handleEditPlan}
                   onDeletePlan={handleDeletePlan}
@@ -395,7 +360,6 @@ export default function App() {
               {activeTab === 'pastas' && (
                 <PastasView
                   plans={plans}
-                  isEmptyState={isEmptyState}
                   onSaveClaim={handleSaveClaim}
                   onMarkClaimed={handleMarkClaimed}
                   onRemoveClaim={handleRemoveClaim}
@@ -409,7 +373,7 @@ export default function App() {
                   remindersEnabled={remindersEnabled}
                   onToggleReminders={handleToggleReminders}
                   onSaveProfile={handleSaveProfile}
-                  onResetData={handleResetData}
+                  onDeleteAll={handleDeleteAll}
                 />
               )}
             </main>
@@ -417,49 +381,12 @@ export default function App() {
             <BottomNav
               activeTab={activeTab}
               onSelectTab={setActiveTab}
-              isEmptyState={isEmptyState}
-              onToggleEmptyState={() => {
-                if (!isEmptyState) setActiveTab('horario');
-                setIsEmptyState(!isEmptyState);
-              }}
-              hasClaimToday={hasClaimToday && !isEmptyState}
-              onCreateProfile={() => setScreen('profile_create')}
-              onTapTestClaim={handleTestClaim}
-              onShowSplash={() => setIsSplashOpen(true)}
+              hasClaimToday={hasClaimToday}
             />
-
-            {/* Temporal: recorre los tres estados vacíos (Horario → Mis planes → Pastas) */}
-            {isEmptyState && (
-              <button
-                onClick={() => {
-                  const i = EMPTY_STATE_TABS.indexOf(activeTab);
-                  setActiveTab(EMPTY_STATE_TABS[(i + 1) % EMPTY_STATE_TABS.length]);
-                }}
-                className="fixed bottom-24 right-5 z-30 bg-gray-900 hover:bg-gray-800 text-white font-bold py-2.5 pl-4 pr-3 rounded-full text-sm shadow-lg flex items-center space-x-1.5 active:scale-[0.98] transition-all"
-              >
-                <span>
-                  Siguiente{' '}
-                  <span className="font-medium text-white/70">
-                    {Math.max(EMPTY_STATE_TABS.indexOf(activeTab), 0) + 1}/{EMPTY_STATE_TABS.length}
-                  </span>
-                </span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
 
             {/* Recordatorio de toma: solo sobre la vista principal, para no
                 interrumpir el escáner ni el formulario de plan. */}
-            {isSplashOpen && <SplashScreen onClose={() => setIsSplashOpen(false)} />}
-            {testClaimKind && (
-              <ClaimAlert
-                key={`prueba-${testClaimKind}`}
-                claim={buildTestClaim(testClaimKind)}
-                onClaimed={handleNextTestClaim}
-                onAcknowledge={handleNextTestClaim}
-                onSnooze={handleNextTestClaim}
-              />
-            )}
-            {dueDose && !testClaimKind && (
+            {dueDose && (
               <ReminderAlert
                 dose={dueDose}
                 plan={plans.find((p) => p.id === dueDose.planId)}
@@ -468,7 +395,7 @@ export default function App() {
               />
             )}
             {/* Aviso de reclamo: solo si no hay una toma en pantalla */}
-            {dueClaim && !dueDose && !testClaimKind && (
+            {dueClaim && !dueDose && (
               <ClaimAlert
                 key={dueClaim.key}
                 claim={dueClaim}
@@ -482,6 +409,9 @@ export default function App() {
             )}
           </>
         )}
+
+        {/* Splash al abrir la app, encima de todo (también de "Nuevo perfil") */}
+        {isSplashOpen && <SplashScreen onClose={closeSplash} />}
       </div>
     </div>
   );
