@@ -1,6 +1,6 @@
 # Estado actual — 2026-10-22
 
-Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #25). Hogar canónico de "qué falta y qué bloquea".
+Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #26). Hogar canónico de "qué falta y qué bloquea".
 
 **Éxito =** Alberto se toma todas las pastillas según lo planeado, sin confusiones. Lo que no acerque a eso, no es prioritario.
 
@@ -9,7 +9,8 @@ Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Verc
 - **Planes**: CRUD con validación; formulario "Revisa el plan" con steppers de dosis (cantidad + mg) y frecuencia; eliminar pide confirmación (`ConfirmDialog`). Un plan nuevo tiene paso 2, "Reclamo en la EPS" (todos se reclaman en la EPS por ahora), que registra la orden con la entrega 1 ya reclamada.
 - **Horario**: tomas de hoy calculadas desde los planes (frecuencia, Desde/Hasta), "Hoy no hay tomas" si los planes no tienen ese día; marcar toma con hora real; recuadro "Mañana toca reclamar …" desde las 12 m de la víspera, con X para ocultarlo.
 - **Escaneo real** (cámara → Gemini → formulario); sin cámara o si Gemini falla, formulario vacío.
-- **Recordatorios opt-in** (campana o interruptor del Perfil): alerta a pantalla completa + notificación + chime, insistiendo cada 5 min; posponer de 5 en 5 minutos (5–60).
+- **Notificaciones estilo ajustes de Android** (paso 3 de "Nuevo perfil" y Perfil): Recordatorios, Sonido y Vibración con su interruptor; tocar "Sonido" abre los sonidos y la música del celular (selector de archivos) y muestra el nombre del elegido; si no se puede reproducir, suena el chime. En la app nativa debería abrir el selector de tonos de Android.
+- **Recordatorios siempre activos** desde que existe el perfil (no son una opción, 2026-11-04): alerta a pantalla completa + notificación + sonido elegido o chime, insistiendo cada 5 min; posponer de 5 en 5 minutos (5–60).
 - **Alarma real = versión 4** (sin píldora, texto al centro, ondas fluidas) para toma y reclamo, con escala de texto común (`design.md` §9).
 - **Pastas — reclamos mensuales en la EPS** (ADR 0008): registrar/editar/renovar la orden de un plan, estado del mes, historial con meses perdidos; avisos a las 12 m de la víspera y a las 8 a. m. del día y de cada día de atraso, posponibles de 1 a 12 h; punto en la pestaña.
 - **Datos guardados en el teléfono** (ADR 0007, prefijo `v2`): una instalación nueva empieza sin perfil ni planes; los recordatorios encendidos se recuerdan. Sin datos de ejemplo: Perfil → "Borrar todo y empezar de nuevo" deja el teléfono como recién instalado.
@@ -35,6 +36,7 @@ Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Verc
 14. **Deuda de diseño**: `#69E1BC` huérfano, `motion` sin usar y `--color-success` sin uso (`../design.md` §11).
 15. **Cuenta con Supabase.** Decidido (2026-11-03): la cuenta es de quien toma los medicamentos (sin cuidador) y se crea **al principio**, antes del perfil, con **un código al correo, sin contraseña**. Cada cuenta tiene su perfil, planes, tomas y reclamos. Falta conectar Supabase (proyecto, URL y clave pública en `.env.local`, plantilla del correo con el código) y llevar los datos del teléfono a la nube. Hasta entonces, un perfil por teléfono. Ya están las pantallas "Crea tu cuenta" y "Escribe el código" (`AccountScreen`), con un aviso ámbar de "versión de prueba": **no publicar a usuarios reales hasta conectar el envío real del código** (nadie debe esperar un correo que no llega).
 16. **Todo plan nuevo pasa por "Reclamo en la EPS"**: decidido así por la persona (2026-11-03), "todas se reclaman en la EPS". No agregar la opción "no se reclama" hasta que lo pida.
+17. ⚠️ **`npm run lint` no revisa props de componentes**: faltan `@types/react` y `@types/react-dom` en `devDependencies`, y el JSX queda sin tipos (`../gotchas/navegador.md`). Instalarlos y corregir lo que aparezca; hasta entonces, la regla 11 de `AGENTS.md` da menos seguridad de la que parece.
 
 ## Blockers
 - **API key en el bundle del navegador** (`vite.config.ts` → `define`). Bloquea cualquier deploy público. Salida: endpoint propio (`express` y `tsx` ya instalados, sin usar). ADR 0002.
