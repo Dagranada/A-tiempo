@@ -78,7 +78,10 @@ export function setCustomAlarmSound(file: Blob | null): void {
 
 /** Detiene el sonido escogido (al responder la alarma o al terminar la prueba). */
 export function stopReminderSound(): void {
-  navigator.vibrate?.(0);
+  if (isVibrating) {
+    navigator.vibrate?.(0);
+    isVibrating = false;
+  }
   if (stopTimer) clearTimeout(stopTimer);
   stopTimer = null;
   if (customSound) {
@@ -153,6 +156,7 @@ export function showClaimNotification(body: string, tag: string): void {
 // Interruptores "Sonido" y "Vibración" de Notificaciones.
 let soundOn = true;
 let vibrationOn = true;
+let isVibrating = false; // para cortar solo una vibración que sí empezó
 // Tres pulsos largos: se notan en el bolsillo sin ser molestos.
 const VIBRATION_PATTERN = [700, 300, 700, 300, 700];
 
@@ -168,7 +172,7 @@ export function setAlarmPreferences(prefs: { sound: boolean; vibration: boolean 
  * alarma solo se ve (y vibra).
  */
 export function playReminderSound(): void {
-  if (vibrationOn) navigator.vibrate?.(VIBRATION_PATTERN);
+  if (vibrationOn && navigator.vibrate?.(VIBRATION_PATTERN)) isVibrating = true;
   if (!soundOn) return;
   if (!playCustom(CUSTOM_MAX_MS)) playChime();
 }

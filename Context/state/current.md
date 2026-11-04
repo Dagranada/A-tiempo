@@ -1,6 +1,6 @@
 # Estado actual — 2026-10-22
 
-Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #26). Hogar canónico de "qué falta y qué bloquea".
+Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #27). Hogar canónico de "qué falta y qué bloquea".
 
 **Éxito =** Alberto se toma todas las pastillas según lo planeado, sin confusiones. Lo que no acerque a eso, no es prioritario.
 
@@ -15,13 +15,13 @@ Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Verc
 - **Pastas — reclamos mensuales en la EPS** (ADR 0008): registrar/editar/renovar la orden de un plan, estado del mes, historial con meses perdidos; avisos a las 12 m de la víspera y a las 8 a. m. del día y de cada día de atraso, posponibles de 1 a 12 h; punto en la pestaña.
 - **Datos guardados en el teléfono** (ADR 0007, prefijo `v2`): una instalación nueva empieza sin perfil ni planes; los recordatorios encendidos se recuerdan. Sin datos de ejemplo: Perfil → "Borrar todo y empezar de nuevo" deja el teléfono como recién instalado.
 - **Perfil editable** sin barra superior, con interruptor de recordatorios.
-- **Inicio**: splash en cada apertura → "Crea tu cuenta" (correo + código de 6 números, **provisional**: no envía correo y acepta cualquier código) → "Nuevo perfil" (3 pasos, solo el nombre obligatorio) si no hay perfil → Horario en estado vacío hasta el primer plan. El Header muestra el primer nombre del perfil y la fecha real.
+- **Inicio**: splash en cada apertura → "Crea tu cuenta" (correo + código de 6 números con **Supabase**, probado de punta a punta) → "Nuevo perfil" (3 pasos, solo el nombre obligatorio) si no hay perfil → Horario en estado vacío hasta el primer plan. El Header muestra el primer nombre del perfil y la fecha real.
 - Estados vacíos comunes (`EmptyState`: "No tienes un horario / un plan / pastas" + "Crear plan"), que salen cuando de verdad no hay planes, y sistema de diseño documentado y revisado a 386 y 320 px.
 
 ## Pendiente
 
 1. ~~Generar las tomas desde la frecuencia~~ Resuelto el 2026-11-03: las tomas de cada día se calculan desde los planes (`src/lib/doses.ts`) y el formulario muestra las horas que resultan.
-2. **Datos solo en ese navegador** (ADR 0007): no sobreviven a borrar los datos del sitio ni pasan a otro teléfono. Se resuelve con la cuenta en Supabase (Pendiente 15).
+2. **Datos en la nube** (ADR 0010): listo en el código; funciona cuando se complete la configuración de Supabase (Pendiente 15).
 3. ~~Reinicio diario~~ Resuelto el 2026-11-03: solo se guardan las tomas marcadas, por día; cada día empieza con todas pendientes. Falta un historial de tomas olvidadas (las de ayer sin marcar no se ven).
 4. ~~`upcoming` nunca pasa a `pending`~~ Resuelto el 2026-11-03: el estado se recalcula cada minuto.
 5. ~~`startDate`/`endDate` decorativos~~ Resuelto el 2026-11-03: fuera de Desde/Hasta no hay tomas.
@@ -34,9 +34,9 @@ Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Verc
 12. ~~Quitar un reclamo en Pastas no pide confirmación~~ Resuelto el 2026-11-03: pide confirmación; además, "Deshacer" en Ya tomadas para una toma marcada por error.
 13. **En el Horario, varias tomas pendientes muestran varios "Listo" verdes** (choca con "un solo primario por pantalla", `design.md` §3). Se ofreció aplicarles el secundario menta y quedó sin respuesta.
 14. **Deuda de diseño**: `#69E1BC` huérfano, `motion` sin usar y `--color-success` sin uso (`../design.md` §11).
-15. **Cuenta con Supabase.** Decidido (2026-11-03): la cuenta es de quien toma los medicamentos (sin cuidador) y se crea **al principio**, antes del perfil, con **un código al correo, sin contraseña**. Cada cuenta tiene su perfil, planes, tomas y reclamos. Falta conectar Supabase (proyecto, URL y clave pública en `.env.local`, plantilla del correo con el código) y llevar los datos del teléfono a la nube. Hasta entonces, un perfil por teléfono. Ya están las pantallas "Crea tu cuenta" y "Escribe el código" (`AccountScreen`), con un aviso ámbar de "versión de prueba": **no publicar a usuarios reales hasta conectar el envío real del código** (nadie debe esperar un correo que no llega).
+15. **Supabase: terminar la configuración** (ADR 0010). El código ya está (cuenta con código, sincronización, Cerrar sesión, Borrar todo en la nube). Hecho en el proyecto (2026-11-04): SQL corrido, SMTP con Gmail (contraseña de aplicación; Username = el Gmail completo) y plantillas "Confirm sign up" y "Magic link or OTP" con `{{ .Token }}`. Probado de punta a punta en local: crear cuenta, perfil y plan en la nube, recargar sin código, cerrar sesión y recuperar todo con otro código. Falta: **agregar `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` en Vercel antes de publicar**, y para gente real, Resend con dominio propio en vez de Gmail. Después: mover Gemini a una Edge Function.
 16. **Todo plan nuevo pasa por "Reclamo en la EPS"**: decidido así por la persona (2026-11-03), "todas se reclaman en la EPS". No agregar la opción "no se reclama" hasta que lo pida.
-17. ⚠️ **`npm run lint` no revisa props de componentes**: faltan `@types/react` y `@types/react-dom` en `devDependencies`, y el JSX queda sin tipos (`../gotchas/navegador.md`). Instalarlos y corregir lo que aparezca; hasta entonces, la regla 11 de `AGENTS.md` da menos seguridad de la que parece.
+17. ~~`npm run lint` no revisa props~~ Resuelto el 2026-11-04: se instalaron `@types/react` y `@types/react-dom` (cero errores).
 
 ## Blockers
 - **API key en el bundle del navegador** (`vite.config.ts` → `define`). Bloquea cualquier deploy público. Salida: endpoint propio (`express` y `tsx` ya instalados, sin usar). ADR 0002.

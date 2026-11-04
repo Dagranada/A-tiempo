@@ -40,6 +40,8 @@ export const ageFromBirthDate = (iso: string, fallback: number) => {
   return age;
 };
 
+const AVATAR_MAX_PX = 400;
+
 interface ProfilePhotoProps {
   draft: SeniorProfile;
   update: UpdateField;
@@ -47,12 +49,24 @@ interface ProfilePhotoProps {
 
 /** Foto (o silueta si aún no hay) con el botón de cámara, y el nombre debajo. */
 export const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ draft, update }) => {
+  // La foto se achica a 400 px (JPEG): una foto del celular pesa varios MB, no
+  // cabe en el almacenamiento del teléfono y tarda en subir a la nube.
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => update('avatarUrl', String(reader.result));
-    reader.readAsDataURL(file);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, AVATAR_MAX_PX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      update('avatarUrl', canvas.toDataURL('image/jpeg', 0.85));
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => URL.revokeObjectURL(url);
+    img.src = url;
   };
 
   return (
