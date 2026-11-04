@@ -38,3 +38,6 @@ Vite vigila todo el proyecto: guardar un archivo de `Context/` dispara un **page
 
 ## Probar lo que depende de la hora sin esperar
 El recuadro de reclamo aparece desde las 12 m y los avisos de reclamo a las 8 a. m. Para verlos sin esperar, en la página (no en el código) reemplaza `Date` por una clase que sume un desfase (`class extends RealDate { constructor(...a){ a.length ? super(...a) : super(RealDate.now()+offset) } static now(){ return RealDate.now()+offset } }`) y espera al siguiente tic de la app (≤ 60 s, el reloj de `App.tsx`). **Recarga después** para volver a la hora real, y avisa a la persona de que lo que ve está adelantado.
+
+## `npm run lint` no revisa las props de los componentes
+El proyecto **no tiene `@types/react` ni `@types/react-dom`**: sin esos tipos, todo el JSX es `any` y `tsc` no avisa si a un componente le falta una prop obligatoria, le sobra una o recibe otra con el nombre viejo (visto el 2026-11-04 al reemplazar `RemindersToggle`/`AlarmSoundPicker`: `lint` pasó con App aún pasando las props viejas). Hasta instalarlos, después de renombrar props busca a mano los usos (`grep -n "nombreViejo" src`) y prueba la pantalla en el navegador.

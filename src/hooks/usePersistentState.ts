@@ -8,7 +8,7 @@ const PREFIX = 'a-tiempo:v2:';
 
 // Claves que usa la app hoy. Todo lo demás con el prefijo "a-tiempo:" son
 // restos de versiones anteriores (datos v1, la lista de tomas que ya no se guarda).
-const CURRENT_KEYS = new Set(['account', 'profile', 'plans', 'taken-doses', 'claim-alerts', 'reminders-enabled']);
+const CURRENT_KEYS = new Set(['account', 'alarm-sound', 'alarm-sound-enabled', 'alarm-vibration-enabled', 'profile', 'plans', 'taken-doses', 'claim-alerts']);
 
 /** "Borrar todo": quita del teléfono los restos que no maneja ningún estado. */
 export function clearLeftoverStoredData(): void {

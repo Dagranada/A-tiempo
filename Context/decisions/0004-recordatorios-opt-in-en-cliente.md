@@ -1,6 +1,6 @@
 # 0004 · Recordatorios opt-in, vigilando el reloj en el cliente
 
-**Fecha:** 2026-08-22 · **Estado:** Vigente
+**Fecha:** 2026-08-22 · **Estado:** Vigente en parte: el "opt-in" se derogó el 2026-11-04 (ver abajo); sigue vigente vigilar el reloj en el cliente
 
 ## Contexto
 La app mostraba las tomas del día pero nunca comparaba la hora actual contra ellas: el cuidador solo se enteraba si abría la app y miraba la lista.
@@ -22,3 +22,9 @@ Es **opt-in**: se activa con la campana del `Header` o con el interruptor de Per
 - **Solo funciona con la app abierta.** Con el celular bloqueado no suena.
 - Los timers en segundo plano se estrangulan a ~1/min; tolerable para un ciclo de 5 min, no para uno de 30 s.
 - La alerta se muestra solo en `screen === 'home'`, para no interrumpir el escáner ni el formulario.
+
+## Actualización 2026-11-04 · los recordatorios dejan de ser opcionales
+La persona pidió quitar la opción "Recordatorios": avisar a la hora de cada toma es la parte básica de la app, no un ajuste. Desde ahora `useDoseReminders` y `useClaimReminders` están activos siempre que hay cuenta y perfil (`remindersActive`), y se quitó el estado `remindersEnabled` (y la clave guardada `reminders-enabled`). Lo que el opt-in resolvía se mantiene así:
+- **Audio y permiso**: el toque de "Crear perfil" desbloquea el sonido y pide el permiso de notificaciones; en cada apertura posterior, el primer toque en la app desbloquea el sonido (y pide el permiso si aún no se decidió). Antes de ese primer toque, una alarma se ve pero puede no sonar.
+- **La campana** del Header ya no activa nada: es un indicador de "recordatorios activos" con el punto de tomas pendientes.
+- En Notificaciones quedan solo **Sonido** y **Vibración**, que sí se pueden apagar (la alarma sigue apareciendo).

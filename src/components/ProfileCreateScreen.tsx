@@ -5,15 +5,14 @@ import {
   ProfileBasicFields,
   ProfileMedicalFields,
   ProfilePhoto,
-  RemindersToggle,
+  NotificationSettings,
   SectionTitle,
   ageFromBirthDate,
 } from './ProfileFields';
 
 interface ProfileCreateScreenProps {
-  remindersEnabled: boolean;
-  onToggleReminders: () => void;
   onCreateProfile: (profile: SeniorProfile) => void;
+  notifications: React.ComponentProps<typeof NotificationSettings>; // paso 3
 }
 
 const EMPTY_PROFILE: SeniorProfile = {
@@ -39,9 +38,8 @@ const STEPS = ['Información básica', 'Información médica', 'Notificaciones']
  * flecha solo aparece desde el paso 2 y vuelve al anterior sin perder lo escrito.
  */
 export const ProfileCreateScreen: React.FC<ProfileCreateScreenProps> = ({
-  remindersEnabled,
-  onToggleReminders,
   onCreateProfile,
+  notifications,
 }) => {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<SeniorProfile>(EMPTY_PROFILE);
@@ -108,7 +106,7 @@ export const ProfileCreateScreen: React.FC<ProfileCreateScreenProps> = ({
           )}
           {step === 1 && <ProfileMedicalFields draft={draft} update={update} />}
           {step === 2 && (
-            <RemindersToggle remindersEnabled={remindersEnabled} onToggleReminders={onToggleReminders} />
+            <NotificationSettings {...notifications} />
           )}
         </div>
 

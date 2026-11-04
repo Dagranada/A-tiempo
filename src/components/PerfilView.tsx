@@ -6,25 +6,23 @@ import {
   ProfileBasicFields,
   ProfileMedicalFields,
   ProfilePhoto,
-  RemindersToggle,
+  NotificationSettings,
   SectionTitle,
   ageFromBirthDate,
 } from './ProfileFields';
 
 interface PerfilViewProps {
   profile: SeniorProfile;
-  remindersEnabled: boolean;
-  onToggleReminders: () => void;
   onSaveProfile: (profile: SeniorProfile) => void;
+  notifications: React.ComponentProps<typeof NotificationSettings>; // se aplica al instante
   onDeleteAll: () => void; // borra perfil, planes y tomas: vuelve a "Nuevo perfil"
 }
 
 export const PerfilView: React.FC<PerfilViewProps> = ({
   profile,
-  remindersEnabled,
-  onToggleReminders,
   onSaveProfile,
   onDeleteAll,
+  notifications,
 }) => {
   // Borrador local: nada se aplica hasta "Guardar cambios"
   const [draft, setDraft] = useState<SeniorProfile>(profile);
@@ -74,11 +72,12 @@ export const PerfilView: React.FC<PerfilViewProps> = ({
 
       {/* Notificaciones: se aplica al instante, no espera a "Guardar cambios" */}
       <section className="bg-white rounded-3xl border border-[#E2E8F0] shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#E2E8F0]">
+        {/* Sin línea bajo el título: los ajustes van debajo, como en las otras tarjetas */}
+        <div className="px-5 pt-5 pb-4">
           <SectionTitle>Notificaciones</SectionTitle>
         </div>
-        <div className="p-5">
-          <RemindersToggle remindersEnabled={remindersEnabled} onToggleReminders={onToggleReminders} />
+        <div className="px-5 pb-5">
+          <NotificationSettings {...notifications} />
         </div>
       </section>
 

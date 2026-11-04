@@ -1,7 +1,7 @@
 # Gotchas — datos y estado
 
 ## Todo persiste en el navegador (desde 2026-10-14)
-`account` (solo el correo, provisional), `profile`, `plans`, `taken-doses` (tomas marcadas) y `claim-alerts` usan `usePersistentState` (ADR 0007): se guardan en `localStorage` con el prefijo `a-tiempo:v2:` (también `reminders-enabled`). Una instalación nueva arranca **sin perfil ni planes** (no hay datos de ejemplo). Consecuencias al probar:
+`account` (solo el correo, provisional), `alarm-sound` (nombre del sonido elegido), `alarm-sound-enabled` y `alarm-vibration-enabled` (interruptores), `profile`, `plans`, `taken-doses` (tomas marcadas) y `claim-alerts` usan `usePersistentState` (ADR 0007): se guardan en `localStorage` con el prefijo `a-tiempo:v2:` (también `reminders-enabled`). Una instalación nueva arranca **sin perfil ni planes** (no hay datos de ejemplo). Consecuencias al probar:
 - **Para volver a empezar**: Perfil → "Borrar todo y empezar de nuevo" (también en el celular). Borra además los restos con prefijo `a-tiempo:` que no usa ningún estado (datos v1, la vieja lista `doses`): `clearLeftoverStoredData`. Si agregas una clave guardada, súmala a `CURRENT_KEYS` en `usePersistentState.ts` o "Borrar todo" la borrará al instante.
 - Si cambias la forma de un dato guardado, sube el prefijo a `v2` o migra; si no, los datos viejos pueden romper la vista.
 
@@ -27,3 +27,6 @@
 
 ## Posponer: la toma recuerda los minutos, el reclamo las horas
 `useDoseReminders.snooze(minutos)` guarda el "hasta cuándo" **en memoria** (se pierde al recargar). Los avisos de reclamo guardan lo pospuesto y lo resuelto en `claim-alerts` (persistente), con una clave por plan + fecha (+ día en los atrasos, para volver a avisar cada día).
+
+## El sonido de alarma vive en IndexedDB, no en localStorage
+Una canción no cabe en `localStorage`: el archivo va en IndexedDB (`src/lib/soundStore.ts`, base `a-tiempo`, clave `alarm`) y solo el nombre en `alarm-sound`. Al abrir, `App` lo carga y se lo pasa a `setCustomAlarmSound`; si el archivo falta, se borra el nombre y vuelve el chime. Con "Sonido" apagado no suena nada (la alarma se ve y, si está activa, vibra con `navigator.vibrate`; `stopReminderSound` también corta la vibración). Suena en bucle hasta 1 min por aviso (o hasta responder la alarma: `stopReminderSound` cuando no hay `dueDose` ni `dueClaim`); si `play()` falla, suena el chime. El navegador exige un toque antes: `unlockAudio` lo reproduce en silencio y lo pausa, y `playId` evita que esa preparación silencie una reproducción real que empezó a la vez (pasó con "Escuchar").

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Bell, Calendar, Camera, ChevronDown, Phone, User } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Calendar, Camera, ChevronDown, Phone, User } from 'lucide-react';
 import { SeniorProfile } from '../types';
 
 // Campos del perfil compartidos por la pestaña Perfil y por "Nuevo perfil":
@@ -270,45 +270,135 @@ export const ProfileMedicalFields: React.FC<ProfileMedicalFieldsProps> = ({ draf
   </div>
 );
 
-interface RemindersToggleProps {
-  remindersEnabled: boolean;
-  onToggleReminders: () => void;
+interface SwitchProps {
+  checked: boolean;
+  onToggle: () => void;
+  labelledBy: string;
 }
 
-/** Fila "Recordatorios con sonido" con su interruptor (se aplica al instante). */
-export const RemindersToggle: React.FC<RemindersToggleProps> = ({
-  remindersEnabled,
-  onToggleReminders,
-}) => (
-  <div className="flex items-center justify-between gap-4">
-    <div className="flex items-center space-x-3.5">
-      <div className="w-12 h-12 rounded-2xl bg-[#d0f8ed] text-[#0bc4a0] flex items-center justify-center shrink-0">
-        <Bell className="w-5 h-5" />
-      </div>
+/** Interruptor de la app (menta encendido, gris apagado). */
+const Switch: React.FC<SwitchProps> = ({ checked, onToggle, labelledBy }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    aria-labelledby={labelledBy}
+    onClick={onToggle}
+    className={`relative w-14 h-8 rounded-full shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba] focus-visible:ring-offset-2 ${
+      checked ? 'bg-[#0ee5ba]' : 'bg-gray-200'
+    }`}
+  >
+    <span
+      className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${
+        checked ? 'translate-x-6' : ''
+      }`}
+    />
+  </button>
+);
+
+export interface NotificationSettingsProps {
+  soundEnabled: boolean;
+  onToggleSound: () => void;
+  vibrationEnabled: boolean;
+  onToggleVibration: () => void;
+  soundName: string | null; // null = el sonido de A Tiempo
+  onPickSound: (file: File) => Promise<string | null>; // devuelve un error para mostrar, o null
+  onClearSound: () => void;
+}
+
+// Fila como la de los ajustes de Android: título, valor en color debajo y, tras
+// una línea vertical, el interruptor.
+const rowClass = 'flex items-center py-4';
+const titleClass = 'block text-base font-semibold text-gray-900 leading-tight';
+const valueClass = (on: boolean) =>
+  `block text-sm font-semibold mt-1 leading-snug break-words ${on ? 'text-[#0bc4a0]' : 'text-gray-400'}`;
+const dividerClass = 'w-px h-9 bg-gray-200 mx-4 shrink-0';
+
+/**
+ * Notificaciones (paso 3 de "Nuevo perfil" y Perfil): Sonido y Vibración,
+ * cada uno con su interruptor (los recordatorios no son una opción: siempre
+ * están activos). Tocar "Sonido" abre los sonidos y la
+ * música del celular (selector de archivos de audio; en la app nativa será el
+ * selector de tonos de Android) y muestra el nombre del elegido. Todo se
+ * aplica al instante.
+ */
+export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
+  soundEnabled,
+  onToggleSound,
+  vibrationEnabled,
+  onToggleVibration,
+  soundName,
+  onPickSound,
+  onClearSound,
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // permite volver a escoger el mismo archivo
+    if (!file) return;
+    setIsSaving(true);
+    setError((await onPickSound(file)) ?? '');
+    setIsSaving(false);
+  };
+
+  return (
+    <div className="divide-y divide-[#E2E8F0]">
+      {/* Sonido: tocar el texto abre los sonidos del celular */}
       <div>
-        <p id="reminders-label" className="text-sm font-bold text-gray-900">
-          Recordatorios con sonido
-        </p>
-        <p className="text-xs text-gray-500 font-medium mt-0.5">
-          Avisan a la hora de cada toma, con la app abierta
-        </p>
+        <div className={`${rowClass} pt-0`}>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            aria-label={`Sonido: ${soundName ?? 'Sonido de A Tiempo'}. Toca para escoger otro sonido del celular`}
+            className="flex-1 min-w-0 text-left rounded-xl -m-1 p-1 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba]"
+          >
+            <span id="sound-label" className={titleClass}>
+              Sonido
+            </span>
+            <span className={valueClass(soundEnabled)} aria-live="polite">
+              {isSaving ? 'Guardando…' : soundName ?? 'Sonido de A Tiempo'}
+            </span>
+          </button>
+          <span className={dividerClass} aria-hidden="true" />
+          <Switch checked={soundEnabled} onToggle={onToggleSound} labelledBy="sound-label" />
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="audio/*"
+          onChange={handleChange}
+          className="sr-only"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+        {error && <p className="text-xs text-red-500 font-medium -mt-2 pb-3">{error}</p>}
+        {soundName && !error && (
+          <button
+            type="button"
+            onClick={onClearSound}
+            className="-mt-2 mb-3 text-sm font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 -ml-2 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba]"
+          >
+            Usar el sonido de A Tiempo
+          </button>
+        )}
+      </div>
+
+      {/* Vibración */}
+      <div className={`${rowClass} pb-0`}>
+        <div className="flex-1 min-w-0">
+          <span id="vibration-label" className={titleClass}>
+            Vibración
+          </span>
+          <span className={valueClass(vibrationEnabled)}>
+            {vibrationEnabled ? 'Al sonar la alarma' : 'Apagada'}
+          </span>
+        </div>
+        <span className={dividerClass} aria-hidden="true" />
+        <Switch checked={vibrationEnabled} onToggle={onToggleVibration} labelledBy="vibration-label" />
       </div>
     </div>
-    <button
-      type="button"
-      role="switch"
-      aria-checked={remindersEnabled}
-      aria-labelledby="reminders-label"
-      onClick={onToggleReminders}
-      className={`relative w-14 h-8 rounded-full shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba] focus-visible:ring-offset-2 ${
-        remindersEnabled ? 'bg-[#0ee5ba]' : 'bg-gray-200'
-      }`}
-    >
-      <span
-        className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-sm transition-transform ${
-          remindersEnabled ? 'translate-x-6' : ''
-        }`}
-      />
-    </button>
-  </div>
-);
+  );
+};
