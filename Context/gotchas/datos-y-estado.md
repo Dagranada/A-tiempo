@@ -1,7 +1,7 @@
 # Gotchas — datos y estado
 
 ## Todo persiste en el navegador (desde 2026-10-14)
-`account` (solo el correo, provisional), `alarm-sound` (nombre del sonido elegido), `alarm-sound-enabled` y `alarm-vibration-enabled` (interruptores), `profile`, `plans`, `taken-doses` (tomas marcadas) y `claim-alerts` usan `usePersistentState` (ADR 0007): se guardan en `localStorage` con el prefijo `a-tiempo:v2:` (también `reminders-enabled`). Una instalación nueva arranca **sin perfil ni planes** (no hay datos de ejemplo). Consecuencias al probar:
+`alarm-sound` (nombre del sonido elegido), `alarm-sound-enabled` y `alarm-vibration-enabled` (interruptores), `profile`, `plans`, `taken-doses` (tomas marcadas) y `claim-alerts` usan `usePersistentState` (ADR 0007): se guardan en `localStorage` con el prefijo `a-tiempo:v2:` (también `reminders-enabled`). Una instalación nueva arranca **sin perfil ni planes** (no hay datos de ejemplo). Consecuencias al probar:
 - **Para volver a empezar**: Perfil → "Borrar todo y empezar de nuevo" (también en el celular). Borra además los restos con prefijo `a-tiempo:` que no usa ningún estado (datos v1, la vieja lista `doses`): `clearLeftoverStoredData`. Si agregas una clave guardada, súmala a `CURRENT_KEYS` en `usePersistentState.ts` o "Borrar todo" la borrará al instante.
 - Si cambias la forma de un dato guardado, sube el prefijo a `v2` o migra; si no, los datos viejos pueden romper la vista.
 
@@ -30,3 +30,11 @@
 
 ## El sonido de alarma vive en IndexedDB, no en localStorage
 Una canción no cabe en `localStorage`: el archivo va en IndexedDB (`src/lib/soundStore.ts`, base `a-tiempo`, clave `alarm`) y solo el nombre en `alarm-sound`. Al abrir, `App` lo carga y se lo pasa a `setCustomAlarmSound`; si el archivo falta, se borra el nombre y vuelve el chime. Con "Sonido" apagado no suena nada (la alarma se ve y, si está activa, vibra con `navigator.vibrate`; `stopReminderSound` también corta la vibración). Suena en bucle hasta 1 min por aviso (o hasta responder la alarma: `stopReminderSound` cuando no hay `dueDose` ni `dueClaim`); si `play()` falla, suena el chime. El navegador exige un toque antes: `unlockAudio` lo reproduce en silencio y lo pausa, y `playId` evita que esa preparación silencie una reproducción real que empezó a la vez (pasó con "Escuchar").
+
+## Supabase: la copia del teléfono manda (desde 2026-11-04, ADR 0010)
+- La sesión la guarda supabase-js en `localStorage` con su propia clave (`sb-…-auth-token`), fuera del prefijo `a-tiempo:`: "Borrar todo" no la toca; la cierra `signOut`.
+- **Cerrar sesión: primero `signOut`, después vaciar el teléfono.** Al revés, la sincronización vería el teléfono vacío y borraría los planes de la nube.
+- Al entrar, si la nube tiene perfil **reemplaza** al teléfono; si no, **sube** lo del teléfono (también datos viejos de antes de la cuenta).
+- Cambiar `.env.local` exige **reiniciar el dev server** (Vite lee las variables al arrancar). En producción las variables van en Vercel.
+- Probar con la clave publicable si las tablas existen: `curl "$URL/rest/v1/profiles?select=user_id&limit=1" -H "apikey: $KEY"` → `PGRST205` = falta correr el SQL; `[]` = existen (RLS no deja ver nada sin sesión).
+- **"Error sending confirmation email" (500)** al pedir el código = el SMTP rechazó el envío. Visto el 2026-11-04: en Supabase el **Username** del SMTP de Gmail decía "A tiempo"; tiene que ser el Gmail completo (el nombre va en *Sender name*). Las plantillas de correo solo se pueden editar con SMTP propio; editar **las dos**: "Confirm sign up" (cuenta nueva) y "Magic link or OTP" (volver a entrar).
