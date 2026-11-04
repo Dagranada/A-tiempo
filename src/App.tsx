@@ -1,9 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { analyzeMedicationImage } from './services/geminiService';
 import {
+  previewAlarmSound,
   requestNotificationPermission,
+  setAlarmPreferences,
+  setCustomAlarmSound,
+  stopReminderSound,
   unlockAudio,
 } from './services/notificationService';
+import { deleteAlarmSound, loadAlarmSound, saveAlarmSound } from './lib/soundStore';
 import { useDoseReminders } from './hooks/useDoseReminders';
 import { clearLeftoverStoredData, usePersistentState } from './hooks/usePersistentState';
 import { EpsClaim, MedicationPlan, NavTab, ScreenView, SeniorProfile } from './types';
@@ -30,6 +35,9 @@ import { SplashScreen } from './components/SplashScreen';
 import { BottomNav } from './components/BottomNav';
 import { PastasView } from './components/PastasView';
 import { ClaimAlert } from './components/ClaimAlert';
+
+// Tope del sonido de alarma escogido del celular.
+const MAX_SOUND_BYTES = 20 * 1024 * 1024;
 
 export default function App() {
   // Datos de quien toma los medicamentos: se guardan en el teléfono (ADR 0007). Una instalación
@@ -70,19 +78,74 @@ export default function App() {
   // true cuando el análisis de la imagen (real o de ejemplo) ya terminó
   const [isPlanReady, setIsPlanReady] = useState(false);
 
-  // Recordatorios de toma: se activan explícitamente (campana, Perfil o el paso
-  // 3 de "Nuevo perfil") y la elección se guarda en el teléfono.
-  const [remindersEnabled, setRemindersEnabled] = usePersistentState('reminders-enabled', false);
-  const { dueDose, snooze } = useDoseReminders(doses, remindersEnabled);
+  // Recordatorios: son parte básica de la app, no una opción. Están activos
+  // desde que existe el perfil (antes no hay nada que recordar).
+  const remindersActive = Boolean(account && profile);
+  const { dueDose, snooze } = useDoseReminders(doses, remindersActive);
 
-  // Al reabrir la app con los recordatorios ya activos, el navegador vuelve a
-  // bloquear el sonido: se desbloquea con el primer toque en cualquier parte.
+  // Sonido de la alarma escogido del celular: el nombre va con los datos y el
+  // archivo en IndexedDB (src/lib/soundStore.ts). Al abrir se vuelve a cargar;
+  // si el archivo ya no está, se vuelve al sonido de A Tiempo.
+  const [alarmSound, setAlarmSound] = usePersistentState<{ name: string } | null>('alarm-sound', null);
   useEffect(() => {
-    if (!remindersEnabled) return;
-    const unlock = () => unlockAudio();
+    loadAlarmSound().then((file) => {
+      setCustomAlarmSound(file);
+      if (!file) setAlarmSound(null);
+    });
+  }, []); // solo al abrir la app
+
+  const handlePickSound = async (file: File): Promise<string | null> => {
+    const isAudio = file.type.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|amr|3gp)$/i.test(file.name);
+    if (!isAudio) return 'Ese archivo no es un sonido. Escoge una canción o un tono.';
+    if (file.size > MAX_SOUND_BYTES) return 'El archivo es muy grande (más de 20 MB). Escoge uno más corto.';
+    try {
+      await saveAlarmSound(file);
+    } catch {
+      return 'No se pudo guardar el sonido en este teléfono. Intenta con otro.';
+    }
+    setCustomAlarmSound(file);
+    setAlarmSound({ name: file.name.replace(/\.[^.]+$/, '') || file.name });
+    if (!soundEnabled) setSoundEnabled(true); // escoger un sonido es querer oírlo
+    previewAlarmSound(); // se escucha unos segundos, como en el selector de tonos
+    return null;
+  };
+
+  const handleClearSound = () => {
+    void deleteAlarmSound();
+    setCustomAlarmSound(null);
+    setAlarmSound(null);
+  };
+
+  // Interruptores "Sonido" y "Vibración" de Notificaciones (se guardan).
+  const [soundEnabled, setSoundEnabled] = usePersistentState('alarm-sound-enabled', true);
+  const [vibrationEnabled, setVibrationEnabled] = usePersistentState('alarm-vibration-enabled', true);
+  useEffect(() => {
+    setAlarmPreferences({ sound: soundEnabled, vibration: vibrationEnabled });
+  }, [soundEnabled, vibrationEnabled]);
+
+  const notificationProps = {
+    soundEnabled,
+    onToggleSound: () => setSoundEnabled(!soundEnabled),
+    vibrationEnabled,
+    onToggleVibration: () => {
+      // Al encenderla, una vibración corta confirma que funciona en este teléfono.
+      if (!vibrationEnabled) navigator.vibrate?.(200);
+      setVibrationEnabled(!vibrationEnabled);
+    },
+    soundName: alarmSound?.name ?? null,
+    onPickSound: handlePickSound,
+    onClearSound: handleClearSound,
+  };
+
+  // Cada vez que se abre la app, el navegador bloquea el sonido hasta el primer
+  // toque: ese toque lo desbloquea y, si aún no se decidió, pide el permiso de
+  // notificaciones. Solo con perfil (la primera vez lo hace "Crear perfil").
+  useEffect(() => {
+    if (!remindersActive) return;
+    const unlock = () => enableReminderOutput();
     window.addEventListener('pointerdown', unlock, { once: true });
     return () => window.removeEventListener('pointerdown', unlock);
-  }, [remindersEnabled]);
+  }, [remindersActive]);
 
   // Avisos de reclamo en la EPS: qué se respondió a cada uno se guarda
   // en el teléfono para no repetir un aviso ya resuelto al recargar.
@@ -90,25 +153,22 @@ export default function App() {
     'claim-alerts',
     EMPTY_CLAIM_ALERTS
   );
-  const dueClaim = useClaimReminders(plans, claimAlerts, remindersEnabled);
+  const dueClaim = useClaimReminders(plans, claimAlerts, remindersActive);
 
-  const handleEnableReminders = () => {
-    if (remindersEnabled) return;
+  // El sonido escogido suena mientras la alarma está en pantalla: al responderla
+  // (Listo, Recordar en…, Entendido) se detiene.
+  useEffect(() => {
+    if (!dueDose && !dueClaim) stopReminderSound();
+  }, [dueDose, dueClaim]);
 
-    // El mismo toque que activa los recordatorios habilita el audio, porque
-    // los navegadores bloquean el sonido sin una interacción previa.
+  // Dentro de un toque: habilita el audio (los navegadores lo bloquean sin una
+  // interacción previa) y pide permiso de notificaciones si aún no se decidió.
+  // Aunque se nieguen, la alerta en pantalla y el sonido siguen funcionando.
+  const enableReminderOutput = () => {
     unlockAudio();
-
-    requestNotificationPermission()
-      .catch((err) => {
-        console.error('No se pudo pedir permiso de notificaciones:', err);
-        return false;
-      })
-      .finally(() => {
-        // Aunque el navegador niegue las notificaciones del sistema, la alerta
-        // en pantalla y el sonido siguen funcionando.
-        setRemindersEnabled(true);
-      });
+    requestNotificationPermission().catch((err) => {
+      console.error('No se pudo pedir permiso de notificaciones:', err);
+    });
   };
 
   // Handlers for marking a dose as completed ("Listo ✓")
@@ -196,21 +256,13 @@ export default function App() {
     );
   };
 
-  // Apagar no necesita gesto ni permisos; encender pasa por el flujo de la campana
-  const handleToggleReminders = () => {
-    if (remindersEnabled) {
-      setRemindersEnabled(false);
-    } else {
-      handleEnableReminders();
-    }
-  };
-
   const handleSaveProfile = (updated: SeniorProfile) => {
     setProfile(updated);
   };
 
   // Fin de "Nuevo perfil": entra al Horario, vacío hasta crear el primer plan.
   const handleCreateProfile = (created: SeniorProfile) => {
+    enableReminderOutput(); // el toque de "Crear perfil" deja listos sonido y permiso
     setProfile(created);
     setScreen('home');
     setActiveTab('horario');
@@ -271,10 +323,12 @@ export default function App() {
   // queda como recién instalado y la app vuelve a "Nuevo perfil".
   const handleDeleteAll = () => {
     clearLeftoverStoredData();
+    handleClearSound();
+    setSoundEnabled(true);
+    setVibrationEnabled(true);
     setPlans([]);
     setTakenDoses({});
     setClaimAlerts(EMPTY_CLAIM_ALERTS);
-    setRemindersEnabled(false);
     setProfile(null);
     setAccount(null);
     setScreen('home');
@@ -311,11 +365,7 @@ export default function App() {
         {/* Primera vez: crear la cuenta (correo + código) y después el perfil */}
         {!account && <AccountScreen onCreateAccount={(email) => setAccount({ email })} />}
         {account && !profile && (
-          <ProfileCreateScreen
-            remindersEnabled={remindersEnabled}
-            onToggleReminders={handleToggleReminders}
-            onCreateProfile={handleCreateProfile}
-          />
+          <ProfileCreateScreen onCreateProfile={handleCreateProfile} notifications={notificationProps} />
         )}
 
         {/* Main Home App View */}
@@ -328,8 +378,6 @@ export default function App() {
                 profile={profile}
                 today={now}
                 todayCountPending={pendingDosesCount}
-                remindersEnabled={remindersEnabled}
-                onEnableReminders={handleEnableReminders}
               />
             )}
 
@@ -370,10 +418,9 @@ export default function App() {
               {activeTab === 'perfil' && (
                 <PerfilView
                   profile={profile}
-                  remindersEnabled={remindersEnabled}
-                  onToggleReminders={handleToggleReminders}
                   onSaveProfile={handleSaveProfile}
                   onDeleteAll={handleDeleteAll}
+                  notifications={notificationProps}
                 />
               )}
             </main>

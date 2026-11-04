@@ -6,8 +6,6 @@ interface HeaderProps {
   profile: SeniorProfile;
   today: Date; // reloj de App: cambia solo al pasar la medianoche
   todayCountPending: number;
-  remindersEnabled: boolean;
-  onEnableReminders: () => void;
 }
 
 // "lunes, 3 de noviembre" → "Lunes, 3 de noviembre"
@@ -20,8 +18,6 @@ export const Header: React.FC<HeaderProps> = ({
   profile,
   today,
   todayCountPending,
-  remindersEnabled,
-  onEnableReminders
 }) => {
   return (
     <header className="bg-white px-5 py-4 flex justify-between items-center border-b border-gray-100 shrink-0 sticky top-0 z-10">
@@ -51,25 +47,22 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center space-x-1">
-        {/* Notification Bell */}
-        <button
-          onClick={onEnableReminders}
+        {/* Campana: los recordatorios siempre están activos; el punto avisa que
+            hay tomas pendientes. No es un botón. */}
+        <div
+          role="img"
           aria-label={
-            remindersEnabled
-              ? 'Recordatorios activos'
-              : 'Activar recordatorios de dosis'
+            todayCountPending > 0
+              ? `Recordatorios activos: ${todayCountPending} ${todayCountPending === 1 ? 'toma pendiente' : 'tomas pendientes'}`
+              : 'Recordatorios activos'
           }
-          className={`p-2 relative transition-colors rounded-full ${
-            remindersEnabled
-              ? 'text-[#0bc4a0] bg-[#d0f8ed] hover:bg-[#0ee5ba]/30'
-              : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-          }`}
+          className="p-2 relative rounded-full text-[#0bc4a0] bg-[#d0f8ed]"
         >
-          <Bell className="w-6 h-6" />
+          <Bell className="w-6 h-6" aria-hidden="true" />
           {todayCountPending > 0 && (
             <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#ff5f56] rounded-full ring-2 ring-white animate-pulse" />
           )}
-        </button>
+        </div>
       </div>
     </header>
   );
