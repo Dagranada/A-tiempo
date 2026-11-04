@@ -17,5 +17,5 @@ La alarma a pantalla completa (`ReminderAlert`, la pantalla más importante de l
 - Ondas que animan tamaño: se veían intermitentes con el tiempo; la v4 anima solo escala y opacidad.
 
 ## Consecuencias
-- Los botones de prueba ("Alarma 4", "Reclamo", "Mañana") siguen en el menú hasta el lanzamiento (ADR 0006).
+- Los botones de prueba ("Alarma 4", "Reclamo", "Mañana") siguieron en el menú hasta el 2026-11-03, cuando se borraron con las alarmas de prueba (ADR 0006 derogado).
 - Borrar las versiones 2 y 3 si no se vuelven a usar (`../state/current.md`).

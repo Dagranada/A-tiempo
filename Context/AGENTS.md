@@ -5,12 +5,12 @@ Léelo completo al arrancar, junto con `state/current.md`. Todo lo demás, **baj
 
 ## 1. Proyecto
 
-**A Tiempo**: app web móvil-first para que un cuidador familiar organice los medicamentos de un adulto mayor.
-Persona: **Alberto, 78**; cuidadora: **María (hija)**. Origen: Google AI Studio.
+**A Tiempo**: app web móvil-first para que **la persona que toma los medicamentos** (un adulto mayor) organice los suyos: su perfil, sus planes, sus tomas y sus reclamos en la EPS.
+Persona: **Alberto, 78**, usa la app él mismo. **No hay cuidador, ni ahora ni en el futuro** (decidido 2026-11-03): los textos le hablan de tú a quien toma la medicina. Origen: Google AI Studio.
 
 **Definición de éxito:** Alberto se toma **todas** las pastillas según lo planeado, **sin confusiones**. Adherencia y claridad — no retención ni tiempo de uso. Juzga cada cambio contra esto.
 
-Flujos: `Horario` (tomas de hoy, marcar "Listo") · `Mis Planes` (CRUD; "Nuevo plan" abre Escanear: foto → Gemini → formulario prellenado) · `Pastas` (reclamos mensuales en la EPS, ADR 0008) · `Perfil`. Alarma a pantalla completa para tomas y reclamos. Los datos se guardan en el teléfono (ADR 0007).
+Flujos: splash → "Crea tu cuenta" (correo + código, provisional hasta Supabase) y "Nuevo perfil" (la primera vez) → `Horario` (tomas de hoy, marcar "Listo") · `Mis Planes` (CRUD; "Nuevo plan" abre Escanear: foto → Gemini → formulario prellenado) · `Pastas` (reclamos mensuales en la EPS, ADR 0008) · `Perfil`. Alarma a pantalla completa para tomas y reclamos. Los datos se guardan en el teléfono (ADR 0007).
 Publicación: rama `memoria-de-contexto` → PR → `main`; **Vercel despliega `main` a producción** en cada fusión.
 Stack: React 19 + TS + Vite 6 + Tailwind 4 (`@tailwindcss/vite`) + `lucide-react` + `@google/genai`. Sin backend, sin router, sin tests.
 
@@ -26,7 +26,7 @@ Si una petición contradice una de estas, **detente antes de editar nada**: nomb
 2. **Ningún secreto en el repo.** `.env.local`, API keys ni credenciales, en ningún archivo ni commit.
 3. **Accesibilidad mínima**: nada accionable baja de `text-sm`, todo botón solo-icono lleva `aria-label`, el foco es visible. La app es para una persona de 78 años.
 4. **La salida manual siempre visible**: "Omitir y llenar a mano" / "Crear a mano" no se elimina de ningún paso del flujo de creación.
-5. **Nada en pantalla que no corresponda con la realidad.** Un dato falso o desactualizado sobre qué tomar y cuándo es un bug de seguridad del paciente, no un detalle cosmético. *Excepción acotada: las alarmas de prueba ("Alarma 4", "Reclamo", "Mañana") muestran Metformina (ADR 0006). Sus botones se quitaron del menú el 2026-10-23; desde el 2026-11-03 el botón "Reclamo" muestra los avisos de reclamo de prueba (víspera y día) y la excepción vale para él.*
+5. **Nada en pantalla que no corresponda con la realidad.** Un dato falso o desactualizado sobre qué tomar y cuándo es un bug de seguridad del paciente, no un detalle cosmético. Sin excepciones vigentes: desde el 2026-11-03 no hay datos de ejemplo ni alarmas de prueba; la app solo muestra lo que viene del perfil y de los planes creados (ADR 0006 derogado).
 
 ### 2.B · Convenciones — la persona puede cambiarlas al vuelo
 
@@ -62,17 +62,17 @@ Protocolo completo ante un choque: `skills/conflicto-con-una-regla.md`.
 ```
 src/App.tsx                        464 · TODO el estado + handlers + routing por screen/activeTab (pide extraer hooks)
 src/types.ts                        57 · MedicationPlan (+ claim: EpsClaim), DoseItem, SeniorProfile, ScreenView, NavTab
-src/data/mockData.ts               238 · INITIAL_PLANS (3 con reclamo, fechas relativas a hoy) / _TODAY_DOSES / _SENIOR_PROFILE, SCAN_PRESETS
 src/lib/claims.ts                  126 · getClaimSchedule (reglas de reclamo), fechas YYYY-MM-DD, textos de estado
+src/lib/doses.ts                    ~150 · tomas del día desde los planes (frecuencia, Desde/Hasta), tomas marcadas, vista previa
 src/services/geminiService.ts       76 · analyzeMedicationImage(base64) → plan
 src/services/notificationService.ts 125 · permisos, notificaciones (toma, reclamo, prueba), chime Web Audio
-src/hooks/usePersistentState.ts     34 · useState + localStorage (prefijo a-tiempo:v1:)
+src/hooks/usePersistentState.ts     34 · useState + localStorage (prefijo a-tiempo:v2:)
 src/hooks/useDoseReminders.ts      110 · vigila el reloj → dueDose + snooze(minutos)
 src/hooks/useClaimReminders.ts      99 · vigila el reloj → aviso de reclamo (12 m víspera, 8 a. m. el día)
 src/components/                         Header, BottomNav, HorarioView, MisPlanesView, PastasView, PerfilView,
                                         CameraScanScreen, LoadingScreen, PlanFormScreen, Stepper, ConfirmDialog,
                                         AlarmShell (fondo, ondas, SnoozeControl, ALARM_TEXT), ReminderAlert, ClaimAlert,
-                                        EmptyState, PlanClaimStep, ProfileFields (campos del perfil), ProfileCreateScreen, SplashScreen
+                                        EmptyState, PlanClaimStep, ProfileFields (campos del perfil), ProfileCreateScreen, SplashScreen, AccountScreen
 ```
 `npm run dev` (:3000) · `npm run lint` · `npm run build`. Para ver la app: preview con `a-tiempo-dev` de `.claude/launch.json`, **nunca** `npm run dev` por Bash.
 

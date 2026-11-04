@@ -6,7 +6,7 @@
 Prototipo nacido en Google AI Studio para validar el flujo del cuidador, no para producción.
 
 ## Decisión
-Todo el estado de dominio (`plans`, `doses`, `profile`, navegación) vive en `useState` dentro de `src/App.tsx`, inicializado desde `src/data/mockData.ts`. Los componentes son presentacionales: reciben props y callbacks.
+Todo el estado de dominio (`plans`, `doses`, `profile`, navegación) vive en `useState` dentro de `src/App.tsx`, inicializado desde `src/data/mockData.ts` (archivo borrado el 2026-11-03: hoy todo arranca vacío y se guarda en el teléfono, ADR 0007). Los componentes son presentacionales: reciben props y callbacks.
 
 ## Alternativas descartadas
 - Context/Redux: overhead innecesario para ~4 piezas de estado.

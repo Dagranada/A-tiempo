@@ -1,37 +1,27 @@
 import React from 'react';
-import { BellRing, Sparkles, Clock, Inbox, Map, Pill, User, UserPlus } from 'lucide-react';
+import { Clock, Map, Pill, User } from 'lucide-react';
 import { NavTab } from '../types';
 
 interface BottomNavProps {
   activeTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
-  isEmptyState: boolean;
-  onToggleEmptyState: () => void; // botón temporal "Empty states"
   hasClaimToday: boolean; // punto en "Pastas" si hay que reclamar hoy o mañana
-  onCreateProfile: () => void; // botón temporal "Crear perfil"
-  onTapTestClaim: () => void; // botón temporal "Reclamo": avisos de víspera y del día
-  onShowSplash: () => void; // botón temporal "Splash"
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({
   activeTab,
   onSelectTab,
-  isEmptyState,
-  onToggleEmptyState,
   hasClaimToday,
-  onCreateProfile,
-  onTapTestClaim,
-  onShowSplash,
 }) => {
   return (
-    <nav className="bg-white border-t border-gray-200 px-1 min-[380px]:px-2 py-2 flex justify-between items-center fixed bottom-0 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl left-1/2 -translate-x-1/2 z-30 shrink-0">
+    <nav className="bg-white border-t border-gray-200 px-2 py-2 flex justify-between items-center fixed bottom-0 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl left-1/2 -translate-x-1/2 z-30 shrink-0">
       {/* 1. Horario */}
       <button
         onClick={() => onSelectTab('horario')}
-        className="flex flex-col items-center py-2 px-0.5 w-1/8 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/4 transition-colors"
       >
         <div
-          className={`px-2 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
+          className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
             activeTab === 'horario'
               ? 'bg-[#d0f8ed] text-[#0bc4a0]'
               : 'text-gray-400'
@@ -40,7 +30,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <Clock className="w-5 h-5" />
         </div>
         <span
-          className={`text-[10px] min-[380px]:text-[11px] tracking-tight min-[380px]:tracking-normal font-semibold text-center leading-tight ${
+          className={`text-[11px] font-semibold whitespace-nowrap ${
             activeTab === 'horario' ? 'text-[#0bc4a0]' : 'text-gray-500'
           }`}
         >
@@ -51,10 +41,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       {/* 2. Mis planes */}
       <button
         onClick={() => onSelectTab('planes')}
-        className="flex flex-col items-center py-2 px-0.5 w-1/8 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/4 transition-colors"
       >
         <div
-          className={`px-2 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
+          className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
             activeTab === 'planes'
               ? 'bg-[#d0f8ed] text-[#0bc4a0]'
               : 'text-gray-400'
@@ -63,7 +53,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <Map className="w-5 h-5" />
         </div>
         <span
-          className={`text-[10px] min-[380px]:text-[11px] tracking-tight min-[380px]:tracking-normal font-semibold text-center leading-tight ${
+          className={`text-[11px] font-semibold whitespace-nowrap ${
             activeTab === 'planes' ? 'text-[#0bc4a0]' : 'text-gray-500'
           }`}
         >
@@ -75,10 +65,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       <button
         onClick={() => onSelectTab('pastas')}
         aria-label={hasClaimToday ? 'Pastas: hay un reclamo pendiente' : 'Pastas'}
-        className="flex flex-col items-center py-2 px-0.5 w-1/8 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/4 transition-colors"
       >
         <div
-          className={`relative px-2 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
+          className={`relative px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
             activeTab === 'pastas' ? 'bg-[#d0f8ed] text-[#0bc4a0]' : 'text-gray-400'
           }`}
         >
@@ -88,7 +78,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           )}
         </div>
         <span
-          className={`text-[10px] min-[380px]:text-[11px] tracking-tight min-[380px]:tracking-normal font-semibold text-center leading-tight ${
+          className={`text-[11px] font-semibold whitespace-nowrap ${
             activeTab === 'pastas' ? 'text-[#0bc4a0]' : 'text-gray-500'
           }`}
         >
@@ -96,76 +86,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         </span>
       </button>
 
-      {/* 4. Empty states (temporal): muestra Horario, Mis planes y Pastas como
-          si no hubiera planes, sin borrar nada. Se apaga tocándolo otra vez. */}
-      <button
-        onClick={onToggleEmptyState}
-        aria-pressed={isEmptyState}
-        className="flex flex-col items-center py-2 px-0.5 w-1/8 transition-colors"
-      >
-        <div
-          className={`px-2 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
-            isEmptyState ? 'bg-[#d0f8ed] text-[#0bc4a0]' : 'text-gray-400'
-          }`}
-        >
-          <Inbox className="w-5 h-5" />
-        </div>
-        <span
-          className={`text-[10px] min-[380px]:text-[11px] tracking-tight min-[380px]:tracking-normal font-semibold text-center leading-tight ${
-            isEmptyState ? 'text-[#0bc4a0]' : 'text-gray-500'
-          }`}
-        >
-          {/* Con ocho botones, las etiquetas largas bajan a dos líneas */}
-          Empty states
-        </span>
-      </button>
-
-      {/* 5. Crear perfil (temporal): abre el flujo "Nuevo perfil" para verlo */}
-      <button
-        onClick={onCreateProfile}
-        className="flex flex-col items-center py-2 px-0.5 w-1/8 transition-colors"
-      >
-        <div className="px-2 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
-          <UserPlus className="w-5 h-5" />
-        </div>
-        <span className="text-[10px] min-[380px]:text-[11px] tracking-tight min-[380px]:tracking-normal font-semibold text-center leading-tight text-gray-500">
-          Crear perfil
-        </span>
-      </button>
-
-      {/* 6. Reclamo (temporal): aviso del día anterior y, al cerrarlo, el del día */}
-      <button
-        onClick={onTapTestClaim}
-        className="flex flex-col items-center py-2 px-0.5 w-1/8 transition-colors"
-      >
-        <div className="px-2 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
-          <BellRing className="w-5 h-5" />
-        </div>
-        <span className="text-[10px] min-[380px]:text-[11px] tracking-tight min-[380px]:tracking-normal font-semibold text-center leading-tight text-gray-500">
-          Reclamo
-        </span>
-      </button>
-
-      {/* 7. Splash (temporal): pantalla de bienvenida */}
-      <button
-        onClick={onShowSplash}
-        className="flex flex-col items-center py-2 px-0.5 w-1/8 transition-colors"
-      >
-        <div className="px-2 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all text-gray-400">
-          <Sparkles className="w-5 h-5" />
-        </div>
-        <span className="text-[10px] min-[380px]:text-[11px] tracking-tight min-[380px]:tracking-normal font-semibold text-center leading-tight text-gray-500">
-          Splash
-        </span>
-      </button>
-
-      {/* 8. Perfil */}
+      {/* 4. Perfil */}
       <button
         onClick={() => onSelectTab('perfil')}
-        className="flex flex-col items-center py-2 px-0.5 w-1/8 transition-colors"
+        className="flex flex-col items-center py-2 px-0.5 w-1/4 transition-colors"
       >
         <div
-          className={`px-2 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
+          className={`px-4 py-1 rounded-full mb-0.5 flex items-center justify-center transition-all ${
             activeTab === 'perfil'
               ? 'bg-[#d0f8ed] text-[#0bc4a0]'
               : 'text-gray-400'
@@ -174,7 +101,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <User className="w-5 h-5" />
         </div>
         <span
-          className={`text-[10px] min-[380px]:text-[11px] tracking-tight min-[380px]:tracking-normal font-semibold text-center leading-tight ${
+          className={`text-[11px] font-semibold whitespace-nowrap ${
             activeTab === 'perfil' ? 'text-[#0bc4a0]' : 'text-gray-500'
           }`}
         >

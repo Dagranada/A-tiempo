@@ -3,6 +3,8 @@ import { ArrowLeft, Calendar, ChevronDown, Clock, Info, X } from 'lucide-react';
 import { MedicationPlan } from '../types';
 import { Stepper } from './Stepper';
 import { PlanClaimStep } from './PlanClaimStep';
+import { previewDoseTimes } from '../lib/doses';
+import { toIsoDate } from '../lib/claims';
 
 interface PlanFormScreenProps {
   initialData?: Omit<MedicationPlan, 'id' | 'createdAt'> | MedicationPlan | null;
@@ -54,7 +56,8 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
   onSavePlan,
   onCancel,
 }) => {
-  const isFromAi = Boolean(initialData?.name);
+  // Escaneado o editado: "Revisa el plan" (aunque Gemini no haya leído el nombre).
+  const isFromAi = Boolean(initialData);
   // Un plan nuevo (también el escaneado, que no trae id) sigue al paso 2, el
   // reclamo en la EPS; editar un plan guarda directo y su orden se ve en Pastas.
   const isEditing = Boolean(initialData && 'id' in initialData);
@@ -65,31 +68,34 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
   const [description, setDescription] = useState(initialData?.description || '');
 
   // Dosis: steppers si encaja en "N pastillas • X mg"; si no, texto libre tal cual vino
-  const initialDose = initialData?.dose || '1 pastilla';
-  const parsedDose = parseDose(initialDose);
-  const [isFreeDose] = useState(parsedDose === null);
+  // Los valores por defecto (1 pastilla, 8:00 a. m., cada 8 horas) son solo para
+  // llenar a mano. Si el plan viene del escaneo, lo que Gemini no leyó queda vacío.
+  const initialDose = initialData ? initialData.dose : '1 pastilla';
+  const parsedDose = initialDose ? parseDose(initialDose) : null;
+  const [isFreeDose] = useState(Boolean(initialDose) && parsedDose === null);
   const [freeDose, setFreeDose] = useState(initialDose);
   const [doseUnit] = useState(parsedDose?.unit || 'pastilla');
-  const [pillCount, setPillCount] = useState(String(parsedDose?.count ?? 1));
+  const [pillCount, setPillCount] = useState(parsedDose ? String(parsedDose.count) : '');
   const [mgPerPill, setMgPerPill] = useState(parsedDose?.mg ?? '');
 
-  const [initialTime, setInitialTime] = useState(initialData?.initialTime || '08:00');
+  const [initialTime, setInitialTime] = useState(initialData ? initialData.initialTime : '08:00');
   const [frequencyValue, setFrequencyValue] = useState(
-    String(initialData?.frequencyValue || 8)
+    initialData ? (initialData.frequencyValue > 0 ? String(initialData.frequencyValue) : '') : '8'
   );
   const [frequencyUnit, setFrequencyUnit] = useState<'horas' | 'días'>(
     initialData?.frequencyUnit || 'horas'
   );
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const defaultEndStr = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
+  // Fecha local (toISOString daría la de UTC: en Colombia, desde las 7 p. m.,
+  // ya sería mañana y el plan empezaría un día tarde).
+  const todayStr = toIsoDate(new Date());
+  const defaultEndStr = toIsoDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
   const [startDate, setStartDate] = useState(initialData?.startDate || todayStr);
   const [endDate, setEndDate] = useState(initialData?.endDate || defaultEndStr);
   const [instructions, setInstructions] = useState(
-    initialData?.instructions || 'Tomar según indicaciones del empaque'
+    // Sin texto inventado: si nadie escribió indicaciones, la alarma no muestra ninguna.
+    initialData?.instructions || ''
   );
 
   const [showNotice, setShowNotice] = useState(true);
@@ -99,6 +105,8 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
 
   const unitPlural = `${capitalize(doseUnit)}s`;
   const frequencyNum = parseInt(frequencyValue, 10) || 0;
+  // Horas que van a resultar, para ver antes de guardar si hay tomas de noche.
+  const preview = previewDoseTimes(initialTime, frequencyNum, frequencyUnit);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,6 +125,7 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
     }
     if (!initialTime) newErrors.initialTime = 'Selecciona la hora inicial';
     if (frequencyNum <= 0) newErrors.frequencyValue = 'Ingresa una frecuencia válida';
+    if (startDate && endDate && endDate < startDate) newErrors.endDate = 'La fecha final no puede ser antes del inicio';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -129,7 +138,7 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
     const newPlan: MedicationPlan = {
       id: planId,
       name: name.trim(),
-      description: description.trim() || 'Plan de medicación',
+      description: description.trim(),
       dose: isFreeDose
         ? freeDose.trim()
         : formatDose({ count, unit: doseUnit, mg: mg ? String(parseFloat(mg)) : '' }),
@@ -350,12 +359,18 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
                 id="date-to"
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className={`${inputClass} pr-10 relative ${nativePickerClass}`}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  clearError('endDate');
+                }}
+                className={`${fieldClass(Boolean(errors.endDate))} pr-10 relative ${nativePickerClass}`}
               />
               <Calendar className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
+          {errors.endDate && (
+            <p className="col-span-2 text-xs text-red-500 -mt-1 font-medium">{errors.endDate}</p>
+          )}
         </div>
 
         {/* Campo 7: Frecuencia (stepper + unidad) */}
@@ -396,8 +411,12 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
           {errors.frequencyValue ? (
             <p className="text-xs text-red-500 mt-1 font-medium">{errors.frequencyValue}</p>
           ) : (
-            <p className="text-xs text-[#0bc4a0] font-semibold mt-1.5">
-              Ejemplo: 1 toma cada {frequencyNum || '—'} {frequencyUnit}
+            <p className="text-xs text-[#0bc4a0] font-semibold mt-1.5 leading-relaxed">
+              {preview.times.length === 0
+                ? 'Elige la hora inicial y la frecuencia para ver las tomas'
+                : frequencyUnit === 'días'
+                  ? `Toma: ${preview.times[0]}, ${frequencyNum === 1 ? 'todos los días' : `cada ${frequencyNum} días`}`
+                  : `Tomas: ${preview.times.join(' · ')}${preview.varies ? ' (el horario cambia cada día)' : ''}`}
             </p>
           )}
         </div>

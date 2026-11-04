@@ -6,7 +6,7 @@ Solo commitea si la persona lo pidió. Estilo del repo (mira `git log`):
   - Bien: `Corrige la cámara real: el video nunca quedaba montado`
   - Mal: `fix(camera): mount video`
 - **Cuerpo obligatorio** salvo cambios triviales, envuelto a ~72 columnas, respondiendo:
-  1. Qué estaba mal o faltaba (el síntoma que veía el cuidador, no el detalle interno).
+  1. Qué estaba mal o faltaba (el síntoma que veía la persona que usa la app, no el detalle interno).
   2. Qué hace ahora la app.
   3. Por qué así y no de otra forma.
   4. **Alcance / limitación conocida**, si la hay (ej.: "funciona con la app abierta").

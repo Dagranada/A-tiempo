@@ -16,7 +16,7 @@ function minutesOfDay(hour: number, minute: number): number {
 /**
  * Tomas sin marcar cuya hora ya pasó, de la más antigua a la más reciente.
  * Se incluyen tanto 'pending' como 'upcoming': ambas significan "todavía no se
- * tomó", y nada en la app convierte 'upcoming' en 'pending' al llegar la hora.
+ * tomó", y el estado se recalcula solo una vez por minuto (src/lib/doses.ts).
  */
 function findOverdueDoses(doses: DoseItem[], now: Date): DoseItem[] {
   const nowMinutes = minutesOfDay(now.getHours(), now.getMinutes());

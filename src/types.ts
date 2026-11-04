@@ -25,28 +25,31 @@ export interface EpsClaim {
   claimedDates: string[]; // YYYY-MM-DD de cada reclamo hecho
 }
 
+/**
+ * Una toma de hoy. No se guarda: se calcula desde los planes cada minuto
+ * (src/lib/doses.ts); solo se guarda cuáles se marcaron "Listo".
+ */
 export interface DoseItem {
-  id: string;
+  id: string; // planId@YYYY-MM-DDTHH:MM, la misma clave con que se guarda si se marcó
   planId: string;
   medicationName: string;
   dose: string;
   timeFormatted: string; // e.g. "02:00 PM"
   timeHour: number; // 0 - 23 for sorting
   timeMinute: number;
-  status: 'pending' | 'taken' | 'upcoming';
-  takenAt?: string; // timestamp when marked "Listo"
-  nextTakeNotice?: string; // e.g. "Próxima toma en 7 horas"
+  status: 'pending' | 'taken' | 'upcoming'; // pending = ya llegó su hora; upcoming = aún no
+  takenAt?: string; // hora en que se marcó "Listo", p. ej. "08:05 PM"
+  nextTakeNotice?: string; // solo upcoming: "En 2 horas"
 }
 
-export type ScreenView = 'home' | 'scan' | 'loading' | 'plan_form' | 'profile_create';
+export type ScreenView = 'home' | 'scan' | 'loading' | 'plan_form';
 export type NavTab = 'horario' | 'planes' | 'pastas' | 'perfil';
 
+/** Perfil de quien toma los medicamentos: es quien usa la app (no hay cuidador). */
 export interface SeniorProfile {
   name: string; // nombre completo; el Header muestra solo el primero
-  relationship: string;
   age: number; // se recalcula desde birthDate al guardar
   avatarUrl: string;
-  caregiverName: string;
   birthDate: string; // YYYY-MM-DD
   sex: 'Masculino' | 'Femenino' | 'Otro' | '';
   phone: string;

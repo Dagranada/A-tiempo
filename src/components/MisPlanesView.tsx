@@ -24,7 +24,6 @@ const formatTime12h = (time: string) => {
 
 interface MisPlanesViewProps {
   plans: MedicationPlan[];
-  isEmptyState: boolean;
   onNavigateToScan: () => void;
   onEditPlan?: (plan: MedicationPlan) => void;
   onDeletePlan: (planId: string) => void;
@@ -32,12 +31,11 @@ interface MisPlanesViewProps {
 
 export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
   plans,
-  isEmptyState,
   onNavigateToScan,
   onEditPlan,
   onDeletePlan
 }) => {
-  const activePlans = isEmptyState ? [] : plans;
+  const activePlans = plans;
   // Solo estado visual: qué plan está esperando confirmación para eliminarse.
   const [planToDelete, setPlanToDelete] = useState<MedicationPlan | null>(null);
 
@@ -83,7 +81,7 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
                   <h3 className="text-[18px] font-bold text-gray-900 leading-tight">
                     {plan.name}
                   </h3>
-                  <p className="text-sm text-gray-500 mt-1">{plan.description}</p>
+                  {plan.description && <p className="text-sm text-gray-500 mt-1">{plan.description}</p>}
                 </div>
 
                 <div className="flex items-center space-x-1 -mr-1.5 -mt-1 shrink-0">

@@ -14,15 +14,12 @@ interface ProfileCreateScreenProps {
   remindersEnabled: boolean;
   onToggleReminders: () => void;
   onCreateProfile: (profile: SeniorProfile) => void;
-  onCancel: () => void;
 }
 
 const EMPTY_PROFILE: SeniorProfile = {
   name: '',
-  relationship: '',
   age: 0,
   avatarUrl: '',
-  caregiverName: '',
   birthDate: '',
   sex: '',
   phone: '',
@@ -37,14 +34,14 @@ const STEPS = ['Información básica', 'Información médica', 'Notificaciones']
 
 /**
  * Nuevo perfil en tres pasos: información básica (solo el nombre es
- * obligatorio), información médica y notificaciones. La flecha vuelve al paso
- * anterior sin perder lo escrito; "Cancelar" descarta el perfil nuevo.
+ * obligatorio), información médica y notificaciones. Es lo primero que se ve
+ * después del splash si aún no hay perfil, así que no hay a dónde cancelar: la
+ * flecha solo aparece desde el paso 2 y vuelve al anterior sin perder lo escrito.
  */
 export const ProfileCreateScreen: React.FC<ProfileCreateScreenProps> = ({
   remindersEnabled,
   onToggleReminders,
   onCreateProfile,
-  onCancel,
 }) => {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<SeniorProfile>(EMPTY_PROFILE);
@@ -76,13 +73,17 @@ export const ProfileCreateScreen: React.FC<ProfileCreateScreenProps> = ({
   return (
     <div className="min-h-screen bg-[#f8f9fa] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto flex flex-col">
       <header className="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10 shrink-0">
-        <button
-          onClick={() => (step === 0 ? onCancel() : setStep(step - 1))}
-          className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
-          aria-label={step === 0 ? 'Salir sin crear el perfil' : 'Volver al paso anterior'}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        {step > 0 ? (
+          <button
+            onClick={() => setStep(step - 1)}
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
+            aria-label="Volver al paso anterior"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        ) : (
+          <div className="w-9" />
+        )}
         <div className="text-center">
           <h1 className="text-lg font-bold text-gray-900 font-heading">Nuevo perfil</h1>
           <p className="text-xs text-gray-500">
@@ -119,13 +120,6 @@ export const ProfileCreateScreen: React.FC<ProfileCreateScreenProps> = ({
           >
             {isLast && <Check className="w-5 h-5" />}
             <span>{isLast ? 'Crear perfil' : 'Siguiente'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded-full text-sm transition-all active:scale-[0.98] flex items-center justify-center"
-          >
-            Cancelar
           </button>
         </div>
       </form>
