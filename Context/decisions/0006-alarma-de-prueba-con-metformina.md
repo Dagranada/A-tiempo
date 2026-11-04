@@ -1,6 +1,6 @@
 # 0006 · La alarma de prueba muestra Metformina (excepción al invariante 5)
 
-**Fecha:** 2026-10-14 (ampliado hasta 2026-10-22) · **Estado:** Vigente mientras existan los botones temporales de prueba · **Pidió:** la persona a cargo del diseño, explícitamente, tras ver el riesgo explicado.
+**Fecha:** 2026-10-14 (ampliado hasta 2026-10-22) · **Estado:** Derogado el 2026-11-03: se borraron las alarmas de prueba y los datos de ejemplo; la app solo muestra datos reales del perfil y de los planes · **Pidió:** la persona a cargo del diseño, explícitamente, tras ver el riesgo explicado.
 
 ## Contexto
 El botón temporal "Alarma" de la `BottomNav` abre `ReminderAlert` en modo prueba para mostrar el diseño sin esperar a la hora de una toma. Hasta ahora usaba un medicamento ficticio ("Medicamento de prueba") para respetar el invariante 5 (`../AGENTS.md` §2.A): nada en pantalla que no corresponda con la realidad. Se pidió que la prueba muestre exactamente los textos de la referencia de diseño: Metformina, "Control de glucosa en sangre", 1 pastilla · 850 mg, "Tomar con el almuerzo para evitar molestias estomacales".

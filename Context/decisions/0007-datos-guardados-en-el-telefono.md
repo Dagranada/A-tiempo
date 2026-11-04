@@ -6,7 +6,7 @@
 ADR 0001 dejaba todo en memoria: recargar borraba lo creado. Con los reclamos en la EPS eso dejó de ser aceptable: el historial de reclamos y "su día" de cada mes son justamente lo que evita perder una entrega.
 
 ## Decisión
-`src/hooks/usePersistentState.ts`: igual que `useState`, pero lee y escribe en `localStorage` con el prefijo `a-tiempo:v1:`. Se guardan `profile`, `plans` (incluye `claim`), `doses` y `claim-alerts` (avisos de reclamo resueltos o pospuestos). El estado sigue viviendo en `App.tsx` (regla 8). Si no se puede leer o escribir (modo privado, espacio lleno, JSON dañado), la app arranca desde los datos de ejemplo y sigue en memoria.
+`src/hooks/usePersistentState.ts`: igual que `useState`, pero lee y escribe en `localStorage` con el prefijo `a-tiempo:v1:` (desde 2026-11-03, `a-tiempo:v2:`, ver abajo). Se guardan `profile`, `plans` (incluye `claim`), `doses` y `claim-alerts` (avisos de reclamo resueltos o pospuestos). El estado sigue viviendo en `App.tsx` (regla 8). Si no se puede leer o escribir (modo privado, espacio lleno, JSON dañado), la app arranca desde los datos de ejemplo y sigue en memoria.
 
 ## Alternativas descartadas
 - Backend propio: necesario a futuro (también para notificaciones con el teléfono bloqueado y para la API key), pero desproporcionado para este paso.
@@ -16,4 +16,9 @@ ADR 0001 dejaba todo en memoria: recargar borraba lo creado. Con los reclamos en
 - Recargar ya no borra nada. Para volver a los datos de ejemplo hay que borrar las claves `a-tiempo:v1:*` (consola o datos del sitio).
 - Los datos viven **solo en ese navegador de ese teléfono**: no se comparten entre María y Alberto ni sobreviven a borrar los datos del sitio.
 - Si cambia la forma de los datos, subir el prefijo a `v2` (los viejos se ignoran) o migrarlos.
-- No se persisten: si los recordatorios están activos (`remindersEnabled`), el "posponer" de las tomas, ni la navegación.
+- No se persisten: el "posponer" de las tomas ni la navegación. (`remindersEnabled` sí, desde v2.)
+
+## Actualización 2026-11-03 · prefijo `a-tiempo:v2:`
+Con el flujo de inicio (splash → "Nuevo perfil" → estados vacíos), una instalación nueva ya **no arranca con datos de ejemplo**: `profile` empieza en `null` (sin perfil → "Nuevo perfil") y `plans` / `doses` vacíos. Como cambia la forma de `profile`, se sube el prefijo a `v2`: todos los navegadores, incluido producción, vuelven a empezar por el perfil. Los datos `v1` quedan guardados sin usarse (volver el prefijo a `v1` los recupera). También se guarda `reminders-enabled`; al reabrir, el sonido se desbloquea con el primer toque en cualquier parte. Sigue habiendo **un solo perfil por teléfono**.
+
+Además (mismo día) `doses` deja de guardarse: las tomas se calculan desde los planes y solo se guarda `taken-doses` (clave `planId@YYYY-MM-DDTHH:MM` → hora en que se marcó, últimos 31 días). Ver `gotchas/datos-y-estado.md`.
