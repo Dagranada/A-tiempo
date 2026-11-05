@@ -19,10 +19,15 @@ interface CloudSetters {
 }
 
 // 'loading' = trayendo los datos de la nube al entrar; 'ready' = listo (con o sin
-// conexión: sin internet se sigue con la copia del teléfono).
-export type CloudStatus = 'signed-out' | 'loading' | 'ready';
+// conexión: sin internet se sigue con la copia del teléfono); 'error' = no se
+// pudieron traer y el teléfono no tiene perfil (hay que reintentar: seguir
+// sin datos haría crear un perfil nuevo que pisaría el de la nube).
+export type CloudStatus = 'signed-out' | 'loading' | 'ready' | 'error';
 
 const PUSH_DELAY_MS = 800; // agrupa cambios seguidos en un solo envío
+// Si traer los datos tarda más que esto (señal débil), se sigue con la copia
+// del teléfono en vez de dejar "Cargando tus datos…" para siempre.
+const PULL_TIMEOUT_MS = 12 * 1000;
 const RETRY_MS = 30 * 1000;
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -37,7 +42,11 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
  *   volver la conexión y cada 30 s. Si dos teléfonos cambian lo mismo, gana el
  *   último que sube.
  */
-export function useCloudSync(userId: string | null, data: CloudData, setters: CloudSetters): CloudStatus {
+export function useCloudSync(
+  userId: string | null,
+  data: CloudData,
+  setters: CloudSetters
+): { status: CloudStatus; retry: () => void } {
   const [status, setStatus] = useState<CloudStatus>(userId ? 'loading' : 'signed-out');
   // Lo último que se sabe que está en la nube, para subir solo lo que cambió.
   const syncedRef = useRef<CloudData | null>(null);
@@ -45,6 +54,7 @@ export function useCloudSync(userId: string | null, data: CloudData, setters: Cl
   dataRef.current = data;
   const settersRef = useRef(setters);
   settersRef.current = setters;
+  const [attempt, setAttempt] = useState(0); // "Reintentar" vuelve a traer los datos
 
   // 1. Al entrar (o cambiar de cuenta): traer los datos de la nube.
   useEffect(() => {
@@ -58,11 +68,17 @@ export function useCloudSync(userId: string | null, data: CloudData, setters: Cl
 
     (async () => {
       try {
-        const [profileRes, plansRes, takenRes, stateRes] = await Promise.all([
-          supabase.from('profiles').select('data').eq('user_id', userId).maybeSingle(),
-          supabase.from('plans').select('data').eq('user_id', userId),
-          supabase.from('taken_doses').select('dose_key, taken_at').eq('user_id', userId),
-          supabase.from('user_state').select('claim_alerts').eq('user_id', userId).maybeSingle(),
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Tardó demasiado en traer los datos')), PULL_TIMEOUT_MS)
+        );
+        const [profileRes, plansRes, takenRes, stateRes] = await Promise.race([
+          Promise.all([
+            supabase.from('profiles').select('data').eq('user_id', userId).maybeSingle(),
+            supabase.from('plans').select('data').eq('user_id', userId),
+            supabase.from('taken_doses').select('dose_key, taken_at').eq('user_id', userId),
+            supabase.from('user_state').select('claim_alerts').eq('user_id', userId).maybeSingle(),
+          ]),
+          timeout,
         ]);
         const failed = [profileRes, plansRes, takenRes, stateRes].find((r) => r.error);
         if (failed?.error) throw failed.error;
@@ -86,9 +102,14 @@ export function useCloudSync(userId: string | null, data: CloudData, setters: Cl
           syncedRef.current = { profile: null, plans: [], takenDoses: {}, claimAlerts: EMPTY_CLAIM_ALERTS };
         }
       } catch (err) {
-        // Sin conexión al abrir: se sigue con la copia del teléfono, tal cual.
         console.error('No se pudieron traer los datos de la nube:', err);
         if (cancelled) return;
+        if (!dataRef.current.profile) {
+          // Teléfono sin datos (otro celular, reinstalación): no se puede seguir.
+          setStatus('error');
+          return;
+        }
+        // Sin conexión al abrir, con datos en el teléfono: se sigue con esa copia.
         syncedRef.current = { ...dataRef.current };
       }
       if (!cancelled) setStatus('ready');
@@ -97,7 +118,7 @@ export function useCloudSync(userId: string | null, data: CloudData, setters: Cl
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, attempt]);
 
   // 2. Subir lo que cambió desde la última vez.
   const push = useCallback(async () => {
@@ -178,7 +199,7 @@ export function useCloudSync(userId: string | null, data: CloudData, setters: Cl
     };
   }, [status, push]);
 
-  return status;
+  return { status, retry: useCallback(() => setAttempt((n) => n + 1), []) };
 }
 
 /** "Borrar todo": quita los datos de la cuenta en la nube. */

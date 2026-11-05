@@ -1,6 +1,6 @@
 # Estado actual — 2026-10-22
 
-Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #28). Hogar canónico de "qué falta y qué bloquea".
+Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #29). Hogar canónico de "qué falta y qué bloquea".
 
 **Éxito =** Alberto se toma todas las pastillas según lo planeado, sin confusiones. Lo que no acerque a eso, no es prioritario.
 
