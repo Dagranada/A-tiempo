@@ -10,6 +10,8 @@ interface PlanFormScreenProps {
   initialData?: Omit<MedicationPlan, 'id' | 'createdAt'> | MedicationPlan | null;
   onSavePlan: (plan: MedicationPlan) => void;
   onCancel: () => void;
+  scanFailed?: boolean; // no se pudo leer la foto: aviso con "Intentar de nuevo"
+  onRetryScan?: () => void;
 }
 
 // Unidades que se cuentan por pieza. Cualquier otra dosis ("10ml", "5 gotas")
@@ -55,9 +57,9 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
   initialData,
   onSavePlan,
   onCancel,
+  scanFailed,
+  onRetryScan,
 }) => {
-  // Escaneado o editado: "Revisa el plan" (aunque Gemini no haya leído el nombre).
-  const isFromAi = Boolean(initialData);
   // Un plan nuevo (también el escaneado, que no trae id) sigue al paso 2, el
   // reclamo en la EPS; editar un plan guarda directo y su orden se ve en Pastas.
   const isEditing = Boolean(initialData && 'id' in initialData);
@@ -174,7 +176,7 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto flex flex-col">
       {/* Top Bar Header */}
-      <header className="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10 shrink-0">
+      <header className="bg-[#f8f9fa] px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10 shrink-0">
         <button
           onClick={onCancel}
           className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
@@ -184,7 +186,7 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
         </button>
         <div className="text-center">
           <h1 className="text-lg font-bold text-gray-900 font-heading">
-            {isFromAi ? 'Revisa el plan' : 'Nuevo plan'}
+            {isEditing ? 'Revisa el plan' : 'Nuevo plan'}
           </h1>
           {!isEditing && <p className="text-xs text-gray-500">Paso 1 de 2</p>}
         </div>
@@ -192,9 +194,28 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
       </header>
 
       <form onSubmit={handleSubmit} className="p-5 space-y-5 flex-1">
+        {/* No se pudo leer la foto: se llena a mano o se vuelve a intentar */}
+        {scanFailed && (
+          <div role="alert" className="bg-amber-50 p-3.5 rounded-2xl flex items-start space-x-3 text-xs">
+            <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="font-medium text-amber-800 leading-snug">
+                No pudimos leer la foto. Llena el plan a mano o inténtalo otra vez.
+              </p>
+              <button
+                type="button"
+                onClick={onRetryScan}
+                className="mt-1.5 text-sm font-bold text-amber-800 underline rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+              >
+                Intentar de nuevo
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Medical suggestion notice */}
         {showNotice && (
-          <div className="bg-amber-50 border border-amber-200/80 p-3.5 rounded-2xl flex items-start justify-between space-x-3 text-xs text-amber-900">
+          <div className="bg-amber-50 p-3.5 rounded-2xl flex items-start justify-between space-x-3 text-xs text-amber-900">
             <div className="flex items-start space-x-3">
               <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <p className="font-medium text-amber-800 leading-snug">
@@ -439,7 +460,7 @@ export const PlanFormScreen: React.FC<PlanFormScreenProps> = ({
         {/* Botón Guardar Plan */}
         <button
           type="submit"
-          className="w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2 mt-4"
+          className="w-full bg-[linear-gradient(90deg,#0ee5ba,#19cdff)] hover:brightness-95 text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2 mt-4"
         >
           <span>{isEditing ? 'Guardar plan' : 'Siguiente'}</span>
         </button>

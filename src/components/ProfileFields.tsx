@@ -76,10 +76,10 @@ export const ProfilePhoto: React.FC<ProfilePhotoProps> = ({ draft, update }) => 
           <img
             src={draft.avatarUrl}
             alt={`Foto de perfil de ${draft.name || 'la persona'}`}
-            className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-sm ring-1 ring-[#E2E8F0]"
+            className="w-28 h-28 rounded-full object-cover"
           />
         ) : (
-          <div className="w-28 h-28 rounded-full bg-gray-100 text-gray-400 border-4 border-white shadow-sm ring-1 ring-[#E2E8F0] flex items-center justify-center">
+          <div className="w-28 h-28 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center">
             <User className="w-12 h-12" strokeWidth={1.75} />
           </div>
         )}

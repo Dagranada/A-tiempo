@@ -39,7 +39,7 @@ export const PlanClaimStep: React.FC<PlanClaimStepProps> = ({ plan, onSavePlan, 
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto flex flex-col">
-      <header className="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10 shrink-0">
+      <header className="bg-[#f8f9fa] px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10 shrink-0">
         <button
           onClick={onBack}
           className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
@@ -48,7 +48,7 @@ export const PlanClaimStep: React.FC<PlanClaimStepProps> = ({ plan, onSavePlan, 
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="text-center">
-          <h1 className="text-lg font-bold text-gray-900 font-heading">Reclamo en la EPS</h1>
+          <h1 className="text-lg font-bold text-gray-900 font-heading">Nuevo plan</h1>
           <p className="text-xs text-gray-500">Paso 2 de 2</p>
         </div>
         <div className="w-9" /> {/* Spacer */}
@@ -62,58 +62,61 @@ export const PlanClaimStep: React.FC<PlanClaimStepProps> = ({ plan, onSavePlan, 
           </p>
         </div>
 
-        {/* items-end: a 320px "Meses de la orden" ocupa dos líneas; los campos
-            quedan alineados por abajo. */}
-        <div className="grid grid-cols-2 gap-3 items-end">
-          <div>
-            <label htmlFor="plan-claim-first" className={labelClass}>
-              Lo reclamaste *
-            </label>
-            <div className="relative">
-              <input
-                id="plan-claim-first"
-                type="date"
-                value={firstDate}
-                max={todayIso}
-                onChange={(e) => {
-                  setFirstDate(e.target.value);
+        <div>
+          {/* items-end: a 320px "Meses de la orden" ocupa dos líneas; los campos
+              quedan alineados por abajo. */}
+          <div className="grid grid-cols-2 gap-3 items-end">
+            <div>
+              <label htmlFor="plan-claim-first" className={labelClass}>
+                Lo reclamaste *
+              </label>
+              <div className="relative">
+                <input
+                  id="plan-claim-first"
+                  type="date"
+                  value={firstDate}
+                  max={todayIso}
+                  onChange={(e) => {
+                    setFirstDate(e.target.value);
+                    setError('');
+                  }}
+                  className={`${inputClass} pr-10 relative ${nativePickerClass}`}
+                />
+                <Calendar className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="plan-claim-months" className={labelClass}>
+                Meses de la orden *
+              </label>
+              <Stepper
+                inputId="plan-claim-months"
+                value={months}
+                onChange={(v) => {
+                  setMonths(v.replace(/\D/g, ''));
                   setError('');
                 }}
-                className={`${inputClass} pr-10 relative ${nativePickerClass}`}
+                step={1}
+                min={1}
+                max={24}
+                label="meses"
               />
-              <Calendar className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
-          <div>
-            <label htmlFor="plan-claim-months" className={labelClass}>
-              Meses de la orden *
-            </label>
-            <Stepper
-              inputId="plan-claim-months"
-              value={months}
-              onChange={(v) => {
-                setMonths(v.replace(/\D/g, ''));
-                setError('');
-              }}
-              step={1}
-              min={1}
-              max={24}
-              label="meses"
-            />
-          </div>
-        </div>
 
-        {error ? (
-          <p className="text-xs text-red-500 font-medium">{error}</p>
-        ) : (
-          <p className="text-xs text-[#0bc4a0] font-semibold">La entrega 1 quedará marcada como reclamada.</p>
-        )}
+          {/* Pegado a los campos, como la ayuda de la frecuencia en el paso 1 */}
+          {error ? (
+            <p className="text-xs text-red-500 mt-1.5 font-medium">{error}</p>
+          ) : (
+            <p className="text-xs text-[#0bc4a0] font-semibold mt-1.5">La entrega 1 quedará marcada como reclamada.</p>
+          )}
+        </div>
 
         {/* Botones al final de la pantalla */}
         <div className="space-y-2.5 pt-2 mt-auto">
           <button
             type="submit"
-            className="w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2"
+            className="w-full bg-[linear-gradient(90deg,#0ee5ba,#19cdff)] hover:brightness-95 text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2"
           >
             <CheckCircle2 className="w-5 h-5" />
             <span>Guardar plan</span>

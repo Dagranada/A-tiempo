@@ -14,7 +14,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   hasClaimToday,
 }) => {
   return (
-    <nav className="bg-white border-t border-gray-200 px-2 py-2 flex justify-between items-center fixed bottom-0 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl left-1/2 -translate-x-1/2 z-30 shrink-0">
+    <nav className="bg-[#f8f9fa] border-t border-gray-200 px-2 py-2 flex justify-between items-center fixed bottom-0 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl left-1/2 -translate-x-1/2 z-30 shrink-0">
       {/* 1. Horario */}
       <button
         onClick={() => onSelectTab('horario')}
@@ -74,7 +74,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         >
           <Pill className="w-5 h-5" />
           {hasClaimToday && (
-            <span className="absolute top-0.5 right-2.5 w-2.5 h-2.5 bg-[#ff5f56] rounded-full ring-2 ring-white motion-safe:animate-pulse" />
+            <span className="absolute top-0.5 right-2.5 w-2.5 h-2.5 bg-[#ff5f56] rounded-full ring-2 ring-[#f8f9fa] motion-safe:animate-pulse" />
           )}
         </div>
         <span

@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ArrowLeft, Camera, Edit3 } from 'lucide-react';
 
+const MAX_PHOTO_PX = 1280; // lado más largo de la foto que se envía a analizar
+
 interface CameraScanScreenProps {
   // base64Image es la foto capturada (sin el prefijo data:...), o null si no hay
   // cámara real disponible (entonces se llena el plan a mano).
@@ -43,9 +45,9 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
         }
         setHasCameraAccess(true);
       } catch (err) {
-        const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+        // El detalle técnico queda en la consola; en pantalla, un mensaje claro.
         console.warn('Camera access error or unsupported in environment:', err);
-        setCameraErrorMessage(message);
+        setCameraErrorMessage('No pudimos abrir la cámara. Puedes llenar el plan a mano.');
         setHasCameraAccess(false);
       }
     }
@@ -63,9 +65,12 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
     const video = videoRef.current;
 
     if (hasCameraAccess && video && video.videoWidth > 0) {
+      // La foto se achica antes de enviarla: sube mucho más rápido con datos
+      // móviles y el texto de una caja se sigue leyendo bien.
+      const scale = Math.min(1, MAX_PHOTO_PX / Math.max(video.videoWidth, video.videoHeight));
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      canvas.width = Math.round(video.videoWidth * scale);
+      canvas.height = Math.round(video.videoHeight * scale);
       const ctx = canvas.getContext('2d');
 
       if (ctx) {
@@ -124,9 +129,7 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
                 Apunta al nombre y dosis de la etiqueta
               </p>
               {cameraErrorMessage && (
-                <p className="text-[11px] text-amber-400/90 mt-3 max-w-xs break-words">
-                  No se pudo abrir la cámara real: {cameraErrorMessage}
-                </p>
+                <p className="text-xs text-amber-400/90 mt-3 max-w-[220px]">{cameraErrorMessage}</p>
               )}
             </div>
           </div>
@@ -152,7 +155,7 @@ export const CameraScanScreen: React.FC<CameraScanScreenProps> = ({
         {/* Tomar Foto Button */}
         <button
           onClick={handleTriggerTakePhoto}
-          className="w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 rounded-full transition-all text-sm shadow-sm active:scale-[0.98] flex items-center justify-center space-x-2"
+          className="w-full bg-[linear-gradient(90deg,#0ee5ba,#19cdff)] hover:brightness-95 text-gray-900 font-bold py-2.5 rounded-full transition-all text-sm shadow-sm active:scale-[0.98] flex items-center justify-center space-x-2"
         >
           <Camera className="w-4 h-4" />
           <span>Tomar foto</span>

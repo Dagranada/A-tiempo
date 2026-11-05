@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Check, Loader2, Pill } from 'lucide-react';
 
 interface LoadingScreenProps {
@@ -14,7 +14,7 @@ const STEPS = [
   'Generando tu horario sugerido...',
 ];
 
-const MAX_WAIT_MS = 15000; // Por si el análisis tarda demasiado o se cuelga.
+const MAX_WAIT_MS = 30000; // Por si el análisis tarda demasiado o se cuelga.
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete, isReady }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -37,10 +37,13 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete, isRead
     }
   }, [isReady, currentStep, onComplete]);
 
+  // Con referencia: el tope corre una sola vez, aunque App se redibuje.
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
   useEffect(() => {
-    const maxWaitTimeout = setTimeout(onComplete, MAX_WAIT_MS);
+    const maxWaitTimeout = setTimeout(() => onCompleteRef.current(), MAX_WAIT_MS);
     return () => clearTimeout(maxWaitTimeout);
-  }, [onComplete]);
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-[#f8f9fa] z-50 flex flex-col items-center justify-center p-6 text-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto">
