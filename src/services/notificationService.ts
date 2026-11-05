@@ -127,14 +127,39 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /**
+ * Registra el service worker mínimo (public/sw.js), que Chrome de Android
+ * exige para mostrar notificaciones. Se llama una vez al abrir la app.
+ */
+export function registerNotificationWorker(): void {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('/sw.js').catch((err) => {
+    console.error('No se pudo registrar el service worker de notificaciones:', err);
+  });
+}
+
+/**
+ * Muestra una notificación del sistema. Primero por el service worker (lo
+ * único que acepta Chrome de Android: ahí `new Notification()` lanza "Illegal
+ * constructor" y dejaba la app en blanco) y, si no hay, como antes. Nunca
+ * lanza: si falla, la alarma en pantalla y el sonido siguen igual.
+ */
+function showSystemNotification(title: string, options: NotificationOptions): void {
+  if (!isNotificationSupported() || Notification.permission !== 'granted') return;
+  const show = async () => {
+    const registration = await navigator.serviceWorker?.getRegistration?.();
+    if (registration) return registration.showNotification(title, options);
+    new Notification(title, options);
+  };
+  show().catch((err) => console.error('No se pudo mostrar la notificación:', err));
+}
+
+/**
  * Muestra la notificación del sistema de una toma pendiente.
  * El `tag` por medicamento evita que se apilen decenas de avisos repetidos:
  * cada recordatorio reemplaza al anterior del mismo medicamento.
  */
 export function showDoseNotification(medicationName: string, dose: string, tag: string): void {
-  if (!isNotificationSupported() || Notification.permission !== 'granted') return;
-
-  new Notification(NOTIFICATION_TITLE, {
+  showSystemNotification(NOTIFICATION_TITLE, {
     body: `Es hora de tomar ${dose} de ${medicationName}`,
     tag: `dose-${tag}`,
     requireInteraction: true,
@@ -144,9 +169,7 @@ export function showDoseNotification(medicationName: string, dose: string, tag: 
 
 /** Notificación del sistema de un reclamo en la EPS: mismo texto que el recuadro del Horario. */
 export function showClaimNotification(body: string, tag: string): void {
-  if (!isNotificationSupported() || Notification.permission !== 'granted') return;
-
-  new Notification(body, {
+  showSystemNotification(body, {
     body: 'Toca para ver tus pastas',
     tag: `claim-${tag}`,
     silent: false,

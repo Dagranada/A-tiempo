@@ -169,7 +169,7 @@ export default function App() {
   const dueClaim = useClaimReminders(plans, claimAlerts, remindersActive);
 
   // Sincronización con la nube (ver useCloudSync).
-  const cloud = useCloudSync(
+  const { status: cloud, retry: retryCloud } = useCloudSync(
     userId,
     { profile, plans, takenDoses, claimAlerts },
     { setProfile, setPlans, setTakenDoses, setClaimAlerts }
@@ -416,7 +416,12 @@ export default function App() {
         {/* Sin sesión: entrar o crear la cuenta (correo + código). Con sesión,
             primero se traen los datos de la nube y, si no hay perfil, se crea. */}
         {session === null && <AccountScreen onSendCode={handleSendCode} onVerifyCode={handleVerifyCode} />}
-        {session && cloud === 'loading' && <CloudLoadingScreen />}
+        {/* Con sesión, mientras no esté lista (incluido el instante justo después
+            del código, antes de empezar a cargar) se ve "Cargando tus datos…",
+            nunca una pantalla en blanco. */}
+        {session && cloud !== 'ready' && (
+          <CloudLoadingScreen failed={cloud === 'error'} onRetry={retryCloud} onSignOut={handleSignOut} />
+        )}
         {session && cloud === 'ready' && !profile && (
           <ProfileCreateScreen onCreateProfile={handleCreateProfile} notifications={notificationProps} />
         )}
