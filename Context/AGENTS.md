@@ -12,7 +12,7 @@ Persona: **Alberto, 78**, usa la app él mismo. **No hay cuidador, ni ahora ni e
 
 Flujos: splash → "Crea tu cuenta" (correo + código de Supabase, sin contraseña) y "Nuevo perfil" (la primera vez) → `Horario` (tomas de hoy, marcar "Listo") · `Mis Planes` (CRUD; "Nuevo plan" abre Escanear: foto → Gemini → formulario prellenado) · `Pastas` (reclamos mensuales en la EPS, ADR 0008) · `Perfil`. Alarma a pantalla completa para tomas y reclamos. Los datos se guardan en el teléfono (ADR 0007).
 Publicación: rama `memoria-de-contexto` → PR → `main`; **Vercel despliega `main` a producción** en cada fusión.
-Stack: React 19 + TS + Vite 6 + Tailwind 4 (`@tailwindcss/vite`) + `lucide-react` + `@google/genai` + `@supabase/supabase-js` (cuentas y datos, ADR 0010). Sin router, sin tests.
+Stack: React 19 + TS + Vite 6 + Tailwind 4 (`@tailwindcss/vite`) + `lucide-react` + `@supabase/supabase-js` (cuentas, datos y el escaneo con Gemini vía la Edge Function `analizar-medicamento`; ADR 0010 y 0002). Sin router, sin tests.
 
 ## 2. Reglas duras
 
@@ -64,13 +64,14 @@ src/App.tsx                        464 · TODO el estado + handlers + routing po
 src/types.ts                        57 · MedicationPlan (+ claim: EpsClaim), DoseItem, SeniorProfile, ScreenView, NavTab
 src/lib/claims.ts                  126 · getClaimSchedule (reglas de reclamo), fechas YYYY-MM-DD, textos de estado
 src/lib/doses.ts                    ~150 · tomas del día desde los planes (frecuencia, Desde/Hasta), tomas marcadas, vista previa
-src/services/geminiService.ts       76 · analyzeMedicationImage(base64) → plan
+src/services/geminiService.ts       45 · analyzeMedicationImage(base64) → llama a la Edge Function → plan
 src/services/notificationService.ts 125 · permisos, notificaciones (toma, reclamo, prueba), chime Web Audio
 src/hooks/usePersistentState.ts     34 · useState + localStorage (prefijo a-tiempo:v2:) = copia local
 src/hooks/useCloudSync.ts          ~200 · sincroniza la copia local con Supabase (ADR 0010)
 src/lib/supabase.ts                 ~40 · cliente Supabase + errores en español
 src/lib/soundStore.ts               ~40 · sonido de alarma elegido (IndexedDB)
 supabase/migrations/                    · SQL de tablas y RLS (se pega en el SQL Editor)
+supabase/functions/analizar-medicamento · Edge Function: Gemini con la clave en secretos de Supabase (se sube desde el panel)
 src/hooks/useDoseReminders.ts      110 · vigila el reloj → dueDose + snooze(minutos)
 src/hooks/useClaimReminders.ts      99 · vigila el reloj → aviso de reclamo (12 m víspera, 8 a. m. el día)
 src/components/                         Header, BottomNav, HorarioView, MisPlanesView, PastasView, PerfilView,

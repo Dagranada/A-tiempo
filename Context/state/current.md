@@ -1,6 +1,6 @@
 # Estado actual — 2026-10-22
 
-Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #27). Hogar canónico de "qué falta y qué bloquea".
+Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Vercel publica `main` en producción** en cada fusión (último: PR #28). Hogar canónico de "qué falta y qué bloquea".
 
 **Éxito =** Alberto se toma todas las pastillas según lo planeado, sin confusiones. Lo que no acerque a eso, no es prioritario.
 
@@ -8,7 +8,7 @@ Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Verc
 - **Pestañas**: Horario · Mis planes · Pastas · Perfil ; al abrir, splash (2 s) y, la primera vez, "Nuevo perfil". Escanear ya no es pestaña: se abre desde "Nuevo plan" y desde "Crear plan" de los estados vacíos.
 - **Planes**: CRUD con validación; formulario "Revisa el plan" con steppers de dosis (cantidad + mg) y frecuencia; eliminar pide confirmación (`ConfirmDialog`). Un plan nuevo tiene paso 2, "Reclamo en la EPS" (todos se reclaman en la EPS por ahora), que registra la orden con la entrega 1 ya reclamada.
 - **Horario**: tomas de hoy calculadas desde los planes (frecuencia, Desde/Hasta), "Hoy no hay tomas" si los planes no tienen ese día; marcar toma con hora real; recuadro "Mañana toca reclamar …" desde las 12 m de la víspera, con X para ocultarlo.
-- **Escaneo real** (cámara → Gemini → formulario); sin cámara o si Gemini falla, formulario vacío.
+- **Escaneo real** (cámara → Edge Function de Supabase → Gemini → formulario, solo con cuenta); sin cámara o si Gemini falla, formulario vacío.
 - **Notificaciones estilo ajustes de Android** (paso 3 de "Nuevo perfil" y Perfil): Recordatorios, Sonido y Vibración con su interruptor; tocar "Sonido" abre los sonidos y la música del celular (selector de archivos) y muestra el nombre del elegido; si no se puede reproducir, suena el chime. En la app nativa debería abrir el selector de tonos de Android.
 - **Recordatorios siempre activos** desde que existe el perfil (no son una opción, 2026-11-04): alerta a pantalla completa + notificación + sonido elegido o chime, insistiendo cada 5 min; posponer de 5 en 5 minutos (5–60).
 - **Alarma real = versión 4** (sin píldora, texto al centro, ondas fluidas) para toma y reclamo, con escala de texto común (`design.md` §9).
@@ -34,12 +34,12 @@ Se trabaja en la rama `memoria-de-contexto` y se fusiona a `main` por PR; **Verc
 12. ~~Quitar un reclamo en Pastas no pide confirmación~~ Resuelto el 2026-11-03: pide confirmación; además, "Deshacer" en Ya tomadas para una toma marcada por error.
 13. **En el Horario, varias tomas pendientes muestran varios "Listo" verdes** (choca con "un solo primario por pantalla", `design.md` §3). Se ofreció aplicarles el secundario menta y quedó sin respuesta.
 14. **Deuda de diseño**: `#69E1BC` huérfano, `motion` sin usar y `--color-success` sin uso (`../design.md` §11).
-15. **Supabase: terminar la configuración** (ADR 0010). El código ya está (cuenta con código, sincronización, Cerrar sesión, Borrar todo en la nube). Hecho en el proyecto (2026-11-04): SQL corrido, SMTP con Gmail (contraseña de aplicación; Username = el Gmail completo) y plantillas "Confirm sign up" y "Magic link or OTP" con `{{ .Token }}`. Probado de punta a punta en local: crear cuenta, perfil y plan en la nube, recargar sin código, cerrar sesión y recuperar todo con otro código. Falta: **agregar `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` en Vercel antes de publicar**, y para gente real, Resend con dominio propio en vez de Gmail. Después: mover Gemini a una Edge Function.
+15. **Supabase: terminar la configuración** (ADR 0010). El código ya está (cuenta con código, sincronización, Cerrar sesión, Borrar todo en la nube). Hecho en el proyecto (2026-11-04): SQL corrido, SMTP con Gmail (contraseña de aplicación; Username = el Gmail completo) y plantillas "Confirm sign up" y "Magic link or OTP" con `{{ .Token }}`. Probado de punta a punta en local: crear cuenta, perfil y plan en la nube, recargar sin código, cerrar sesión y recuperar todo con otro código. Falta: **agregar `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` en Vercel antes de publicar**, y para gente real, Resend con dominio propio en vez de Gmail.
 16. **Todo plan nuevo pasa por "Reclamo en la EPS"**: decidido así por la persona (2026-11-03), "todas se reclaman en la EPS". No agregar la opción "no se reclama" hasta que lo pida.
 17. ~~`npm run lint` no revisa props~~ Resuelto el 2026-11-04: se instalaron `@types/react` y `@types/react-dom` (cero errores).
 
 ## Blockers
-- **API key en el bundle del navegador** (`vite.config.ts` → `define`). Bloquea cualquier deploy público. Salida: endpoint propio (`express` y `tsx` ya instalados, sin usar). ADR 0002.
+- ~~API key en el bundle del navegador~~ Resuelto el 2026-11-04: el escaneo pasa por la Edge Function `analizar-medicamento` de Supabase (solo con sesión), la clave vive en sus secretos y el build ya no lleva ninguna clave de Google. Antes, en producción, el escaneo nunca había funcionado (Vercel no tenía la clave).
 - **Recordatorios solo con la app abierta.** Con el celular bloqueado no suena: la adherencia depende de que alguien mire la pantalla. Exigiría PWA + push con servidor. ADR 0004.
 - **Sin tests.** La red de seguridad es `npm run lint` + probar a mano (y scripts con `tsx` para `claims.ts`).
 - **Sin README** (el arranque está en `../AGENTS.md` §4).

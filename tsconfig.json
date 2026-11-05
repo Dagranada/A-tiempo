@@ -22,5 +22,7 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  // supabase/functions corre en Deno (Edge Functions), no en la app: tiene sus propios tipos.
+  "exclude": ["node_modules", "dist", "supabase"]
 }
