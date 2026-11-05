@@ -55,7 +55,7 @@ export const MisPlanesView: React.FC<MisPlanesViewProps> = ({
           </div>
           <button
             onClick={onNavigateToScan}
-            className="w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-4 rounded-full text-sm flex items-center justify-center space-x-2 shadow-sm transition-all active:scale-[0.98]"
+            className="w-full bg-[linear-gradient(90deg,#0ee5ba,#19cdff)] hover:brightness-95 text-gray-900 font-bold py-2.5 px-4 rounded-full text-sm flex items-center justify-center space-x-2 shadow-sm transition-all active:scale-[0.98]"
           >
             <Plus className="w-4 h-4" />
             <span>Nuevo plan</span>

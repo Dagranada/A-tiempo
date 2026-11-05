@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Loader2, Mail } from 'lucide-react';
-import { SectionTitle } from './ProfileFields';
 
 interface AccountScreenProps {
   // Devuelven un error para mostrar, o null si salió bien.
@@ -12,7 +11,7 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-gray-7
 const inputBase =
   'w-full bg-white border rounded-2xl px-4 py-3 h-12 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0ee5ba] transition-all flex items-center';
 const primaryButton =
-  'w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2';
+  'w-full bg-[linear-gradient(90deg,#0ee5ba,#19cdff)] hover:brightness-95 text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2';
 
 const CODE_LENGTH = 6;
 const RESEND_SECONDS = 30;
@@ -102,7 +101,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onSendCode, onVeri
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto flex flex-col">
-      <header className="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10 shrink-0">
+      <header className="bg-[#f8f9fa] px-5 py-4 flex items-center justify-between border-b border-gray-100 sticky top-0 z-10 shrink-0">
         {step === 'code' ? (
           <button
             onClick={() => {
@@ -125,11 +124,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onSendCode, onVeri
 
       <form onSubmit={handleSubmit} noValidate className="p-5 pb-8 space-y-5 flex-1 flex flex-col">
         {step === 'email' ? (
-          <div className="space-y-5">
-            <SectionTitle>Tu correo</SectionTitle>
+          <div className="space-y-5 pt-6">
             <div>
               <label htmlFor="account-email" className={labelClass}>
-                Correo electrónico *
+                Escribe tu correo electrónico *
               </label>
               <div className="relative">
                 <input
@@ -158,17 +156,13 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onSendCode, onVeri
             </div>
           </div>
         ) : (
-          <div className="space-y-5">
-            <SectionTitle>Código</SectionTitle>
-            <p className="text-sm text-gray-600 leading-relaxed">
+          <div className="space-y-6 pt-6 text-center">
+            <p className="text-base text-gray-800 leading-relaxed">
               Lo enviamos a <span className="font-bold text-gray-900 break-all">{email}</span>.
             </p>
             <div>
-              <label htmlFor="account-code-0" className={labelClass}>
-                Código de {CODE_LENGTH} números *
-              </label>
               {/* Seis cuadros; pegar el código en cualquiera llena todos */}
-              <div className="grid grid-cols-6 gap-2" role="group" aria-label={`Código de ${CODE_LENGTH} números`}>
+              <div className="flex justify-center gap-2" role="group" aria-label={`Código de ${CODE_LENGTH} números`}>
                 {digits.map((digit, index) => (
                   <input
                     key={index}
@@ -198,20 +192,20 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ onSendCode, onVeri
                       e.preventDefault();
                       fillFrom(0, e.clipboardData.getData('text'));
                     }}
-                    className={`w-full min-w-0 bg-white border rounded-2xl h-14 text-center text-2xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0ee5ba] transition-all ${
+                    className={`flex-1 min-w-0 max-w-[52px] aspect-square bg-white border rounded-2xl shadow-sm text-center text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0ee5ba] transition-all ${
                       error && !digit ? 'border-red-500' : 'border-gray-200'
                     }`}
                   />
                 ))}
               </div>
-              {error && <p className="text-xs text-red-500 mt-1 font-medium">{error}</p>}
+              {error && <p className="text-sm text-red-500 mt-2 font-medium">{error}</p>}
             </div>
 
             <button
               type="button"
               onClick={() => void sendCode(email)}
               disabled={resendIn > 0 || isBusy}
-              className="text-sm font-semibold text-[#0bc4a0] hover:text-[#087064] disabled:text-gray-400 px-1 py-1 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba]"
+              className="text-sm font-medium text-[#087064] hover:text-[#0bc4a0] disabled:text-gray-400 px-3 py-1 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0ee5ba]"
             >
               {resendIn > 0 ? `Reenviar el código en ${resendIn} s` : 'Reenviar el código'}
             </button>

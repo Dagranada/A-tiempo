@@ -26,5 +26,5 @@ Es **opt-in**: se activa con la campana del `Header` o con el interruptor de Per
 ## Actualización 2026-11-04 · los recordatorios dejan de ser opcionales
 La persona pidió quitar la opción "Recordatorios": avisar a la hora de cada toma es la parte básica de la app, no un ajuste. Desde ahora `useDoseReminders` y `useClaimReminders` están activos siempre que hay cuenta y perfil (`remindersActive`), y se quitó el estado `remindersEnabled` (y la clave guardada `reminders-enabled`). Lo que el opt-in resolvía se mantiene así:
 - **Audio y permiso**: el toque de "Crear perfil" desbloquea el sonido y pide el permiso de notificaciones; en cada apertura posterior, el primer toque en la app desbloquea el sonido (y pide el permiso si aún no se decidió). Antes de ese primer toque, una alarma se ve pero puede no sonar.
-- **La campana** del Header ya no activa nada: es un indicador de "recordatorios activos" con el punto de tomas pendientes.
+- **La campana** del Header se quitó (primero quedó como indicador; el 2026-11-05 se eliminó porque no hacía nada).
 - En Notificaciones quedan solo **Sonido** y **Vibración**, que sí se pueden apagar (la alarma sigue apareciendo).

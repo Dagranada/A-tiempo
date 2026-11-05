@@ -13,7 +13,7 @@ const RING_SIZES = [74, 121, 169, 216, 264];
 /**
  * Pantalla de bienvenida: degradado del verde de la toma (arriba) al azul de
  * los reclamos (abajo), anillos concéntricos finos y, al centro, la pastilla
- * en un círculo y "A tiempo". Sale cada vez que se abre la app y sigue sola a
+ * en un círculo. Sale cada vez que se abre la app y sigue sola a
  * los 2 s (o antes, al tocarla).
  */
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onClose }) => {
@@ -51,7 +51,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onClose }) => {
             <path d="M10.7515 25.3677C19.9517 17.3677 25.2515 12.3677 26.7515 10.8677" />
           </svg>
         </span>
-        <span className="text-[2.4rem] leading-none font-light tracking-tight mt-6">A tiempo</span>
       </span>
     </button>
   );

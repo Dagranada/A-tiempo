@@ -27,7 +27,7 @@ const inputClass =
   'w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 h-12 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0ee5ba] transition-all flex items-center';
 const labelClass = 'block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5';
 const primaryButton =
-  'w-full bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2';
+  'w-full bg-[linear-gradient(90deg,#0ee5ba,#19cdff)] hover:brightness-95 text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-2';
 const secondaryButton =
   'w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded-full text-sm transition-all active:scale-[0.98] flex items-center justify-center space-x-1.5';
 // Secundario menta (design.md §3, D): el mismo verde, más claro. Para las acciones
@@ -37,15 +37,16 @@ const mintButton =
 const nativePickerClass =
   '[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer';
 
-// Color de la píldora de estado según qué tan urgente es reclamar.
+// Color de la píldora de estado según qué tan urgente es reclamar. El menta es
+// más claro que el del botón "Marcar como reclamada", para no confundirlos.
 function statusTone(cycle: ClaimCycle, today: string): string {
   if (cycle.status === 'open') {
     return cycle.dueDate === today
-      ? 'bg-[#d0f8ed] text-[#0b8f75] border-[#0ee5ba]/40'
+      ? 'bg-[#f0fcfa] text-[#397b6f] border-transparent'
       : 'bg-amber-50 text-amber-800 border-amber-200';
   }
   return daysBetween(today, cycle.dueDate) === 1
-    ? 'bg-[#d0f8ed] text-[#0b8f75] border-[#0ee5ba]/40'
+    ? 'bg-[#f0fcfa] text-[#397b6f] border-transparent'
     : 'bg-gray-50 text-gray-600 border-[#E2E8F0]';
 }
 
@@ -211,7 +212,7 @@ const ClaimCard: React.FC<ClaimCardProps> = ({ plan, schedule, today, onMarkClai
           {/* Atrasado: aviso ámbar como el de "Revisa el plan" (sin X: es el
               estado del mes, no se oculta). Hoy: píldora menta. */}
           {isLate ? (
-            <div className="bg-amber-50 border border-amber-200/80 p-3.5 rounded-2xl flex items-start space-x-3 text-xs">
+            <div className="bg-amber-50 p-3.5 rounded-2xl flex items-start space-x-3 text-xs">
               <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <p className="font-medium text-amber-800 leading-snug">{describeCycle(current, today)}</p>
             </div>

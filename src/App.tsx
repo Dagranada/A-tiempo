@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { analyzeMedicationImage } from './services/geminiService';
 import {
   previewAlarmSound,
@@ -90,6 +90,9 @@ export default function App() {
   >(null);
   // true cuando el análisis de la imagen (real o de ejemplo) ya terminó
   const [isPlanReady, setIsPlanReady] = useState(false);
+  // No se pudo leer la foto (falló o se agotó la espera): el formulario lo avisa.
+  const [scanFailed, setScanFailed] = useState(false);
+  const scanIdRef = useRef(0); // para ignorar una respuesta que llega tarde
 
   // Recordatorios: son parte básica de la app, no una opción. Están activos
   // desde que existe el perfil (antes no hay nada que recordar).
@@ -224,9 +227,11 @@ export default function App() {
   };
 
   const handleTakePhoto = (base64Image: string | null) => {
+    setScanFailed(false);
+    setPendingScannedPlan(null);
+
     if (!base64Image) {
       // Sin cámara real no hay nada que analizar: formulario vacío, a mano.
-      setPendingScannedPlan(null);
       setScreen('plan_form');
       return;
     }
@@ -234,26 +239,34 @@ export default function App() {
     setIsPlanReady(false);
     setScreen('loading');
 
+    const scanId = ++scanIdRef.current;
     analyzeMedicationImage(base64Image)
       .then((extractedPlan) => {
-        setPendingScannedPlan(extractedPlan);
+        if (scanId === scanIdRef.current) setPendingScannedPlan(extractedPlan);
       })
       .catch((err) => {
         console.error('No se pudo analizar la imagen con Gemini:', err);
-        // Si el análisis falla, el plan se completa a mano.
-        setPendingScannedPlan(null);
+        // Se completa a mano; el formulario avisa y ofrece intentarlo otra vez.
+        if (scanId === scanIdRef.current) setScanFailed(true);
       })
       .finally(() => {
-        setIsPlanReady(true);
+        if (scanId === scanIdRef.current) setIsPlanReady(true);
       });
   };
 
   const handleSkipToManualForm = () => {
+    setScanFailed(false);
     setPendingScannedPlan(null); // Empty form
     setScreen('plan_form');
   };
 
   const handleLoadingComplete = () => {
+    if (!isPlanReady) {
+      // Se agotó la espera: se ignora la respuesta si llega tarde (el formulario
+      // ya estaría abierto) y se avisa que no se pudo leer la foto.
+      scanIdRef.current += 1;
+      setScanFailed(true);
+    }
     setScreen('plan_form');
   };
 
@@ -276,6 +289,7 @@ export default function App() {
   };
 
   const handleEditPlan = (plan: MedicationPlan) => {
+    setScanFailed(false);
     setPendingScannedPlan(plan);
     setScreen('plan_form');
   };
@@ -386,8 +400,6 @@ export default function App() {
     return null;
   };
 
-  const pendingDosesCount = doses.filter((d) => d.status === 'pending').length;
-
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#1b1c1c] font-sans flex flex-col items-center justify-start antialiased">
       {/* Container Device Envelope */}
@@ -410,6 +422,8 @@ export default function App() {
             initialData={pendingScannedPlan}
             onSavePlan={handleSavePlan}
             onCancel={() => setScreen('home')}
+            scanFailed={scanFailed}
+            onRetryScan={handleTapScan}
           />
         )}
 
@@ -435,7 +449,6 @@ export default function App() {
               <Header
                 profile={profile}
                 today={now}
-                todayCountPending={pendingDosesCount}
               />
             )}
 

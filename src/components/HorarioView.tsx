@@ -124,7 +124,7 @@ export const HorarioView: React.FC<HorarioViewProps> = ({
                 {/* Confirm Button */}
                 <button
                   onClick={() => onMarkAsTaken(dose.id)}
-                  className="w-full mt-3 bg-[#0ee5ba] hover:bg-[#0bc4a0] text-gray-900 font-bold py-2.5 rounded-full transition-all text-sm shadow-sm active:scale-[0.98] flex items-center justify-center space-x-2"
+                  className="w-full mt-3 bg-[linear-gradient(90deg,#0ee5ba,#19cdff)] hover:brightness-95 text-gray-900 font-bold py-2.5 rounded-full transition-all text-sm shadow-sm active:scale-[0.98] flex items-center justify-center space-x-2"
                 >
                   <CheckCircle2 className="w-5 h-5 text-gray-900" />
                   <span>Listo</span>
