@@ -41,3 +41,6 @@ El recuadro de reclamo aparece desde las 12 m y los avisos de reclamo a las 8 a.
 
 ## `npm run lint` no revisaba las props (resuelto 2026-11-04)
 Hasta el 2026-11-04 faltaban `@types/react` y `@types/react-dom`: el JSX era `any` y `tsc` no avisaba de props faltantes, sobrantes o con nombre viejo. Ya están en `devDependencies`; si `lint` vuelve a pasar con props mal puestas, revisa que sigan instalados.
+
+## Chrome de Android prohíbe `new Notification()` (pantalla en blanco, 2026-11-04)
+Con el permiso concedido, `new Notification(...)` en Chrome de Android lanza **"Illegal constructor"**: solo acepta `ServiceWorkerRegistration.showNotification()`. El error salía dentro del chequeo de `useDoseReminders` y React dejaba **toda la app en blanco**, justo al entrar con una cuenta que tenía una toma vencida (con una cuenta sin planes no pasaba). Arreglo: `public/sw.js` (service worker mínimo: sin caché ni red, solo `notificationclick`), registrado en `main.tsx`, y `showSystemNotification` en `notificationService.ts`, que usa el service worker, cae a `new Notification` solo si no hay, y **nunca lanza**. Si tocas notificaciones, pruébalo simulando el constructor que lanza (ver log del 2026-11-04).

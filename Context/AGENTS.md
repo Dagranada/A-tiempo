@@ -72,6 +72,7 @@ src/lib/supabase.ts                 ~40 · cliente Supabase + errores en españo
 src/lib/soundStore.ts               ~40 · sonido de alarma elegido (IndexedDB)
 supabase/migrations/                    · SQL de tablas y RLS (se pega en el SQL Editor)
 supabase/functions/analizar-medicamento · Edge Function: Gemini con la clave en secretos de Supabase (se sube desde el panel)
+public/sw.js                            · service worker mínimo: notificaciones (Chrome de Android lo exige)
 src/hooks/useDoseReminders.ts      110 · vigila el reloj → dueDose + snooze(minutos)
 src/hooks/useClaimReminders.ts      99 · vigila el reloj → aviso de reclamo (12 m víspera, 8 a. m. el día)
 src/components/                         Header, BottomNav, HorarioView, MisPlanesView, PastasView, PerfilView,
